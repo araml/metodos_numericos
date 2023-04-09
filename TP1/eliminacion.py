@@ -38,6 +38,15 @@ def gaussianElimination_rowPivoting(M, b):
             b[i] = b[i] - coefficient * b[k] 
 
 
+def gaussianElimination_tridiagonal(M, b):
+    n = M.shape[0]
+
+    for k in range(n-1):
+        coefficient = M[k+1][k] / M[k][k]
+        M[k+1] = M[k+1] - coefficient * M[k]
+        b[k+1] = b[k+1] - coefficient * b[k]
+
+
 def solve(M, b, triangulationFunction):
     n = M.shape[0]
     assert(M.shape == (n, n))
