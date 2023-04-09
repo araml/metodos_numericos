@@ -1,4 +1,5 @@
-import numpy as np 
+import numpy as np
+import sys
 
 def eliminacion_gaussiana_sin_pivoteo(m: np.array) -> np.array:
     return np.eye(3)
@@ -10,12 +11,12 @@ def eliminacion_gaussiana_tridiagonal(m: np.array) -> np.array:
     return np.zeros((3, 3))
 
 
-def gaussianElimination_noPivoting(M, b):
+def gaussianElimination_noPivoting(M: np.array, b: np.array, epsilon=0):
     n = M.shape[0]
 
     for k in range(n):
         for i in range(k+1, n):
-            if M[k][k] == 0:
+            if abs(M[k][k]) <= epsilon:
                 raise Exception("Could not triangulate matrix due to null coefficient in diagonal")
             
             coefficient = M[i][k] / M[k][k]
@@ -23,7 +24,7 @@ def gaussianElimination_noPivoting(M, b):
             b[i] = b[i] - coefficient * b[k] 
 
 
-def gaussianElimination_rowPivoting(M, b):
+def gaussianElimination_rowPivoting(M: np.array, b: np.array, max=sys.float_info.max, min=sys.float_info.min):
     n = M.shape[0]
 
     for k in range(n):
@@ -34,11 +35,16 @@ def gaussianElimination_rowPivoting(M, b):
         
         for i in range(k+1, n):
             coefficient = M[i][k] / M[k][k]
-            M[i] = M[i] - coefficient * M[k]
-            b[i] = b[i] - coefficient * b[k] 
+            rowToSubtract = coefficient * M[k]
+            solutionToSubtract = coefficient * b[k]
+            # TODO: compare coefficient and M, b components with max and min
+            if np.any(np.isclose(M[i], rowToSubtract)) or np.isclose(b[i], solutionToSubtract):
+                print("Catastrophic cancellation risk!")
+            M[i] = M[i] - rowToSubtract
+            b[i] = b[i] - solutionToSubtract
 
 
-def gaussianElimination_tridiagonal(M, b):
+def gaussianElimination_tridiagonal(M: np.array, b: np.array):
     n = M.shape[0]
 
     for k in range(n-1):
