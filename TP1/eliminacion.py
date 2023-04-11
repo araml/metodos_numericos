@@ -75,7 +75,27 @@ def gaussianElimination_tridiagonal_vectors(a: np.array, b: np.array, c: np.arra
         d[k+1] -= coefficient * d[k]
 
 
-def solve(M: np.array, b: np.array, triangulationFunction) -> np.array:
+def gaussianElimination_b_redefinition(a: np.array, b: np.array, c: np.array) -> np.array:
+    n = a.size
+    assert(b.size == n and c.size == n)
+
+    coefficients= np.array([])
+    for k in range(0, n-1):
+        coefficient = a[k+1] / b[k]
+        coefficients.append(coefficient)
+        b[k+1] -= coefficient * c[k]
+
+    return coefficients
+
+
+def gaussianElimination_d_redefinition(d: np.array, coefficients: np.array):
+    n = d.size
+    assert (coefficients.size == n)
+    for i in range(1, n):
+        d[i] -= coefficients[i] * d[i-1]
+
+
+def solveFullMatrix(M: np.array, b: np.array, triangulationFunction) -> np.array:
     n = M.shape[0]
     assert(M.shape == (n, n))
     assert(b.size == n)
