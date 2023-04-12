@@ -4,7 +4,7 @@ NUMPY_MAX = np.finfo(np.float64).max
 NUMPY_MIN = np.finfo(np.float64).min
 NUMPY_EPSILON = np.finfo(np.float64).eps
 
-def gaussianElimination_noPivoting(M: np.array, b: np.array, epsilon=0):
+def gaussianElimination_noPivoting(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
     n = M.shape[0]
 
     for k in range(n):
@@ -39,7 +39,7 @@ def gaussianElimination_rowPivoting(
             rowToSubtract = coefficient * M[k]
             solutionToSubtract = coefficient * b[k]
 
-            if np.any(np.isclose(M[i], rowToSubtract, epsilon, epsilon)) or np.isclose(b[i], solutionToSubtract, epsilon, epsilon):
+            if np.any(np.logical_and(np.isclose(M[i], rowToSubtract, epsilon, epsilon), np.logical_not(M[i] == rowToSubtract))) or (np.isclose(b[i], solutionToSubtract, epsilon, epsilon) and b[i] != solutionToSubtract):
                 print("Catastrophic cancellation risk!")
             if differentMagnitudes(M[i], rowToSubtract, magnitudeEpsilon):
                 print("Absorption risk!")
@@ -56,10 +56,12 @@ def differentMagnitudes(a1: np.array, a2: np.array, epsilon):
     return np.any(t1 != t2)
 
 
-def gaussianElimination_tridiagonal(M: np.array, b: np.array):
+def gaussianElimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
     n = M.shape[0]
 
     for k in range(n-1):
+        if abs(M[k][k]) <= epsilon:
+                print("Numerical error risk: dividing by small absolute value!")
         coefficient = M[k+1][k] / M[k][k]
         M[k+1] = M[k+1] - coefficient * M[k]
         b[k+1] = b[k+1] - coefficient * b[k]
@@ -71,10 +73,12 @@ def gaussianElimination_tridiagonal_vectors(a: np.array, b: np.array, c: np.arra
 
     for k in range(0, n-1):
         coefficient = a[k+1] / b[k]
-        b[k+1] -= coefficient * c[k] # subtract row above
+        # subtract row above. c doesn't change because each element has a 0 above it
+        b[k+1] -= coefficient * c[k]
         d[k+1] -= coefficient * d[k]
 
 
+# Modifies b and returns coefficients needed to redefine solution vector
 def gaussianElimination_b_redefinition(a: np.array, b: np.array, c: np.array) -> np.array:
     n = a.size
     assert(b.size == n and c.size == n)
@@ -95,18 +99,59 @@ def gaussianElimination_d_redefinition(d: np.array, coefficients: np.array):
         d[i] -= coefficients[i] * d[i-1]
 
 
-def solveFullMatrix(M: np.array, b: np.array, triangulationFunction) -> np.array:
+# This will only work with triangulation functions that assume M is a matrix
+# with all coefficients including zeroes, NOT a vector representation
+def solveFullMatrix(M: np.array, b: np.array, triangulationFunction, epsilon) -> np.array:
     n = M.shape[0]
     assert(M.shape == (n, n))
     assert(b.size == n)
 
-    G, c = M.copy(), b.copy()
-    triangulationFunction(G, c)
+    M_, b_ = M.copy(), b.copy()
+    triangulationFunction(M_, b_, epsilon)
 
     solution = np.array([])
     for i in range(n-1, -1, -1):
-        equation = G[i, i:]
-        x_i = (c[i] - np.inner(equation[1:], solution)) / equation[0]
+        equation = M_[i, i:]
+        x_i = (b_[i] - np.inner(equation[1:], solution)) / equation[0]
         solution = np.insert(solution, 0, x_i)
     
+    return solution
+
+
+# solve a tridiagonal system where the matrix is represented as three vectors:
+# a = [ 0, a2, a3, ... , an]
+# b = [b1, b2, b3, ... , bn]
+# c = [c1, c2, ..., cn-1, 0]
+def solveVectorialTridiagonal(a: np.array, b: np.array, c: np.array, d: np.array) -> np.array:
+    n = a.size
+    assert(b.size == n and c.size == n and d.size == n)
+
+    b_, d_ = b.copy(), d.copy()
+    gaussianElimination_tridiagonal_vectors(a, b_, c, d_)
+
+    # triangulated matrix, last row has only b_n-1
+    solution = np.array([d_[-1] / b_[-1]])
+    for i in range(n-2, -1, -1):
+        # substitute previously solved component, i.e. solution[0], and solve
+        x_i = (d_[i] - c[i] * solution[0]) / b_[i]
+        solution = np.insert(solution, 0, x_i)
+
+    return solution
+
+
+def solveVectorialTridiagonal_precalculation(a: np.array, b: np.array, c: np.array, d: np.array) -> np.array:
+    n = a.size
+    assert(b.size == n and c.size == n and d.size == n)
+
+    b_, d_ = b.copy(), d.copy()
+    coefficients = gaussianElimination_b_redefinition(a, b_, c)
+    gaussianElimination_d_redefinition(d_, coefficients)
+
+    # TODO: refactor, this is identical to previous function
+    solution = np.array([d_[-1] / b_[-1]])
+    for i in range(n-2, -1, -1):
+        # substitute previously solved component, i.e. solution[0], and solve
+        x_i = (d_[i] - c[i] * solution[0]) / b_[i]
+        solution = np.insert(solution, 0, x_i)
+
     return solution
