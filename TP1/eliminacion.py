@@ -42,7 +42,7 @@ def gaussianElimination_rowPivoting(
 
             if anyCloseDifferences(M[i], rowToSubtract) or (np.isclose(b[i], solutionToSubtract) and b[i] != solutionToSubtract):
                 print("Catastrophic cancellation risk!")
-            if np.any(absorption(M[i], rowToSubtract)):
+            if anyAbsorption(M[i], rowToSubtract) or absorption(b[i], solutionToSubtract):
                 print("Absorption risk!")
             M[i] = M[i] - rowToSubtract
             b[i] = b[i] - solutionToSubtract
@@ -60,6 +60,11 @@ def absorption(n1: float, n2: float) -> bool:
     else:
         maxAbs, minAbs = n2, n1
     return maxAbs+minAbs == maxAbs and minAbs != 0
+
+def anyAbsorption(a1: np.array, a2: np.array) -> bool:
+    return np.any(np.logical_or(
+        np.logical_and(a1+a2 == a1, np.logical_not(a2 == 0)),
+        np.logical_and(a1+a2 == a2, np.logical_not(a1 == 0))))
 
 
 def gaussianElimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
