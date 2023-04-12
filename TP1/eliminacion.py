@@ -39,7 +39,7 @@ def gaussianElimination_rowPivoting(
             rowToSubtract = coefficient * M[k]
             solutionToSubtract = coefficient * b[k]
 
-            if np.any(np.logical_and(np.isclose(M[i], rowToSubtract, epsilon, epsilon), np.logical_not(M[i] == rowToSubtract))) or (np.isclose(b[i], solutionToSubtract, epsilon, epsilon) and b[i] != solutionToSubtract):
+            if anyCloseDifferences(M[i], rowToSubtract) or (np.isclose(b[i], solutionToSubtract) and b[i] != solutionToSubtract):
                 print("Catastrophic cancellation risk!")
             if differentMagnitudes(M[i], rowToSubtract, magnitudeEpsilon):
                 print("Absorption risk!")
@@ -50,8 +50,11 @@ def gaussianElimination_rowPivoting(
 def outOfBounds(n, max, min):
     return n >= max or n <= min
 
+def anyCloseDifferences(a1: np.array, a2: np.array) -> bool:
+    return np.any(np.logical_and(np.isclose(a1, a2), np.logical_not(a1 == a2)))
+    
 # TODO: change this to a better criterion
-def differentMagnitudes(a1: np.array, a2: np.array, epsilon):
+def differentMagnitudes(a1: np.array, a2: np.array, epsilon) -> bool:
     t1, t2 = a1 <= epsilon, a2 <= epsilon
     return np.any(t1 != t2)
 
