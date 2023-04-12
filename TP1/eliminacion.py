@@ -19,7 +19,7 @@ def gaussianElimination_noPivoting(M: np.array, b: np.array, epsilon=NUMPY_EPSIL
 
 def gaussianElimination_rowPivoting(
         M: np.array, b: np.array,
-        max=NUMPY_MAX, min=NUMPY_MIN, epsilon=NUMPY_EPSILON, magnitudeEpsilon=NUMPY_EPSILON):
+        max=NUMPY_MAX, min=NUMPY_MIN, epsilon=NUMPY_EPSILON):
 
     n = M.shape[0]
 
@@ -34,14 +34,15 @@ def gaussianElimination_rowPivoting(
                 print("Numerical error risk: dividing by small absolute value!")
             coefficient = M[i][k] / M[k][k]
 
-            if outOfBounds(coefficient, max, min) or outOfBounds(b[k], max, min) or np.any(M[k] >= max) or np.any(M[k] <= min):
+            if outOfBounds(coefficient, max, min) or outOfBounds(b[k], max, min) or np.any(M[k] >= max)\
+                or np.any(M[k] <= min):
                 print("Numerical error risk: multiplying by big absolute value!")
             rowToSubtract = coefficient * M[k]
             solutionToSubtract = coefficient * b[k]
 
             if anyCloseDifferences(M[i], rowToSubtract) or (np.isclose(b[i], solutionToSubtract) and b[i] != solutionToSubtract):
                 print("Catastrophic cancellation risk!")
-            if differentMagnitudes(M[i], rowToSubtract, magnitudeEpsilon):
+            if np.any(absorption(M[i], rowToSubtract)):
                 print("Absorption risk!")
             M[i] = M[i] - rowToSubtract
             b[i] = b[i] - solutionToSubtract
@@ -53,10 +54,12 @@ def outOfBounds(n, max, min):
 def anyCloseDifferences(a1: np.array, a2: np.array) -> bool:
     return np.any(np.logical_and(np.isclose(a1, a2), np.logical_not(a1 == a2)))
     
-# TODO: change this to a better criterion
-def differentMagnitudes(a1: np.array, a2: np.array, epsilon) -> bool:
-    t1, t2 = a1 <= epsilon, a2 <= epsilon
-    return np.any(t1 != t2)
+def absorption(n1: float, n2: float) -> bool:
+    if abs(n1) > abs(n2):
+        maxAbs, minAbs = n1, n2
+    else:
+        maxAbs, minAbs = n2, n1
+    return maxAbs+minAbs == maxAbs and minAbs != 0
 
 
 def gaussianElimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
@@ -110,7 +113,7 @@ def solveFullMatrix(M: np.array, b: np.array, triangulationFunction, epsilon) ->
     assert(b.size == n)
 
     M_, b_ = M.copy(), b.copy()
-    triangulationFunction(M_, b_, epsilon)
+    triangulationFunction(M_, b_, epsilon=epsilon)
 
     solution = np.array([])
     for i in range(n-1, -1, -1):
