@@ -36,7 +36,7 @@ four_over_n_middle(3)
 
 def four_over(dimension: int) -> np.array:
     a, b, c = laplacian_vectors(dimension)
-    d = np.array([x/(dimension ** 2) for x in range(1, dimension + 1)])
+    d = np.array([4/(dimension ** 2) for x in range(1, dimension + 1)])
     
     u = solveVectorialTridiagonal(a, b, c, d)
     return u
