@@ -64,10 +64,15 @@ def generate_no_pivoting_matrix(dimension):
     while True:
         matrix = generate_inversible_matrix(dimension)
         try:
-            gaussian_elimination_no_pivoting(matrix, np.zeros(dimension))
+            gaussian_elimination_no_pivoting(matrix.copy(), np.zeros(dimension))
             return matrix
         except ZeroDivisionError:
             continue
+
+def scale_diagonal(matrix, factor):
+    n = matrix.shape[0]
+    for i in range(n):
+        matrix[i, i] = matrix[i, i] * factor
 
 experimento_laplaciano()
 
