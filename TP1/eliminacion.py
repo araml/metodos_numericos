@@ -10,7 +10,7 @@ def gaussian_elimination_no_pivoting(M: np.array, b: np.array, epsilon=NUMPY_EPS
     for k in range(n):
         for i in range(k+1, n):
             if abs(M[k][k]) <= epsilon:
-                raise Exception("Could not triangulate matrix due to null coefficient in diagonal")
+                raise ZeroDivisionError("Could not triangulate matrix due to null coefficient in diagonal")
             
             coefficient = M[i][k] / M[k][k]
             M[i] = M[i] - coefficient * M[k]

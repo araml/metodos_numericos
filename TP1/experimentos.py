@@ -1,5 +1,6 @@
 from eliminacion import *
 import matplotlib.pyplot as plt
+import numpy as np
 
 def laplacian_generate_a(dimension: int) -> np.array:
     return np.concatenate([np.array([0]), np.ones(dimension-1)])
@@ -50,6 +51,23 @@ def experimento_laplaciano() -> None:
     plt.legend()
     plt.show()
 
+# Generate an inversible matrix with random coefficients in the range [0,1)
+def generate_inversible_matrix(dimension):
+    while True:
+        matrix = np.random.rand(dimension, dimension)
+        if np.linalg.matrix_rank(matrix) == dimension:
+            return matrix
+
+# Generate a matrix that can be triangulated with no pivoting
+# with coefficients in the range [0,1)
+def generate_no_pivoting_matrix(dimension):
+    while True:
+        matrix = generate_inversible_matrix(dimension)
+        try:
+            gaussian_elimination_no_pivoting(matrix, np.zeros(dimension))
+            return matrix
+        except ZeroDivisionError:
+            continue
 
 experimento_laplaciano()
 
