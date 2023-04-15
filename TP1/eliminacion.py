@@ -48,6 +48,8 @@ def gaussian_elimination_row_pivoting(
             b[i] = b[i] - solutionToSubtract
 
 
+# Helper functions
+
 def out_of_bounds(n, max, min):
     return n >= max or n <= min
 
@@ -67,6 +69,8 @@ def any_absorption(a1: np.array, a2: np.array) -> bool:
         np.logical_and(a1+a2 == a2, np.logical_not(a1 == 0))))
 
 
+# Triangulate a tridiagonal system where the matrix is represented with all coefficients,
+# including zeros
 def gaussian_elimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
     n = M.shape[0]
 
@@ -78,6 +82,10 @@ def gaussian_elimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPS
         b[k+1] = b[k+1] - coefficient * b[k]
 
 
+# Triangulate a tridiagonal system where the matrix is represented as three vectors:
+# a = [ 0, a2, a3, ... , an]
+# b = [b1, b2, b3, ... , bn]
+# c = [c1, c2, ..., cn-1, 0]
 def gaussian_elimination_tridiagonal_vectors(a: np.array, b: np.array, c: np.array, d: np.array):
     n = a.size
     assert(b.size == n and c.size == n and d.size == n)
@@ -103,6 +111,7 @@ def gaussian_elimination_b_redefinition(a: np.array, b: np.array, c: np.array) -
     return coefficients
 
 
+# Transform independent term to match triangulated system
 def gaussian_elimination_d_redefinition(d: np.array, coefficients: np.array):
     n = d.size
     assert (coefficients.size == n)
@@ -129,7 +138,7 @@ def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, epsilon) 
     return solution
 
 
-# solve many tridiagonal systems where the matrix is represented as three vectors:
+# For a list of independent terms, solve a tridiagonal system where the matrix is represented as three vectors:
 # a = [ 0, a2, a3, ... , an]
 # b = [b1, b2, b3, ... , bn]
 # c = [c1, c2, ..., cn-1, 0]
@@ -147,6 +156,7 @@ def solve_many_tridiagonals_no_precalculation(a: np.array, b: np.array, c: np.ar
     return solutions
 
 
+# Same as above, but precalculate transformation once and apply it to each independent term
 def solve_many_tridiagonals_precalculation(a: np.array, b: np.array, c: np.array, ds: np.array) -> np.array:
     n = a.size
     assert(b.size == n and c.size == n and ds.shape[1] == n)
@@ -161,6 +171,7 @@ def solve_many_tridiagonals_precalculation(a: np.array, b: np.array, c: np.array
         solutions = np.append(solutions, solve_triangulated_tridiagonal_vectors(b_, c, d_))
 
     return solutions
+
 
 def solve_triangulated_tridiagonal_vectors(triangulated_b, c, independent_term):
     n = triangulated_b.size
