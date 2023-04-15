@@ -4,7 +4,7 @@ NUMPY_MAX = np.finfo(np.float64).max
 NUMPY_MIN = np.finfo(np.float64).min
 NUMPY_EPSILON = np.finfo(np.float64).eps
 
-def gaussianElimination_noPivoting(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
+def gaussian_elimination_no_pivoting(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
     n = M.shape[0]
 
     for k in range(n):
@@ -17,7 +17,7 @@ def gaussianElimination_noPivoting(M: np.array, b: np.array, epsilon=NUMPY_EPSIL
             b[i] = b[i] - coefficient * b[k] 
 
 
-def gaussianElimination_rowPivoting(
+def gaussian_elimination_row_pivoting(
         M: np.array, b: np.array,
         max=NUMPY_MAX, min=NUMPY_MIN, epsilon=NUMPY_EPSILON):
 
@@ -34,24 +34,24 @@ def gaussianElimination_rowPivoting(
                 print("Numerical error risk: dividing by small absolute value!")
             coefficient = M[i][k] / M[k][k]
 
-            if outOfBounds(coefficient, max, min) or outOfBounds(b[k], max, min) or np.any(M[k] >= max)\
+            if out_of_bounds(coefficient, max, min) or out_of_bounds(b[k], max, min) or np.any(M[k] >= max)\
                 or np.any(M[k] <= min):
                 print("Numerical error risk: multiplying by big absolute value!")
             rowToSubtract = coefficient * M[k]
             solutionToSubtract = coefficient * b[k]
 
-            if anyCloseDifferences(M[i], rowToSubtract) or (np.isclose(b[i], solutionToSubtract) and b[i] != solutionToSubtract):
+            if any_close_differences(M[i], rowToSubtract) or (np.isclose(b[i], solutionToSubtract) and b[i] != solutionToSubtract):
                 print("Catastrophic cancellation risk!")
-            if anyAbsorption(M[i], rowToSubtract) or absorption(b[i], solutionToSubtract):
+            if any_absorption(M[i], rowToSubtract) or absorption(b[i], solutionToSubtract):
                 print("Absorption risk!")
             M[i] = M[i] - rowToSubtract
             b[i] = b[i] - solutionToSubtract
 
 
-def outOfBounds(n, max, min):
+def out_of_bounds(n, max, min):
     return n >= max or n <= min
 
-def anyCloseDifferences(a1: np.array, a2: np.array) -> bool:
+def any_close_differences(a1: np.array, a2: np.array) -> bool:
     return np.any(np.logical_and(np.isclose(a1, a2), np.logical_not(a1 == a2)))
     
 def absorption(n1: float, n2: float) -> bool:
@@ -61,13 +61,13 @@ def absorption(n1: float, n2: float) -> bool:
         maxAbs, minAbs = n2, n1
     return maxAbs+minAbs == maxAbs and minAbs != 0
 
-def anyAbsorption(a1: np.array, a2: np.array) -> bool:
+def any_absorption(a1: np.array, a2: np.array) -> bool:
     return np.any(np.logical_or(
         np.logical_and(a1+a2 == a1, np.logical_not(a2 == 0)),
         np.logical_and(a1+a2 == a2, np.logical_not(a1 == 0))))
 
 
-def gaussianElimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
+def gaussian_elimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
     n = M.shape[0]
 
     for k in range(n-1):
@@ -78,7 +78,7 @@ def gaussianElimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSI
         b[k+1] = b[k+1] - coefficient * b[k]
 
 
-def gaussianElimination_tridiagonal_vectors(a: np.array, b: np.array, c: np.array, d: np.array):
+def gaussian_elimination_tridiagonal_vectors(a: np.array, b: np.array, c: np.array, d: np.array):
     n = a.size
     assert(b.size == n and c.size == n and d.size == n)
 
@@ -90,7 +90,7 @@ def gaussianElimination_tridiagonal_vectors(a: np.array, b: np.array, c: np.arra
 
 
 # Modifies b and returns coefficients needed to redefine solution vector
-def gaussianElimination_b_redefinition(a: np.array, b: np.array, c: np.array) -> np.array:
+def gaussian_elimination_b_redefinition(a: np.array, b: np.array, c: np.array) -> np.array:
     n = a.size
     assert(b.size == n and c.size == n)
 
@@ -103,7 +103,7 @@ def gaussianElimination_b_redefinition(a: np.array, b: np.array, c: np.array) ->
     return coefficients
 
 
-def gaussianElimination_d_redefinition(d: np.array, coefficients: np.array):
+def gaussian_elimination_d_redefinition(d: np.array, coefficients: np.array):
     n = d.size
     assert (coefficients.size == n)
     for i in range(1, n):
@@ -112,7 +112,7 @@ def gaussianElimination_d_redefinition(d: np.array, coefficients: np.array):
 
 # This will only work with triangulation functions that assume M is a matrix
 # with all coefficients including zeroes, NOT a vector representation
-def solveFullMatrix(M: np.array, b: np.array, triangulationFunction, epsilon) -> np.array:
+def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, epsilon) -> np.array:
     n = M.shape[0]
     assert(M.shape == (n, n))
     assert(b.size == n)
@@ -141,7 +141,7 @@ def solve_many_tridiagonals_no_precalculation(a: np.array, b: np.array, c: np.ar
 
     for d in ds:
         b_, d_ = b.copy(), d.copy()
-        gaussianElimination_tridiagonal_vectors(a, b_, c, d_)
+        gaussian_elimination_tridiagonal_vectors(a, b_, c, d_)
         solutions = np.append(solutions, solve_triangulated_tridiagonal_vectors(b_, c, d_))
 
     return solutions
@@ -152,12 +152,12 @@ def solve_many_tridiagonals_precalculation(a: np.array, b: np.array, c: np.array
     assert(b.size == n and c.size == n and ds.shape[1] == n)
 
     b_= b.copy()
-    coefficients = gaussianElimination_b_redefinition(a, b_, c)
+    coefficients = gaussian_elimination_b_redefinition(a, b_, c)
     solutions = np.array([])
 
     for d in ds:
         d_ = d.copy()
-        gaussianElimination_d_redefinition(d_, coefficients)
+        gaussian_elimination_d_redefinition(d_, coefficients)
         solutions = np.append(solutions, solve_triangulated_tridiagonal_vectors(b_, c, d_))
 
     return solutions
