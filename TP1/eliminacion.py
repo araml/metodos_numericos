@@ -129,40 +129,47 @@ def solveFullMatrix(M: np.array, b: np.array, triangulationFunction, epsilon) ->
     return solution
 
 
-# solve a tridiagonal system where the matrix is represented as three vectors:
+# solve many tridiagonal systems where the matrix is represented as three vectors:
 # a = [ 0, a2, a3, ... , an]
 # b = [b1, b2, b3, ... , bn]
 # c = [c1, c2, ..., cn-1, 0]
-def solveVectorialTridiagonal(a: np.array, b: np.array, c: np.array, d: np.array) -> np.array:
+def solve_many_tridiagonals_no_precalculation(a: np.array, b: np.array, c: np.array, ds: np.array) -> np.array:
     n = a.size
-    assert(b.size == n and c.size == n and d.size == n)
+    assert(b.size == n and c.size == n and ds.shape[1] == n)
 
-    b_, d_ = b.copy(), d.copy()
-    gaussianElimination_tridiagonal_vectors(a, b_, c, d_)
+    solutions = []
+
+    for d in ds:
+        b_, d_ = b.copy(), d.copy()
+        gaussianElimination_tridiagonal_vectors(a, b_, c, d_)
+        solutions = np.append(solutions, solve_triangulated_tridiagonal_vectors(b_, c, d_))
+
+    return solutions
+
+
+def solve_many_tridiagonals_precalculation(a: np.array, b: np.array, c: np.array, ds: np.array) -> np.array:
+    n = a.size
+    assert(b.size == n and c.size == n and ds.shape[1] == n)
+
+    b_= b.copy()
+    coefficients = gaussianElimination_b_redefinition(a, b_, c)
+    solutions = np.array([])
+
+    for d in ds:
+        d_ = d.copy()
+        gaussianElimination_d_redefinition(d_, coefficients)
+        solutions = np.append(solutions, solve_triangulated_tridiagonal_vectors(b_, c, d_))
+
+    return solutions
+
+def solve_triangulated_tridiagonal_vectors(triangulated_b, c, independent_term):
+    n = triangulated_b.size
 
     # triangulated matrix, last row has only b_n-1
-    solution = np.array([d_[-1] / b_[-1]])
+    solution = np.array([independent_term[-1] / triangulated_b[-1]])
     for i in range(n-2, -1, -1):
         # substitute previously solved component, i.e. solution[0], and solve
-        x_i = (d_[i] - c[i] * solution[0]) / b_[i]
-        solution = np.insert(solution, 0, x_i)
-
-    return solution
-
-
-def solveVectorialTridiagonal_precalculation(a: np.array, b: np.array, c: np.array, d: np.array) -> np.array:
-    n = a.size
-    assert(b.size == n and c.size == n and d.size == n)
-
-    b_, d_ = b.copy(), d.copy()
-    coefficients = gaussianElimination_b_redefinition(a, b_, c)
-    gaussianElimination_d_redefinition(d_, coefficients)
-
-    # TODO: refactor, this is identical to previous function
-    solution = np.array([d_[-1] / b_[-1]])
-    for i in range(n-2, -1, -1):
-        # substitute previously solved component, i.e. solution[0], and solve
-        x_i = (d_[i] - c[i] * solution[0]) / b_[i]
+        x_i = (independent_term[i] - c[i] * solution[0]) / triangulated_b[i]
         solution = np.insert(solution, 0, x_i)
 
     return solution
