@@ -102,10 +102,10 @@ def gaussian_elimination_b_redefinition(a: np.array, b: np.array, c: np.array) -
     n = a.size
     assert(b.size == n and c.size == n)
 
-    coefficients= np.array([])
+    coefficients = np.array([1])
     for k in range(0, n-1):
         coefficient = a[k+1] / b[k]
-        coefficients.append(coefficient)
+        coefficients = np.append(coefficients, coefficient)
         b[k+1] -= coefficient * c[k]
 
     return coefficients

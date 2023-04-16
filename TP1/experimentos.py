@@ -69,6 +69,7 @@ def generate_no_pivoting_matrix(dimension):
         except ZeroDivisionError:
             continue
 
+# Should this return the matrix?
 def scale_diagonal(matrix, factor):
     n = matrix.shape[0]
     for i in range(n):
@@ -76,4 +77,29 @@ def scale_diagonal(matrix, factor):
 
 experimento_laplaciano()
 
+def simulate_diffusion(dimension, iterations, alpha=1, radius=1) -> np.array:
+    a, b, c = laplacian_vectors(dimension)
+    negative_alpha = alpha * (-1)
+    a, b, c = a * negative_alpha, b * 1.5 * negative_alpha, c * negative_alpha
+    
+    # d = np.array([(-1 + (2 * x) / (dimension - 1)) * 12 / dimension**2 for x in range(1, dimension + 1)])
+    u = np.zeros(dimension)
+    for i in range(int(np.floor(dimension/2)) - radius + 1, int(np.floor(dimension/2)) + radius):
+        u[i] = 1
+    
+    us = [u.copy()]
+    for k in range(iterations):
+         u_k = solve_many_tridiagonals_no_precalculation(a, b, c, np.array([u]))
+         us.append(u_k.copy())
+         u = u_k
+    
+    return np.array(us)
 
+def ejercicio6() -> None:
+    print("Ejercicio 6.")
+    diff = simulate_diffusion(dimension = 101, iterations = 1001, alpha=1, radius=10)
+    plt.pcolor(diff.T)
+    plt.colorbar()
+    plt.show()
+
+ejercicio6()
