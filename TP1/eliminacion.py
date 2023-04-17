@@ -121,7 +121,7 @@ def gaussian_elimination_d_redefinition(d: np.array, coefficients: np.array) -> 
 
 # This will only work with triangulation functions that assume M is a matrix
 # with all coefficients including zeroes, NOT a vector representation
-def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, epsilon: float) -> np.array:
+def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, epsilon=NUMPY_EPSILON) -> np.array:
     n = M.shape[0]
     assert(M.shape == (n, n))
     assert(b.size == n)

@@ -39,7 +39,7 @@ def function_c(dimension: int) -> np.array:
     u = solve_many_tridiagonals_precalculation(a, b, c, np.array([d]))
     return u.flatten()
 
-def experimento_laplaciano() -> None:
+def plot_laplacian() -> None:
     l1 = function_a(101)
     l2 = function_b(101)
     l3 = function_c(101)
@@ -83,14 +83,11 @@ def generate_matrix_test_data(dimension: int, scale=1, diagonal_factor=1, no_piv
     scale_diagonal(matrix, diagonal_factor)
     return matrix
 
-experimento_laplaciano()
-
 def simulate_diffusion(dimension: int, iterations: int, alpha=1, radius=1) -> np.array:
     a, b, c = laplacian_vectors(dimension)
     negative_alpha = alpha * (-1)
     a, b, c = a * negative_alpha, b * 1.5 * negative_alpha, c * negative_alpha
     
-    # d = np.array([(-1 + (2 * x) / (dimension - 1)) * 12 / dimension**2 for x in range(1, dimension + 1)])
     u = np.zeros(dimension)
     for i in range(int(np.floor(dimension/2)) - radius + 1, int(np.floor(dimension/2)) + radius):
         u[i] = 1
@@ -102,6 +99,17 @@ def simulate_diffusion(dimension: int, iterations: int, alpha=1, radius=1) -> np
          u = u_k
     
     return np.array(us)
+
+def measure_numerical_error(matrix: np.array, b: np.array, error_metric, function_to_measure, *args) -> float:
+    linalg_solution = np.linalg.solve(matrix, b)
+    solution = function_to_measure(matrix, b, *args)
+    return error_metric(linalg_solution, solution)
+
+def mean_square_error(a1: np.array, a2: np.array) -> np.float64:
+    return ((a1 - a2) ** 2).mean()
+
+def infinity_norm_error(a1: np.array, a2: np.array) -> np.float64:
+    return np.linalg.norm(a1 - a2, 'inf')
 
 def ejercicio6() -> None:
     print("Ejercicio 6.")
