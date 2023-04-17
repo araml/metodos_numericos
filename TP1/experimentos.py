@@ -100,9 +100,9 @@ def simulate_diffusion(dimension: int, iterations: int, alpha=1, radius=1) -> np
     
     return np.array(us)
 
-def measure_numerical_error(matrix: np.array, b: np.array, error_metric, function_to_measure, *args) -> float:
+def measure_full_matrix_numerical_error(matrix: np.array, b: np.array, error_metric, triangulation_function, *args) -> float:
     linalg_solution = np.linalg.solve(matrix, b)
-    solution = function_to_measure(matrix, b, *args)
+    solution = solve_full_matrix(matrix, b, triangulation_function, *args)
     return error_metric(linalg_solution, solution)
 
 def mean_square_error(a1: np.array, a2: np.array) -> np.float64:
@@ -117,5 +117,3 @@ def ejercicio6() -> None:
     plt.pcolor(diff.T)
     plt.colorbar()
     plt.show()
-
-ejercicio6()

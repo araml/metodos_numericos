@@ -121,13 +121,13 @@ def gaussian_elimination_d_redefinition(d: np.array, coefficients: np.array) -> 
 
 # This will only work with triangulation functions that assume M is a matrix
 # with all coefficients including zeroes, NOT a vector representation
-def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, epsilon=NUMPY_EPSILON) -> np.array:
+def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, *args) -> np.array:
     n = M.shape[0]
     assert(M.shape == (n, n))
     assert(b.size == n)
 
     M_, b_ = M.copy(), b.copy()
-    triangulationFunction(M_, b_, epsilon=epsilon)
+    triangulationFunction(M_, b_, *args)
 
     solution = np.array([])
     for i in range(n-1, -1, -1):
@@ -173,6 +173,7 @@ def solve_many_tridiagonals_precalculation(a: np.array, b: np.array, c: np.array
     return solutions
 
 
+# Helper function for the two previous ones. Calculate solution from triangulated matrix represented by b and c.
 def solve_triangulated_tridiagonal_vectors(triangulated_b: np.array, c: np.array, independent_term: np.array) -> np.array:
     n = triangulated_b.size
 
