@@ -52,7 +52,7 @@ def experimento_laplaciano() -> None:
     plt.show()
 
 # Generate an inversible matrix with random coefficients in the range [0,1)
-def generate_inversible_matrix(dimension):
+def generate_inversible_matrix(dimension: int) -> np.array:
     while True:
         matrix = np.random.rand(dimension, dimension)
         if np.linalg.matrix_rank(matrix) == dimension:
@@ -60,7 +60,7 @@ def generate_inversible_matrix(dimension):
 
 # Generate a matrix that can be triangulated with no pivoting
 # with coefficients in the range [0,1)
-def generate_no_pivoting_matrix(dimension):
+def generate_no_pivoting_matrix(dimension: int):
     while True:
         matrix = generate_inversible_matrix(dimension)
         try:
@@ -69,15 +69,23 @@ def generate_no_pivoting_matrix(dimension):
         except ZeroDivisionError:
             continue
 
-# Should this return the matrix?
-def scale_diagonal(matrix, factor):
+def scale_diagonal(matrix: np.array, factor: float) -> None:
     n = matrix.shape[0]
     for i in range(n):
         matrix[i, i] = matrix[i, i] * factor
 
+def generate_matrix_test_data(dimension: int, scale=1, diagonal_factor=1, no_pivoting=False) -> np.array:
+    if no_pivoting:
+        matrix = generate_no_pivoting_matrix(dimension)
+    else:
+        matrix = generate_inversible_matrix(dimension)
+    matrix = matrix * scale
+    scale_diagonal(matrix, diagonal_factor)
+    return matrix
+
 experimento_laplaciano()
 
-def simulate_diffusion(dimension, iterations, alpha=1, radius=1) -> np.array:
+def simulate_diffusion(dimension: int, iterations: int, alpha=1, radius=1) -> np.array:
     a, b, c = laplacian_vectors(dimension)
     negative_alpha = alpha * (-1)
     a, b, c = a * negative_alpha, b * 1.5 * negative_alpha, c * negative_alpha

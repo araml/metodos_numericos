@@ -4,7 +4,7 @@ NUMPY_MAX = np.finfo(np.float64).max
 NUMPY_MIN = np.finfo(np.float64).min
 NUMPY_EPSILON = np.finfo(np.float64).eps
 
-def gaussian_elimination_no_pivoting(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
+def gaussian_elimination_no_pivoting(M: np.array, b: np.array, epsilon=NUMPY_EPSILON) -> None:
     n = M.shape[0]
 
     for k in range(n):
@@ -19,7 +19,7 @@ def gaussian_elimination_no_pivoting(M: np.array, b: np.array, epsilon=NUMPY_EPS
 
 def gaussian_elimination_row_pivoting(
         M: np.array, b: np.array,
-        max=NUMPY_MAX, min=NUMPY_MIN, epsilon=NUMPY_EPSILON):
+        max=NUMPY_MAX, min=NUMPY_MIN, epsilon=NUMPY_EPSILON) -> None:
 
     n = M.shape[0]
 
@@ -50,7 +50,7 @@ def gaussian_elimination_row_pivoting(
 
 # Helper functions
 
-def out_of_bounds(n, max, min):
+def out_of_bounds(n: float, max: float, min: float) -> bool:
     return n >= max or n <= min
 
 def any_close_differences(a1: np.array, a2: np.array) -> bool:
@@ -71,7 +71,7 @@ def any_absorption(a1: np.array, a2: np.array) -> bool:
 
 # Triangulate a tridiagonal system where the matrix is represented with all coefficients,
 # including zeros
-def gaussian_elimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSILON):
+def gaussian_elimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPSILON) -> None:
     n = M.shape[0]
 
     for k in range(n-1):
@@ -86,7 +86,7 @@ def gaussian_elimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPS
 # a = [ 0, a2, a3, ... , an]
 # b = [b1, b2, b3, ... , bn]
 # c = [c1, c2, ..., cn-1, 0]
-def gaussian_elimination_tridiagonal_vectors(a: np.array, b: np.array, c: np.array, d: np.array):
+def gaussian_elimination_tridiagonal_vectors(a: np.array, b: np.array, c: np.array, d: np.array) -> None:
     n = a.size
     assert(b.size == n and c.size == n and d.size == n)
 
@@ -112,7 +112,7 @@ def gaussian_elimination_b_redefinition(a: np.array, b: np.array, c: np.array) -
 
 
 # Transform independent term to match triangulated system
-def gaussian_elimination_d_redefinition(d: np.array, coefficients: np.array):
+def gaussian_elimination_d_redefinition(d: np.array, coefficients: np.array) -> None:
     n = d.size
     assert (coefficients.size == n)
     for i in range(1, n):
@@ -121,7 +121,7 @@ def gaussian_elimination_d_redefinition(d: np.array, coefficients: np.array):
 
 # This will only work with triangulation functions that assume M is a matrix
 # with all coefficients including zeroes, NOT a vector representation
-def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, epsilon) -> np.array:
+def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, epsilon: float) -> np.array:
     n = M.shape[0]
     assert(M.shape == (n, n))
     assert(b.size == n)
@@ -173,7 +173,7 @@ def solve_many_tridiagonals_precalculation(a: np.array, b: np.array, c: np.array
     return solutions
 
 
-def solve_triangulated_tridiagonal_vectors(triangulated_b, c, independent_term):
+def solve_triangulated_tridiagonal_vectors(triangulated_b: np.array, c: np.array, independent_term: np.array) -> np.array:
     n = triangulated_b.size
 
     # triangulated matrix, last row has only b_n-1
