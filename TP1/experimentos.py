@@ -51,20 +51,23 @@ def plot_laplacian() -> None:
     plt.legend()
     plt.show()
 
-# Generate an inversible matrix with random coefficients in the range [0,1)
-def generate_inversible_matrix(dimension: int) -> np.array:
+# Generate an inversible matrix with random coefficients in the range [0,scale) outside the diagonal
+# and a diagonal scaled by diagonal_factor
+def generate_inversible_matrix(dimension: int, scale=1, diagonal_factor=1) -> np.array:
     while True:
-        matrix = np.random.rand(dimension, dimension)
+        matrix = np.random.rand(dimension, dimension) * scale
+        scale_diagonal(matrix, diagonal_factor)
         if np.linalg.matrix_rank(matrix) == dimension:
             return matrix
 
 # Generate a matrix that can be triangulated with no pivoting
-# with coefficients in the range [0,1)
-def generate_no_pivoting_matrix(dimension: int):
+# with coefficients in the range [0,scale) outside the diagonal
+# and a diagonal scaled by diagonal_factor
+def generate_no_pivoting_matrix(dimension: int, independent_term: np.array, scale=1, diagonal_factor=1, epsilon=NUMPY_EPSILON) -> np.array:
     while True:
-        matrix = generate_inversible_matrix(dimension)
+        matrix = generate_inversible_matrix(dimension, scale, diagonal_factor)
         try:
-            gaussian_elimination_no_pivoting(matrix.copy(), np.zeros(dimension))
+            gaussian_elimination_no_pivoting(matrix.copy(), independent_term.copy(), epsilon)
             return matrix
         except ZeroDivisionError:
             continue
@@ -74,13 +77,16 @@ def scale_diagonal(matrix: np.array, factor: float) -> None:
     for i in range(n):
         matrix[i, i] = matrix[i, i] * factor
 
-def generate_matrix_test_data(dimension: int, scale=1, diagonal_factor=1, no_pivoting=False) -> np.array:
-    if no_pivoting:
-        matrix = generate_no_pivoting_matrix(dimension)
+def generate_matrix_test_data(dimension: int, independent_term=None, no_pivoting=False, scale=1, diagonal_factor=1, epsilon=NUMPY_EPSILON) -> np.array:
+    if independent_term is not None:
+        b = independent_term
     else:
-        matrix = generate_inversible_matrix(dimension)
-    matrix = matrix * scale
-    scale_diagonal(matrix, diagonal_factor)
+        b = np.zeros(dimension)
+    if no_pivoting:
+        matrix = generate_no_pivoting_matrix(dimension, b, scale, diagonal_factor, epsilon)
+    else:
+        matrix = generate_inversible_matrix(dimension, scale, diagonal_factor)
+
     return matrix
 
 def simulate_diffusion(dimension: int, iterations: int, alpha=1, radius=1) -> np.array:
@@ -109,11 +115,38 @@ def mean_square_error(a1: np.array, a2: np.array) -> np.float64:
     return ((a1 - a2) ** 2).mean()
 
 def infinity_norm_error(a1: np.array, a2: np.array) -> np.float64:
-    return np.linalg.norm(a1 - a2, 'inf')
+    return np.linalg.norm(a1 - a2, np.inf)
 
-def ejercicio6() -> None:
+def ejercicio6(alpha=1, radius=10) -> None:
     print("Ejercicio 6.")
-    diff = simulate_diffusion(dimension = 101, iterations = 1001, alpha=1, radius=10)
+    diff = simulate_diffusion(dimension = 101, iterations = 1001, alpha = alpha, radius = radius)
     plt.pcolor(diff.T)
     plt.colorbar()
     plt.show()
+
+def test_numerical_error_no_pivoting_row_pivoting(dimension: int, exponent_range: np.array, num_test_cases: np.array, scale_x=False) -> (np.array, np.array):
+    no_pivoting_mean_square_errors = []
+    row_pivoting_mean_square_errors = []
+
+    for i in exponent_range:
+        no_pivoting_mse_list = []
+        row_pivoting_mse_list = []
+        factor = 10**float(i)
+
+        for j in range(num_test_cases):
+            x = np.array(np.random.rand(dimension))
+            if scale_x:
+                x = x / factor
+            matrix = generate_matrix_test_data(dimension, no_pivoting=True, scale=factor)
+
+            b = matrix@x
+            no_pivoting_solution = solve_full_matrix(matrix, b, gaussian_elimination_no_pivoting)
+            row_pivoting_solution = solve_full_matrix(matrix, b, gaussian_elimination_row_pivoting)
+
+            no_pivoting_mse_list.append(mean_square_error(x, no_pivoting_solution))
+            row_pivoting_mse_list.append(mean_square_error(x, row_pivoting_solution))
+
+        no_pivoting_mean_square_errors.append(np.mean(no_pivoting_mse_list))
+        row_pivoting_mean_square_errors.append(np.mean(row_pivoting_mse_list))
+    
+    return np.array(no_pivoting_mean_square_errors), np.array(row_pivoting_mean_square_errors)
