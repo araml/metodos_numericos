@@ -124,6 +124,7 @@ def ejercicio6(alpha=1, radius=10) -> None:
     plt.colorbar()
     plt.show()
 
+
 def test_numerical_error_no_pivoting_row_pivoting(dimension: int, exponent_range: np.array, num_test_cases: np.array, scale_x=False) -> (np.array, np.array):
     no_pivoting_mean_square_errors = []
     row_pivoting_mean_square_errors = []
@@ -150,3 +151,26 @@ def test_numerical_error_no_pivoting_row_pivoting(dimension: int, exponent_range
         row_pivoting_mean_square_errors.append(np.mean(row_pivoting_mse_list))
     
     return np.array(no_pivoting_mean_square_errors), np.array(row_pivoting_mean_square_errors)
+
+
+def test_numerical_error_no_pivoting_growing_diagonal(dimension: int, exponent_range: np.array, num_test_cases: np.array, scale_x=False) -> np.array:
+    no_pivoting_mean_square_errors = []
+
+    for i in exponent_range:
+        no_pivoting_mse_list = []
+        row_pivoting_mse_list = []
+        factor = 10**float(i)
+
+        for j in range(num_test_cases):
+            x = np.array(np.random.rand(dimension))
+            if scale_x:
+                x = x / factor
+            matrix = generate_matrix_test_data(dimension, no_pivoting=True, scale=1, diagonal_factor=factor)
+
+            b = matrix@x
+            no_pivoting_solution = solve_full_matrix(matrix, b, gaussian_elimination_no_pivoting)
+            no_pivoting_mse_list.append(mean_square_error(x, no_pivoting_solution))
+
+        no_pivoting_mean_square_errors.append(np.mean(no_pivoting_mse_list))
+    
+    return np.array(no_pivoting_mean_square_errors)
