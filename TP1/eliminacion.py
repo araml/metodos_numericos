@@ -16,58 +16,69 @@ def gaussian_elimination_no_pivoting(M: np.array, b: np.array, epsilon=NUMPY_EPS
             M[i] = M[i] - coefficient * M[k]
             b[i] = b[i] - coefficient * b[k] 
 
-
 def gaussian_elimination_row_pivoting(
         M: np.array, b: np.array,
-        max=NUMPY_MAX, min=NUMPY_MIN, epsilon=NUMPY_EPSILON) -> None:
-
+        max=NUMPY_MAX, min=NUMPY_MIN, epsilon=NUMPY_EPSILON,
+        turn_off_warnings = False) -> None:
     n = M.shape[0]
 
     for k in range(n):
         # choose coefficient with maximum value along the diagonal in last n-k rows
-        pivotRowIndex = np.argmax(abs(M[k:,k])) + k
-        M[[pivotRowIndex, k]] = M[[k, pivotRowIndex]]
-        b[[pivotRowIndex, k]] = b[[k, pivotRowIndex]]
+        pivot_row_index = find_pivot_row_index(M, k, k, n)
+        M[[pivot_row_index, k]] = M[[k, pivot_row_index]]
+        b[[pivot_row_index, k]] = b[[k, pivot_row_index]]
         
         for i in range(k+1, n):
-            if abs(M[k][k]) <= epsilon:
+            if abs(M[k][k]) <= epsilon and not turn_off_warnings:
                 print("Numerical error risk: dividing by small absolute value!")
             coefficient = M[i][k] / M[k][k]
 
-            if out_of_bounds(coefficient, max, min) or out_of_bounds(b[k], max, min) or np.any(M[k] >= max)\
-                or np.any(M[k] <= min):
+            if (out_of_bounds(coefficient, max, min) or out_of_bounds(b[k], max, min) or any_out_of_bounds(M[k], max, min)) \
+                and not turn_off_warnings:
                 print("Numerical error risk: multiplying by big absolute value!")
-            rowToSubtract = coefficient * M[k]
-            solutionToSubtract = coefficient * b[k]
+            row_to_subtract = coefficient * M[k]
+            solution_to_subtract = coefficient * b[k]
 
-            if any_close_differences(M[i], rowToSubtract) or (np.isclose(b[i], solutionToSubtract) and b[i] != solutionToSubtract):
-                print("Catastrophic cancellation risk!")
-            if any_absorption(M[i], rowToSubtract) or absorption(b[i], solutionToSubtract):
+            if (any_absorption(M[i], row_to_subtract) or absorption(b[i], solution_to_subtract)) and not turn_off_warnings:
                 print("Absorption risk!")
-            M[i] = M[i] - rowToSubtract
-            b[i] = b[i] - solutionToSubtract
+            M[i] = M[i] - row_to_subtract
+            b[i] = b[i] - solution_to_subtract
 
 
-# Helper functions
+# Helper functions. Now 100% Numpy-free!
+def find_pivot_row_index(matrix: np.array, column_index: int, start_row: int, end_row: int):
+    max_element_row_index = start_row
+    max_element = abs(matrix[max_element_row_index, column_index])
+    
+    for current_row in range(start_row, end_row):
+        current_element = abs(matrix[current_row, column_index])
+        if current_element > max_element:
+            max_element_row_index = current_row
+            max_element = current_element
+
+    return max_element_row_index
 
 def out_of_bounds(n: float, max: float, min: float) -> bool:
     return n >= max or n <= min
 
-def any_close_differences(a1: np.array, a2: np.array) -> bool:
-    return np.any(np.logical_and(np.isclose(a1, a2), np.logical_not(a1 == a2)))
+def any_out_of_bounds(a: np.array, max: float, min: float) -> bool:
+    for i in range(a.size):
+        if out_of_bounds(a[i], max, min):
+            return True
+    return False
     
 def absorption(n1: float, n2: float) -> bool:
     if abs(n1) > abs(n2):
-        maxAbs, minAbs = n1, n2
+        max_abs, min_abs = n1, n2
     else:
-        maxAbs, minAbs = n2, n1
-    return maxAbs+minAbs == maxAbs and minAbs != 0
+        max_abs, min_abs = n2, n1
+    return max_abs+min_abs == max_abs and min_abs != 0
 
 def any_absorption(a1: np.array, a2: np.array) -> bool:
-    return np.any(np.logical_or(
-        np.logical_and(a1+a2 == a1, np.logical_not(a2 == 0)),
-        np.logical_and(a1+a2 == a2, np.logical_not(a1 == 0))))
-
+    for i in range(a1.size):
+        if absorption(a1[i], a2[i]):
+            return True
+    return False
 
 # Triangulate a tridiagonal system where the matrix is represented with all coefficients,
 # including zeros
@@ -76,7 +87,7 @@ def gaussian_elimination_tridiagonal(M: np.array, b: np.array, epsilon=NUMPY_EPS
 
     for k in range(n-1):
         if abs(M[k][k]) <= epsilon:
-                print("Numerical error risk: dividing by small absolute value!")
+            print("Numerical error risk: dividing by small absolute value!")
         coefficient = M[k+1][k] / M[k][k]
         M[k+1] = M[k+1] - coefficient * M[k]
         b[k+1] = b[k+1] - coefficient * b[k]
@@ -121,22 +132,48 @@ def gaussian_elimination_d_redefinition(d: np.array, coefficients: np.array) -> 
 
 # This will only work with triangulation functions that assume M is a matrix
 # with all coefficients including zeroes, NOT a vector representation
-def solve_full_matrix(M: np.array, b: np.array, triangulationFunction, *args) -> np.array:
+def solve_full_matrix(M: np.array, b: np.array, triangulation_function, *args) -> np.array:
     n = M.shape[0]
     assert(M.shape == (n, n))
     assert(b.size == n)
 
     M_, b_ = M.copy(), b.copy()
-    triangulationFunction(M_, b_, *args)
+    triangulation_function(M_, b_, *args)
 
     solution = np.array([])
     for i in range(n-1, -1, -1):
         equation = M_[i, i:]
-        x_i = (b_[i] - np.inner(equation[1:], solution)) / equation[0]
+        # b_i = eq_i*x_i + ... + eq_(n-1)*x_(n-1)
+        # => x_i = (b_i - eq_(i+1)*x_(i+1) - ... - eq_(n-1)*x_(n-1)) / eq_i
+        x_i = (b_[i] - inner_product(equation[1:], solution)) / equation[0]
         solution = np.insert(solution, 0, x_i)
     
     return solution
 
+def solve_full_tridiagonal_matrix(M: np.array, b: np.array, *args) -> np.array:
+    n = M.shape[0]
+    assert(M.shape == (n, n))
+    assert(b.size == n)
+
+    M_, b_ = M.copy(), b.copy()
+    gaussian_elimination_tridiagonal(M_, b_, *args)
+
+    solution = np.array([b_[-1] / M_[-1, -1]]) # start with bottom element
+    # solve remaining unknowns with backwards substitution
+    for i in range(n-2, -1, -1):
+        equation = M_[i]
+        x_i = (b_[i] - equation[i+1]*solution[0]) / equation[i]
+        solution = np.insert(solution, 0, x_i)
+        # equation = M_[i, i:i+2] # only two non-null coefficients left
+        # # b_i = eq_i*x_i + ... + eq_(n-1)*x_(n-1)
+        # # => x_i = (b_i - eq_(i+1)*x_(i+1) - ... - eq_(n-1)*x_(n-1)) / eq_i
+        # x_i = (b_[i] - inner_product(equation[1:], solution)) / equation[0]
+        # solution = np.insert(solution, 0, x_i)
+    
+    return solution
+
+def inner_product(equation: np.array, solution: np.array):
+    return sum([equation[i] * solution[i] for i in range(len(equation))])
 
 # For a list of independent terms, solve a tridiagonal system where the matrix is represented as three vectors:
 # a = [ 0, a2, a3, ... , an]
@@ -176,7 +213,6 @@ def solve_many_tridiagonals_precalculation(a: np.array, b: np.array, c: np.array
 # Helper function for the two previous ones. Calculate solution from triangulated matrix represented by b and c.
 def solve_triangulated_tridiagonal_vectors(triangulated_b: np.array, c: np.array, independent_term: np.array) -> np.array:
     n = triangulated_b.size
-
     # triangulated matrix, last row has only b_n-1
     solution = np.array([independent_term[-1] / triangulated_b[-1]])
     for i in range(n-2, -1, -1):
