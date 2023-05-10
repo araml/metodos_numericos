@@ -9,9 +9,9 @@ void test_check_eigen_values() {
     Eigen::VectorXd v(2);
     v << 1, 1;
     
-    auto [l1, v1] = metodo_potencia(B, v, 5000);
+    auto [l1, v1] = power_iteration_method(B, v, 5000);
     auto H = B - (l1 * v1 * v1.transpose());
-    auto [l2, v2] = metodo_potencia(H, v, 5000);
+    auto [l2, v2] = power_iteration_method(H, v, 5000);
     
     // we don't know which eigenvalue we get first 
     std::set<float> s1{l1, l2};
