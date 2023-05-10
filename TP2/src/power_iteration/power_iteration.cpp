@@ -6,16 +6,22 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 
 // TODO(interops with python, can we use doubles?)
-// TODO(use eps to see if we converge faster)
 // TODO(return number of iterations until we converged)
 //
 std::tuple<float, VectorXd>
 power_iteration_method(const MatrixXd &M, const VectorXd &x_0, size_t iters,
                 float eps) {
     VectorXd v = x_0;
-    for (size_t i = 0; i < iters; i++) {
+    VectorXd previous_v(v.size());
+    previous_v.setOnes(v.size());
+    previous_v += v;
+
+    size_t i = 0;
+    while (i < iters && (v - previous_v).norm() >= eps) {
+        previous_v = v;
         auto Mv = M * v;
         v = Mv / Mv.norm();
+        i++;
     }
     float lambda = v.transpose() * M * v;
 
