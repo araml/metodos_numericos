@@ -2,6 +2,9 @@
 #include <cassert>
 #include <iostream>
 #include <power_iteration.h>
+#include <math.h>
+
+const float EPSILON = pow(10, -20);
 
 void test_check_eigen_values() { 
     Eigen::MatrixXd B(2, 2);
@@ -9,9 +12,9 @@ void test_check_eigen_values() {
     Eigen::VectorXd v(2);
     v << 1, 1;
     
-    auto [l1, v1] = power_iteration_method(B, v, 5000);
+    auto [l1, v1] = power_iteration_method(B, v, 5000, EPSILON);
     auto H = B - (l1 * v1 * v1.transpose());
-    auto [l2, v2] = power_iteration_method(H, v, 5000);
+    auto [l2, v2] = power_iteration_method(H, v, 5000, EPSILON);
     
     // we don't know which eigenvalue we get first 
     std::set<float> s1{l1, l2};
@@ -25,7 +28,7 @@ void test_deflate_single_eigen_value() {
     Eigen::VectorXd v(2);
     v << 1, 1;
 
-    auto [ls, vs] = deflate(B, v, 5000, 1);
+    auto [ls, vs] = deflate(B, v, 5000, 1, EPSILON);
     
     std::set<float> s(ls.begin(), ls.end());
     // We need to have *only* one of these 
@@ -40,7 +43,7 @@ void test_deflate_all_eigen_values() {
     Eigen::VectorXd v(2);
     v << 1, 1;
 
-    auto [ls, vs] = deflate(B, v, 5000, 2);
+    auto [ls, vs] = deflate(B, v, 5000, 2, EPSILON);
     
     std::set<float> s1(ls.begin(), ls.end());
     std::set<float> s2{1, -2};
@@ -54,7 +57,7 @@ void test_incorrect_number_of_eigenvalues() {
     v << 1, 1;
 
     try { 
-    auto [ls, vs] = deflate(B, v, 5000, 10);
+    auto [ls, vs] = deflate(B, v, 5000, 10, EPSILON);
     } catch (...) { 
         return;
     }
