@@ -20,6 +20,7 @@ void test_check_eigen_values() {
     std::set<float> s1{l1, l2};
     std::set<float> s2{1, -2};
     assert(s1 == s2);
+    std::cout << "check_eigenvalues ok" << std::endl;
 }
 
 void test_deflate_single_eigen_value() { 
@@ -35,6 +36,7 @@ void test_deflate_single_eigen_value() {
     // but we don't know the order we just count the occurrences of both 
     auto exists = s.count(1) + s.count(-2);
     assert(exists == 1);
+    std::cout << "deflate_single_eigenvalue ok" << std::endl;
 }
 
 void test_deflate_all_eigen_values() { 
@@ -48,6 +50,7 @@ void test_deflate_all_eigen_values() {
     std::set<float> s1(ls.begin(), ls.end());
     std::set<float> s2{1, -2};
     assert(s1 == s2);    
+    std::cout << "deflate_all_eigenvalues ok" << std::endl;
 }
 
 void test_incorrect_number_of_eigenvalues() { 
