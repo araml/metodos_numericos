@@ -1,0 +1,3 @@
+#pragma once 
+
+static constexpr auto file_folder = "@TEST_FILE_PATH@";

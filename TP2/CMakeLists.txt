@@ -35,10 +35,14 @@ if (BUILD_TESTS)
         string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" bare_name ${file})
         add_executable(${name} ${file} ${ARGN})
         include_directories(src)
+        include_directories(tests)
         add_test(NAME ${name} COMMAND ${name}
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         target_link_libraries(${name} ${LIBRARIES} "-lpthread")
     endmacro()
+
+    get_filename_component(TEST_FILE_PATH tests/test_data ABSOLUTE)
+    configure_file(tests/config_tests.h.in ../tests/config_tests.h)
 
     add_custom_test(test_eigen tests/test_eigen.cpp ${power_iteration})
 endif()

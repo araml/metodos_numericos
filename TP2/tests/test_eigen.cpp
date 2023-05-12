@@ -4,6 +4,7 @@
 #include <math.h>
 #include <power_iteration.h>
 #include <set>
+#include <config_tests.h>
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -93,9 +94,10 @@ void test_read_matrix_iterations_tolerance_int() {
     size_t expected_iterations = 10;
     float expected_tolerance = 0.000001;
 
-    std::string filename = "test_matrix_int.txt";
+    std::string filename = std::string(file_folder) + "/test_matrix_int.txt";
     std::ifstream infile(filename);
-    auto[actual_matrix, actual_iterations, actual_tolerance] = read_matrix_iterations_tolerance(infile);
+    auto[actual_matrix, actual_iterations, actual_tolerance] = 
+        read_matrix_iterations_tolerance(infile);
 
     assert(actual_matrix.isApprox(expected_matrix));
     assert(actual_iterations == expected_iterations);
