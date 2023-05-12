@@ -44,9 +44,6 @@ power_iteration_method(const MatrixXd &M, const VectorXd &x_0, size_t iters,
     VectorXd previous_v(v.size());
     previous_v.setOnes(v.size());
     previous_v += v;
-    // std::cout << std::endl << "START" << std::endl;
-    // std::cout << std::endl << "v: " << std::endl << v << std::endl;
-    // std::cout << std::endl << "previous_v: " << std::endl << previous_v << std::endl;
 
     size_t i = 0;
     while (i < iters && ((v - previous_v).norm() >= eps /*&& (v + previous_v).norm() >= eps*/)) {
@@ -54,12 +51,7 @@ power_iteration_method(const MatrixXd &M, const VectorXd &x_0, size_t iters,
         auto Mv = M * v;
         v = Mv / Mv.norm();
         i++;
-        // std::cout << std::endl << "v: " << std::endl << v << std::endl;
-        // std::cout << std::endl << "previous_v: " << std::endl << previous_v << std::endl;
     }
-    // std::cout << std::endl << "END" << std::endl;
-    // std::cout << std::endl << "v: " << std::endl << v << std::endl;
-    // std::cout << std::endl << "previous_v: " << std::endl << previous_v << std::endl;
 
     float lambda = v.transpose() * M * v;
 
@@ -67,7 +59,7 @@ power_iteration_method(const MatrixXd &M, const VectorXd &x_0, size_t iters,
 }
 
 std::tuple<std::vector<float>, std::vector<VectorXd>>
-deflate(MatrixXd M, const VectorXd &x_0, size_t iters, 
+deflate_impl(MatrixXd M, const VectorXd &x_0, size_t iters, 
         size_t number_of_eigenvalues, float eps) { 
     
     if (M.cols() != M.rows() || M.cols() < number_of_eigenvalues) { 
@@ -86,4 +78,11 @@ deflate(MatrixXd M, const VectorXd &x_0, size_t iters,
     }
 
     return std::make_tuple(eigenvalues, eigenvectors);
- }
+}
+
+std::tuple<std::vector<float>, std::vector<VectorXd>>
+deflate(std::string filename, const VectorXd &x_0, size_t number_of_eigenvalues) {
+    std::ifstream infile(filename);
+    auto [M, iters, eps] = read_matrix_iterations_tolerance(infile);
+    return deflate_impl(M, x_0, iters, number_of_eigenvalues, eps);
+}
