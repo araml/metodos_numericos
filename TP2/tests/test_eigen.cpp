@@ -1,8 +1,9 @@
-#include <set>
 #include <cassert>
 #include <iostream>
-#include <power_iteration.h>
+#include <fstream>
 #include <math.h>
+#include <power_iteration.h>
+#include <set>
 
 constexpr float EPSILON = pow(10, -20);
 
@@ -81,11 +82,32 @@ void test_incorrect_number_of_eigenvalues() {
     assert(0);
 }
 
+// This will only work if test_matrix_int.txt is in the current directory
+void test_read_matrix_iterations_tolerance_int() {
+    Eigen::MatrixXd expected_matrix(2, 2);
+    expected_matrix << 1, 0, 0, 1;
+    size_t expected_iterations = 10;
+    float expected_tolerance = 0.000001;
+
+    std::string filename = "test_matrix_int.txt";
+    std::ifstream infile(filename);
+    auto[actual_matrix, actual_iterations, actual_tolerance] = read_matrix_iterations_tolerance(infile);
+    std::cout << std::endl << actual_matrix << std::endl;
+    std::cout << std::endl << expected_matrix << std::endl;
+
+    assert(actual_matrix.isApprox(expected_matrix));
+    assert(actual_iterations == expected_iterations);
+    assert(actual_tolerance == expected_tolerance); 
+
+    std::cout << "read_matrix_iterations_tolerance ok with ints" << std::endl;
+}
+
 
 int main() {
     test_check_eigen_values();
     test_deflate_single_eigen_value();
     test_deflate_all_eigen_values();
     test_incorrect_number_of_eigenvalues();
+    test_read_matrix_iterations_tolerance_int();
     return 0;
 }
