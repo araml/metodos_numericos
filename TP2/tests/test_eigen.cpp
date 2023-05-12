@@ -5,12 +5,16 @@
 #include <power_iteration.h>
 #include <set>
 
+using Eigen::VectorXd;
+using Eigen::MatrixXd;
+using Eigen::EigenSolver;
+
 constexpr float EPSILON = pow(10, -20);
 
 void test_check_eigen_values() { 
-    Eigen::MatrixXd B(2, 2);
+    MatrixXd B(2, 2);
     B << 1, 0, 0, -2;
-    Eigen::VectorXd v(2);
+    VectorXd v(2);
     v << 8, 3;
     
     auto [l1, v1, i1] = power_iteration_method(B, v, 5000, EPSILON);
@@ -27,9 +31,9 @@ void test_check_eigen_values() {
 }
 
 void test_deflate_single_eigen_value() { 
-    Eigen::MatrixXd B(2, 2);
+    MatrixXd B(2, 2);
     B << 1, 0, 0, -2;
-    Eigen::VectorXd v(2);
+    VectorXd v(2);
     v << 1, 1;
 
     auto [ls, vs] = deflate_impl(B, v, 5000, 1, EPSILON);
@@ -43,9 +47,9 @@ void test_deflate_single_eigen_value() {
 }
 
 void test_deflate_all_eigen_values() { 
-    Eigen::MatrixXd B(2, 2);
+    MatrixXd B(2, 2);
     B << 1, 0, 0, -2;
-    Eigen::VectorXd v(2);
+    VectorXd v(2);
     v << 1, 1;
 
     auto [ls, vs] = deflate_impl(B, v, 5000, 2, EPSILON);
@@ -62,15 +66,15 @@ void test_deflate_all_eigen_values() {
     for (auto &v : vs) 
         std::cout << "(" << v.transpose() << ")" << std::endl;
 
-    Eigen::EigenSolver<Eigen::MatrixXd> es(B);
+    EigenSolver<MatrixXd> es(B);
     std::cout << "eigenvalues " << std::endl << es.eigenvalues() << std::endl << std::endl;
     std::cout << "eigenvectors " << std::endl << es.eigenvectors() << std::endl << std::endl; 
 }
 
 void test_incorrect_number_of_eigenvalues() { 
-    Eigen::MatrixXd B(2, 2);
+    MatrixXd B(2, 2);
     B << 1, 0, 0, -2;
-    Eigen::VectorXd v(2);
+    VectorXd v(2);
     v << 1, 1;
 
     try { 
@@ -84,7 +88,7 @@ void test_incorrect_number_of_eigenvalues() {
 
 // This will only work if test_matrix_int.txt is in the current directory
 void test_read_matrix_iterations_tolerance_int() {
-    Eigen::MatrixXd expected_matrix(2, 2);
+    MatrixXd expected_matrix(2, 2);
     expected_matrix << 1, 0, 0, 1;
     size_t expected_iterations = 10;
     float expected_tolerance = 0.000001;
