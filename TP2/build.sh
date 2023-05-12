@@ -1,9 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 mkdir -p build
 cd build
 
 # get number of available cores 
-cores=$(nproc --all)
+cores=4
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    cores=$(sysctl -n hw.physicalcpu)
+else
+    cores=$(nproc -all)
+fi
 
 if ! command -v ninja &> /dev/null
 then

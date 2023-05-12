@@ -10,7 +10,7 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::EigenSolver;
 
-constexpr float EPSILON = pow(10, -20);
+float EPSILON = pow(10, -20);
 
 void test_check_eigen_values() { 
     MatrixXd B(2, 2);
