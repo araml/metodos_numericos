@@ -1,7 +1,7 @@
 #pragma once
 #include <Eigen/Dense>
 
-std::tuple<float, Eigen::VectorXd>
+std::tuple<float, Eigen::VectorXd, size_t>
 power_iteration_method(const Eigen::MatrixXd &B, const Eigen::VectorXd &x_0, 
                 size_t iters, float eps = 0.0f);
 

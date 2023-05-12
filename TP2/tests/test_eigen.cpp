@@ -10,17 +10,19 @@ void test_check_eigen_values() {
     Eigen::MatrixXd B(2, 2);
     B << 1, 0, 0, -2;
     Eigen::VectorXd v(2);
-    v << 1, 1;
+    v << 8, 3;
     
-    auto [l1, v1] = power_iteration_method(B, v, 5000, EPSILON);
+    auto [l1, v1, i1] = power_iteration_method(B, v, 5000, EPSILON);
     auto H = B - (l1 * v1 * v1.transpose());
-    auto [l2, v2] = power_iteration_method(H, v, 5000, EPSILON);
+    auto [l2, v2, i2] = power_iteration_method(H, v, 5000, EPSILON);
     
     // we don't know which eigenvalue we get first 
     std::set<float> s1{l1, l2};
     std::set<float> s2{1, -2};
     assert(s1 == s2);
     std::cout << "check_eigenvalues ok" << std::endl;
+    std::cout << "\teigenvalue " << l1 << " found in " << i1 << " iterations" << std::endl;
+    std::cout << "\teigenvalue " << l2 << " found in " << i2 << " iterations" << std::endl;
 }
 
 void test_deflate_single_eigen_value() { 
