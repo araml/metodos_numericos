@@ -4,7 +4,7 @@
 #include <power_iteration.h>
 #include <math.h>
 
-const float EPSILON = pow(10, -20);
+constexpr float EPSILON = pow(10, -20);
 
 void test_check_eigen_values() { 
     Eigen::MatrixXd B(2, 2);
@@ -53,6 +53,17 @@ void test_deflate_all_eigen_values() {
     std::set<float> s2{1, -2};
     assert(s1 == s2);    
     std::cout << "deflate_all_eigenvalues ok" << std::endl;
+
+    std::cout << "our eigenvalues" << std::endl;
+    for (auto l : ls) 
+        std::cout << l << std::endl;
+    std::cout << "our eigenvectors" << std::endl;
+    for (auto &v : vs) 
+        std::cout << "(" << v.transpose() << ")" << std::endl;
+
+    Eigen::EigenSolver<Eigen::MatrixXd> es(B);
+    std::cout << "eigenvalues " << std::endl << es.eigenvalues() << std::endl << std::endl;
+    std::cout << "eigenvectors " << std::endl << es.eigenvectors() << std::endl << std::endl; 
 }
 
 void test_incorrect_number_of_eigenvalues() { 
