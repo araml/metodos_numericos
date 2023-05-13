@@ -18,7 +18,7 @@ using Eigen::MatrixXd;
 std::tuple<MatrixXd, size_t, float>
 read_matrix_iterations_tolerance(std::ifstream &infile) {
     size_t matrix_dimension, iterations;
-    float value, tolerance;
+    double value, tolerance;
     MatrixXd M;
 
     infile >> matrix_dimension;

@@ -8,7 +8,7 @@ cores=4
 if [[ "$OSTYPE" == "darwin"* ]]; then
     cores=$(sysctl -n hw.physicalcpu)
 else
-    cores=$(nproc -all)
+    cores=$(nproc --all)
 fi
 
 if ! command -v ninja &> /dev/null

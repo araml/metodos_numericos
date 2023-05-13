@@ -45,5 +45,6 @@ if (BUILD_TESTS)
     configure_file(tests/config_tests.h.in ../tests/config_tests.h)
 
     add_custom_test(test_eigen tests/test_eigen.cpp ${power_iteration})
+    add_custom_test(test_read_matrix tests/test_read_matrix.cpp ${power_iteration})
 endif()
 
