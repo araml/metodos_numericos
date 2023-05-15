@@ -10,4 +10,5 @@ namespace py = pybind11;
 PYBIND11_MODULE(deflate, m){
     m.doc() = "powre_iteration";
     m.def("power_iteration", &power_iteration_method);
+    m.def("deflate", &deflate);
 }
