@@ -1,4 +1,11 @@
-build/
-eigen/
-tests/config_tests.h
 .vscode/
+*.zip
+build/
+caras/
+eigen/
+matrices/
+py_stuff/__pycache__
+py_stuff/image_paths.py
+py_stuff/*deflate*
+pybind11/
+tests/config_tests.h

@@ -3,13 +3,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from image_paths import * # TODO: rename image_paths since it also contains matrix path now
 from pathlib import Path
+from random import choices
+from string import ascii_letters
 
 USE_SMALLER_IMAGES = True # TODO: make this a CLI script option
 
 
 def save_matrix_for_deflation(M: np.array, iters=10, tolerance=1e-17, filename=None) -> str:
     if not filename:
-        filename = "amogus"
+        filename = ''.join(choices(ascii_letters, k=12))
     file_path = Path(matrices_path, filename)
     dimension = M.shape[0]
     with open(file_path, 'w') as f:
