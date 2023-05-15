@@ -10,6 +10,8 @@ USE_SMALLER_IMAGES = True # TODO: make this a CLI script option
 SCALE_DOWN_FACTOR = 2
 
 
+# Common functions
+
 def save_matrix_for_deflation(M: np.array, iters=10, tolerance=1e-17, filename=None) -> str:
     if not filename:
         filename = ''.join(choices(ascii_letters, k=12))
@@ -40,28 +42,19 @@ def read_images(path_to_images):
     return images
 
 
-def flatten_images(images: np.array) -> np.array:
-    square_images = np.stack(images)
-    flattened_images = square_images.reshape(square_images.shape[0], square_images[0].size)
-    return flattened_images
-
-
-def get_covariance_matrix(flattened_images: np.array) -> np.array:
-    n = flattened_images.shape[1]
-    centred_images = flattened_images - np.mean(flattened_images, axis=0) # subtract average from each
-    covariance = centred_images.T @ centred_images
-    covariance = covariance / (n-1)
-    return covariance
-
-
-def get_eigenvalues_and_eigenvectors(M: np.array, k: int, get_all=False, filename=None):
+def get_eigenvalues_and_eigenvectors(M: np.array,
+                                     k: int,
+                                     iters=10,
+                                     tolerance=1e-17,
+                                     filename=None,
+                                     get_all=False) -> (np.array, np.array):
     if get_all:
         number_of_eigenvalues = M.shape[0]
     else:
         number_of_eigenvalues = k
 
     print("\tSaving matrix...")
-    filename = save_matrix_for_deflation(M, filename=filename)
+    filename = save_matrix_for_deflation(M, iters, tolerance, filename)
     print("\tSaved matrix to file {}".format(filename))
 
     print("\tDeflating...")
@@ -69,23 +62,67 @@ def get_eigenvalues_and_eigenvectors(M: np.array, k: int, get_all=False, filenam
     return np.array(e), np.array(v).T # return vectors as columns
 
 
-def reduce_dimensions(images: np.array, eigenbase: np.array, k: int):
-    return images @ (eigenbase[:, :k])
+# 1DPCA
+
+def flatten_images(images: np.array) -> np.array:
+    square_images = np.stack(images)
+    flattened_images = square_images.reshape(square_images.shape[0], square_images[0].size)
+    return flattened_images
+
+
+def get_1d_covariance_matrix(flattened_images: np.array) -> np.array:
+    n = flattened_images.shape[1]
+    centred_images = flattened_images - np.mean(flattened_images, axis=0) # subtract average from each
+    covariance = centred_images.T @ centred_images
+    covariance = covariance / (n-1)
+    return covariance
+
+
+def reduce_dimensions(flattened_images: np.array, eigenbase: np.array, k: int):
+    return flattened_images @ (eigenbase[:, :k])
+
+
+# 2DPCA
+
+def get_image_covariance_matrix(images: np.array) -> np.array:
+    mean_pixel_values = np.mean(images, axis=0)
+    centred_images = images - mean_pixel_values
+    return np.mean(np.array([image.T @ image for image in centred_images]), axis=0)
+
+
+def get_eigenbase_for_images(images: np.array,
+                             k: int,
+                             iters=10,
+                             tolerance=1e-17,
+                             filename=None,
+                             get_all=False) -> (np.array, np.array):
+    G = get_image_covariance_matrix(images)
+    return get_eigenvalues_and_eigenvectors(G, k, iters, tolerance, filename, get_all)
+
+
+def get_feature_vectors(image: np.array, eigenbase: np.array, k: int):
+    return image @ eigenbase[:, :k]
 
 
 print("Reading images...")
 images = read_images(Path(faces_path))
 
-print("Calculating covariance...")
-flattened_images = flatten_images(images)
-covariance = get_covariance_matrix(flattened_images)
-
-print("Calculating eigenvector base...")
-e, V = get_eigenvalues_and_eigenvectors(covariance, 100, filename="amogus")
-print(e, V)
-
-print("Reducing dimensions...")
-R = reduce_dimensions(flattened_images, V, 100)
-
-plt.imshow(R[0].reshape(10,10))
+print("Calculating image feature vectors...")
+eigenvalues, eigenbase = get_eigenbase_for_images(images, 0, get_all=True, filename="amogus")
+feature_vectors = get_feature_vectors(images[0], eigenbase, 46)
+plt.imshow(feature_vectors)
 plt.show()
+
+# print("Calculating covariance...")
+# flattened_images = flatten_images(images)
+# covariance = get_1d_covariance_matrix(flattened_images)
+
+# print("Calculating eigenvector base...")
+# e, V = get_eigenvalues_and_eigenvectors(covariance, 100, filename="amogus")
+# print(e, V)
+
+# print("Reducing dimensions...")
+# R = reduce_dimensions(flattened_images, V, 100)
+
+# plt.imshow(R[0].reshape(10,10))
+# plt.show()
