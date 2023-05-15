@@ -1,3 +1,4 @@
 build/
 eigen/
 tests/config_tests.h
+.vscode/
