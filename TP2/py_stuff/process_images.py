@@ -1,3 +1,4 @@
+import argparse
 import deflate as d
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,9 +6,6 @@ from image_paths import * # TODO: rename image_paths since it also contains matr
 from pathlib import Path
 from random import choices
 from string import ascii_letters
-
-USE_SMALLER_IMAGES = True # TODO: make this a CLI script option
-SCALE_DOWN_FACTOR = 2
 
 
 # Common functions
@@ -28,15 +26,15 @@ def save_matrix_for_deflation(M: np.array, iters=10, tolerance=1e-17, filename=N
     return str(file_path)
 
 
-def read_images(path_to_images):
+def read_images(path_to_images, use_smaller_images, scale_down_factor=1) -> list:
     paths = []
     images = []
 
     for path in sorted(list(path_to_images.rglob('*/*.pgm'))):
         paths.append(path)
         image = (plt.imread(path))
-        if USE_SMALLER_IMAGES:
-            image = image[::SCALE_DOWN_FACTOR,::SCALE_DOWN_FACTOR] / 255
+        if use_smaller_images:
+            image = image[::scale_down_factor,::scale_down_factor] / 255
         images.append(image)
 
     return images
@@ -78,7 +76,7 @@ def get_1d_covariance_matrix(flattened_images: np.array) -> np.array:
     return covariance
 
 
-def reduce_dimensions(flattened_images: np.array, eigenbase: np.array, k: int):
+def reduce_dimensions(flattened_images: np.array, eigenbase: np.array, k: int) -> np.array:
     return flattened_images @ (eigenbase[:, :k])
 
 
@@ -100,12 +98,22 @@ def get_eigenbase_for_images(images: np.array,
     return get_eigenvalues_and_eigenvectors(G, k, iters, tolerance, filename, get_all)
 
 
-def get_feature_vectors(image: np.array, eigenbase: np.array, k: int):
+def get_feature_vectors(image: np.array, eigenbase: np.array, k: int) -> np.array:
     return image @ eigenbase[:, :k]
 
 
+parser = argparse.ArgumentParser("process_images")
+parser.add_argument("use_smaller_images",
+                    help="Decrease image resolution for faster computation time",
+                    type=bool)
+parser.add_argument("scale_down_factor",
+                    help="Factor by which to scale down image resolution",
+                    type=int)
+
+args = parser.parse_args()
+
 print("Reading images...")
-images = read_images(Path(faces_path))
+images = read_images(Path(faces_path), args.use_smaller_images, args.scale_down_factor)
 
 print("Calculating image feature vectors...")
 eigenvalues, eigenbase = get_eigenbase_for_images(images, 0, get_all=True, filename="amogus")
