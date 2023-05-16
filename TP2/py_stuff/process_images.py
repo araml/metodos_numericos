@@ -1,11 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+from image_paths import faces_path 
+
+print(faces_path)
 
 paths = []
 imgs = []
 
-for path in sorted(list(Path('build/caras').rglob('*/*.pgm'))):
+for path in sorted(list(Path(faces_path).rglob('*/*.pgm'))):
     paths.append(path)
     imgs.append(plt.imread(path))
 

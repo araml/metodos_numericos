@@ -87,10 +87,27 @@ void test_incorrect_number_of_eigenvalues() {
     assert(0);
 }
 
+void test_check_eigen_values_pybind() { 
+    MatrixXd B(2, 2);
+    B << 1, 0, 0, 1;
+    VectorXd v(2);
+    v << 1, 1;
+    
+    auto [l1, v1, i1] = power_iteration_method(B, v, 5000, 0.000001);
+    auto H = B - (l1 * v1 * v1.transpose());
+    auto [l2, v2, i2] = power_iteration_method(H, v, 5000, 0.000001);
+    std::cout << "eigenvalue " << l1 << " " << l2 << std::endl;
+    std::cout << v1.transpose() << " " << v2.transpose() << std::endl;
+    std::cout << i1 << " " << i2 << std::endl;
+}
+
+
+
 int main() {
     test_check_eigen_values();
     test_deflate_single_eigen_value();
     test_deflate_all_eigen_values();
     test_incorrect_number_of_eigenvalues();
+test_check_eigen_values_pybind();
     return 0;
 }
