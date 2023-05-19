@@ -11,3 +11,17 @@ else
     wget https://www.dropbox.com/s/3glgtzgiyilo5nj/ImagenesCaras.zip?dl=1 -O ImagenesCaras.zip
     unzip ImagenesCaras.zip -d "./caras"
 fi
+
+if [ -d "./matrices" ]
+then
+    echo "Matrix folder already exists"
+else
+    mkdir matrices
+fi
+
+if [ -d "./figures" ]
+then
+    echo "Figure folder already exists"
+else
+    mkdir figures
+fi
