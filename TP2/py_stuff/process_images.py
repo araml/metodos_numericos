@@ -6,6 +6,7 @@ from image_paths import * # TODO: rename image_paths since it also contains matr
 from pathlib import Path
 from random import choices
 from string import ascii_letters
+from sklearn.decomposition import PCA
 
 
 # Common functions
@@ -26,7 +27,7 @@ def save_matrix_for_deflation(M: np.array, iters=10, tolerance=1e-17, filename=N
     return str(file_path)
 
 
-def read_images(path_to_images, use_smaller_images, scale_down_factor=1) -> list:
+def read_images(path_to_images, use_smaller_images, scale_down_factor=1) -> np.array:
     paths = []
     images = []
 
@@ -37,7 +38,7 @@ def read_images(path_to_images, use_smaller_images, scale_down_factor=1) -> list
             image = image[::scale_down_factor,::scale_down_factor] / 255
         images.append(image)
 
-    return images
+    return np.array(images)
 
 
 def get_eigenvalues_and_eigenvectors(M: np.array,
@@ -69,7 +70,7 @@ def flatten_images(images: np.array) -> np.array:
 
 
 def get_1d_covariance_matrix(flattened_images: np.array) -> np.array:
-    n = flattened_images.shape[1]
+    n = flattened_images.shape[0]
     centred_images = flattened_images - np.mean(flattened_images, axis=0) # subtract average from each
     covariance = centred_images.T @ centred_images
     covariance = covariance / (n-1)
@@ -78,6 +79,16 @@ def get_1d_covariance_matrix(flattened_images: np.array) -> np.array:
 
 def reduce_dimensions(flattened_images: np.array, eigenbase: np.array, k: int) -> np.array:
     return flattened_images @ (eigenbase[:, :k])
+
+# image: column vector
+# V: eigenvector base
+# k: number of principal components to use
+def project_image(image: np.array, eigenbase: np.array, k: int) -> np.array:
+    v_k = eigenbase[:, :k].T
+    print("\timage shape: {}".format(image.shape))
+    print("\tv_k shape: {}".format(v_k.shape))
+    return v_k @ image
+
 
 
 # 2DPCA
@@ -103,9 +114,9 @@ def get_feature_vectors(image: np.array, eigenbase: np.array, k: int) -> np.arra
 
 
 parser = argparse.ArgumentParser("process_images")
-parser.add_argument("use_smaller_images",
+parser.add_argument("-use_smaller_images",
                     help="Decrease image resolution for faster computation time",
-                    type=bool)
+                    action="store_true")
 parser.add_argument("scale_down_factor",
                     help="Factor by which to scale down image resolution",
                     type=int)
@@ -114,23 +125,41 @@ args = parser.parse_args()
 
 print("Reading images...")
 images = read_images(Path(faces_path), args.use_smaller_images, args.scale_down_factor)
+h, w = images.shape[1], images.shape[2]
+h2, w2 = h//2, w//2
+print("h2, w2: {}, {}".format(h2, w2))
 
-print("Calculating image feature vectors...")
-eigenvalues, eigenbase = get_eigenbase_for_images(images, 0, get_all=True, filename="amogus")
-feature_vectors = get_feature_vectors(images[0], eigenbase, 46)
-plt.imshow(feature_vectors)
+print("Calculating covariance...")
+flattened_images = flatten_images(images)
+covariance = get_1d_covariance_matrix(flattened_images)
+print("flattened_images shape: {}".format(flattened_images.shape))
+
+print("Calculating eigenvector base...")
+eigenvalues, eigenbase = get_eigenvalues_and_eigenvectors(covariance, h2*w2, filename="amogus")
+
+print("Projecting image...")
+column_image = flattened_images[0].reshape(-1, 1)
+projected_image = project_image(column_image, eigenbase, h2*w2)
+print("projected_image shape: {}".format(projected_image.shape))
+
+plt.imshow(projected_image.reshape(h2,w2))
 plt.show()
 
-# print("Calculating covariance...")
-# flattened_images = flatten_images(images)
-# covariance = get_1d_covariance_matrix(flattened_images)
+# print("Calculating image feature vectors...")
+# eigenvalues, eigenbase = get_eigenbase_for_images(images, 0, get_all=True, filename="amogus")
+# feature_vectors = get_feature_vectors(images[0], eigenbase, 46)
+# plt.imshow(feature_vectors)
+# plt.show()
 
-# print("Calculating eigenvector base...")
-# e, V = get_eigenvalues_and_eigenvectors(covariance, 100, filename="amogus")
-# print(e, V)
+# f, axs = plt.subplots(3, 3, figsize=(12,12))
+# for i, ax in enumerate(axs.flatten()):
+#     ax.imshow(V[:,-i-1].reshape(h, w))
+#     ax.axis('off')
+# plt.tight_layout()
+# plt.show()
+# control_pca = PCA(n_components=h2*w2)
+# pca_reduced = control_pca.fit_transform(flattened_images)
+# pca_reconstructed = control_pca.inverse_transform(pca_reduced)
 
-# print("Reducing dimensions...")
-# R = reduce_dimensions(flattened_images, V, 100)
-
-# plt.imshow(R[0].reshape(10,10))
+# plt.imshow(pca_reconstructed[1,:].reshape(h,w))
 # plt.show()
