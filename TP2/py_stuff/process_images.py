@@ -6,7 +6,7 @@ from image_paths import * # TODO: rename image_paths since it also contains matr
 from pathlib import Path
 from random import choices
 from string import ascii_letters
-from sklearn.decomposition import PCA
+# from sklearn.decomposition import PCA
 
 
 # Common functions
@@ -80,15 +80,14 @@ def get_1d_covariance_matrix(flattened_images: np.array) -> np.array:
 def reduce_dimensions(flattened_images: np.array, eigenbase: np.array, k: int) -> np.array:
     return flattened_images @ (eigenbase[:, :k])
 
-# image: column vector
-# V: eigenvector base
-# k: number of principal components to use
-def project_image(image: np.array, eigenbase: np.array, k: int) -> np.array:
-    v_k = eigenbase[:, :k].T
-    print("\timage shape: {}".format(image.shape))
-    print("\tv_k shape: {}".format(v_k.shape))
-    return v_k @ image
 
+def reconstruct_images(reduced_images: np.array, eigenbase: np.array, k: int) -> np.array:
+    return reduced_images @ eigenbase[:, :k].T
+
+
+def compress_images(flattened_images: np.array, eigenbase: np.array, k: int) -> np.array:
+    reduced_images = reduce_dimensions(flattened_images, eigenbase, k)
+    return reconstruct_images(reduced_images, eigenbase, k)
 
 
 # 2DPCA
@@ -126,8 +125,7 @@ args = parser.parse_args()
 print("Reading images...")
 images = read_images(Path(faces_path), args.use_smaller_images, args.scale_down_factor)
 h, w = images.shape[1], images.shape[2]
-h2, w2 = h//2, w//2
-print("h2, w2: {}, {}".format(h2, w2))
+EIGENBASE_SIZE = 100
 
 print("Calculating covariance...")
 flattened_images = flatten_images(images)
@@ -135,14 +133,12 @@ covariance = get_1d_covariance_matrix(flattened_images)
 print("flattened_images shape: {}".format(flattened_images.shape))
 
 print("Calculating eigenvector base...")
-eigenvalues, eigenbase = get_eigenvalues_and_eigenvectors(covariance, h2*w2, filename="amogus")
+eigenvalues, eigenbase = get_eigenvalues_and_eigenvectors(covariance, EIGENBASE_SIZE, filename="amogus")
 
-print("Projecting image...")
-column_image = flattened_images[0].reshape(-1, 1)
-projected_image = project_image(column_image, eigenbase, h2*w2)
-print("projected_image shape: {}".format(projected_image.shape))
+print("Compressing images...")
+compressed_images = compress_images(flattened_images, eigenbase, 30)
 
-plt.imshow(projected_image.reshape(h2,w2))
+plt.imshow(compressed_images[0].reshape(h,w))
 plt.show()
 
 # print("Calculating image feature vectors...")
