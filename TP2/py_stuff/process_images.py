@@ -20,7 +20,7 @@ def save_matrix_for_deflation(M: np.array, iters=10, tolerance=1e-17, filename=N
         f.write("%d\n" % dimension)
         for i in range(dimension):
             for j in range(dimension):
-                f.write("%.5f\n" % M[i,j])
+                f.write("%.7f\n" % M[i,j])
         f.write("%d\n" % iters)
         f.write("%.20f" % tolerance)
     
@@ -122,12 +122,18 @@ def compress_single_image_2DPCA(image: np.array, eigenbase: np.array, k: int) ->
 
 
 parser = argparse.ArgumentParser("process_images")
-parser.add_argument("-use_smaller_images",
+parser.add_argument("--use_smaller_images",
                     help="Decrease image resolution for faster computation time",
                     action="store_true")
-parser.add_argument("scale_down_factor",
+parser.add_argument("--scale_down_factor",
                     help="Factor by which to scale down image resolution",
-                    type=int)
+                    type=int, default=2)
+parser.add_argument("--iterations",
+                    help="Iterations for power method",
+                    type=int, default=10)
+parser.add_argument("--tolerance",
+                    help="Tolerance for power method convergence criterion",
+                    type=float, default=1e-17)
 
 args = parser.parse_args()
 
@@ -151,10 +157,15 @@ EIGENBASE_SIZE = 100
 # plt.show()
 
 print("Calculating eigenbase for 2DPCA...")
-eigenvalues, eigenbase = get_eigenbase_for_images(images, 0, get_all=True, filename="amogus")
+eigenvalues, eigenbase = get_eigenbase_for_images(images,
+                                                  0,
+                                                  iters=args.iterations,
+                                                  tolerance=args.tolerance,
+                                                  get_all=True,
+                                                  filename="amogus")
 
 print("Compressing image...")
-compressed_image = compress_single_image_2DPCA(images[0], eigenbase, 20)
+compressed_image = compress_single_image_2DPCA(images[20], eigenbase, 20)
 plt.imshow(compressed_image)
 plt.show()
 
