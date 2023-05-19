@@ -7,7 +7,7 @@ from pathlib import Path
 from random import choices
 from string import ascii_letters
 # from sklearn.decomposition import PCA
-
+from support import read_images
 
 # Common functions
 
@@ -25,21 +25,6 @@ def save_matrix_for_deflation(M: np.array, iters=10, tolerance=1e-17, filename=N
         f.write("%.20f" % tolerance)
     
     return str(file_path)
-
-
-def read_images(path_to_images, use_smaller_images, scale_down_factor=1) -> np.array:
-    paths = []
-    images = []
-
-    for path in sorted(list(path_to_images.rglob('*/*.pgm'))):
-        paths.append(path)
-        image = (plt.imread(path))
-        if use_smaller_images:
-            image = image[::scale_down_factor,::scale_down_factor] / 255
-        images.append(image)
-
-    return np.array(images)
-
 
 def get_eigenvalues_and_eigenvectors(M: np.array,
                                      k: int,
