@@ -1,5 +1,4 @@
 import argparse
-import deflate as d
 import matplotlib.pyplot as plt
 import numpy as np
 from image_paths import * # TODO: rename image_paths since it also contains matrix path now
@@ -56,15 +55,40 @@ def save_eigenvector_figure(eigenvectors: np.array,
         filename = ''.join(choices(ascii_letters, k=12))
     file_path = Path(figures_path, filename + '.png')
 
-    f, axs = plt.subplots(subplots_height, subplots_width, figsize=figsize)
+    _, axs = plt.subplots(subplots_height, subplots_width, figsize=figsize)
     for i, ax in enumerate(axs.flatten()):
-        ax.imshow(eigenvectors[:,-i-1].reshape(image_height, image_width), cmap=colourmap)
+        ax.imshow(eigenvectors[:,i].reshape(image_height, image_width), cmap=colourmap)
         ax.set_title("Autovector {}".format(i+1))
         ax.axis('off')
     plt.tight_layout()
     plt.savefig(file_path)
     return file_path
 
+
+def save_image_comparison(original_images: np.array,
+                          compressed_images: np.array,
+                          index: int,
+                          image_height: int,
+                          image_width: int,
+                          figsize: (int, int),
+                          filename=None,
+                          colourmap=plt.cm.viridis) -> str:
+    if not filename:
+        filename = ''.join(choices(ascii_letters, k=12))
+    file_path = Path(figures_path, filename + '.png')
+    _, axs = plt.subplots(1, 2, figsize=figsize)
+
+    axs[0].imshow(original_images[index].reshape(image_height, image_width), cmap=colourmap)
+    axs[0].set_title("Imagen original")
+    axs[0].axis('off')
+
+    axs[1].imshow(compressed_images[index].reshape(image_height, image_width), cmap=colourmap)
+    axs[1].set_title("Imagen comprimida")
+    axs[1].axis('off')
+
+    plt.tight_layout()
+    plt.savefig(file_path)
+    return file_path
 
 
 parser = argparse.ArgumentParser("process_images")
@@ -85,78 +109,21 @@ parser.add_argument("--tolerance",
                     type=float, default=1e-17)
 
 args = parser.parse_args()
-
-print("Reading images...")
-images = read_images(Path(faces_path), args.use_smaller_images, args.scale_down_factor)
-h, w = images.shape[1], images.shape[2]
-
-print("Calculating covariance...")
-pca = PCA()
-flattened_images = pca.flatten_images(images)
-covariance = pca.create_covariance_matrix(flattened_images)
-print("flattened_images shape: {}".format(flattened_images.shape))
-
-#print("Calculating eigenbase for 2DPCA...")
-#eigenvalues, eigenbase = get_eigenbase_for_images(images,
-#                                                  0,
-#                                                  iters=args.iterations,
-#                                                  tolerance=args.tolerance,
-#                                                  get_all=True,
-#                                                  filename="amogus")
-#
-#print("Compressing image...")
-#compressed_image = compress_single_image_2DPCA(images[20], eigenbase, 20)
-#plt.imshow(compressed_image)
-#plt.show()
-print("Calculating eigenvector base...")
+number_of_eigenvectors = args.number_of_eigenvectors
 iterations = args.iterations
 tolerance = args.tolerance
-eigenvalues, eigenbase = get_eigenvalues_and_eigenvectors(covariance, args.number_of_eigenvectors, iterations, tolerance, filename="amogus")
+scale_down_factor = args.scale_down_factor
+print("number of eigenvectors: {}, iterations: {}, tolerance: {}".format(number_of_eigenvectors, iterations, tolerance))
 
-subplots_h = 3
-subplots_w = 3
-filename = "eigenvectors_{}x{}_{}iterations_tolerance{}".format(subplots_h,
-                                                                subplots_w,
-                                                                iterations,
-                                                                tolerance)
-print("Saving eigenvector images...")
-save_eigenvector_figure(eigenbase, h, w, subplots_h, subplots_w, (12,12), filename)
+print("Reading images...")
+images = read_images(Path(faces_path), args.use_smaller_images, scale_down_factor)
+h, w = images.shape[1], images.shape[2]
 
-# print("Compressing images...")
-# compressed_images = compress_images_1DPCA(flattened_images, eigenbase, 30)
+pca = PCA(number_of_eigenvectors, iterations, tolerance)
+pca.fit(images, "amogus")
+compressed_images = pca.transform(images, number_of_eigenvectors)
+# print(compressed_images[0].shape)
+# plt.imshow(compressed_images[0].reshape(h, w))
 
-# plt.imshow(compressed_images[0].reshape(h,w))
-# plt.show()
-
-# print("Calculating eigenbase for 2DPCA...")
-# eigenvalues, eigenbase = get_eigenbase_for_images(images,
-#                                                   0,
-#                                                   iters=args.iterations,
-#                                                   tolerance=args.tolerance,
-#                                                   get_all=True,
-#                                                   filename="amogus")
-
-# print("Compressing image...")
-# compressed_image = compress_single_image_2DPCA(images[20], eigenbase, 20)
-# plt.imshow(compressed_image)
-# plt.show()
-
-# f, axs = plt.subplots(3, 3, figsize=(12,12))
-# for i, ax in enumerate(axs.flatten()):
-#     ax.imshow(V[:,-i-1].reshape(h, w))
-#     ax.axis('off')
-# plt.tight_layout()
-# plt.show()
-# control_pca = PCA(n_components=h2*w2)
-# pca_reduced = control_pca.fit_transform(flattened_images)
-# pca_reconstructed = control_pca.inverse_transform(pca_reduced)
-
-# plt.imshow(pca_reconstructed[1,:].reshape(h,w))
-# plt.show()
-
-pca = PCA()
-pca.fit(images)
-compressed_images = pca.transform(images)
-print(compressed_images[0].shape)
-plt.imshow(compressed_images[0].reshape(h, w))
+save_image_comparison(images, compressed_images, 26, h, w, (12,12), "image_comparison_26")
 plt.show()

@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import deflate as d
 from image_paths import *
 from pathlib import Path
+from random import choices
+from string import ascii_letters
 
 def read_images(path_to_images, use_smaller_images, scale_down_factor=1) -> np.array:
     paths = []
@@ -22,19 +24,13 @@ def get_eigenvalues_and_eigenvectors(M: np.array,
                                      k: int = 100,
                                      iters = 10,
                                      tolerance = 1e-17,
-                                     filename = 'amogus',
-                                     get_all = False) -> (np.array, np.array):
-    if get_all:
-        number_of_eigenvalues = M.shape[0]
-    else:
-        number_of_eigenvalues = k
-
+                                     filename = 'amogus') -> (np.array, np.array):
     print("\tSaving matrix...")
     filename = save_matrix_for_deflation(M, iters, tolerance, filename)
     print("\tSaved matrix to file {}".format(filename))
 
     print("\tDeflating...")
-    e, v = d.deflate(filename, np.ones(M.shape[0]), number_of_eigenvalues)
+    e, v = d.deflate(filename, np.ones(M.shape[0]), k)
     return np.array(e), np.array(v).T # return vectors as columns
 
 # common functions
