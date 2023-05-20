@@ -27,8 +27,8 @@ pybind11_add_module(deflate src/main.cpp ${power_iteration})
 
 get_filename_component(FACES_PATH caras ABSOLUTE)
 get_filename_component(MATRICES_PATH matrices ABSOLUTE)
+get_filename_component(FIGURES_PATH figures ABSOLUTE)
 configure_file(py_stuff/image_paths.in.py ../py_stuff/image_paths.py)
-# configure_file(py_stuff/image_paths.in.py ../py_stuff/image_paths.py)
 
 #TODO (create power iteration as a lib that links the tests/python lib)
 #if (UNITY) 

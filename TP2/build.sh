@@ -20,4 +20,6 @@ else
     ninja
 fi
 
-
+echo "Copying deflate to Python folder"
+cp deflate.cpython* ../py_stuff/
+echo "Copied deflate to Python folder"

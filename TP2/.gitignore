@@ -3,6 +3,7 @@
 build/
 caras/
 eigen/
+figures/
 matrices/
 py_stuff/__pycache__
 py_stuff/image_paths.py

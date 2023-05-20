@@ -6,7 +6,6 @@ from image_paths import * # TODO: rename image_paths since it also contains matr
 from pathlib import Path
 from random import choices
 from string import ascii_letters
-# from sklearn.decomposition import PCA
 from support import read_images
 
 # Common functions
@@ -106,6 +105,31 @@ def compress_single_image_2DPCA(image: np.array, eigenbase: np.array, k: int) ->
     return reconstruct_image_2DPCA(feature_vectors, eigenbase, k)
 
 
+# Figures
+
+def save_eigenvector_figure(eigenvectors: np.array,
+                            image_height: int,
+                            image_width: int,
+                            subplots_height: int,
+                            subplots_width: int,
+                            figsize: (int, int),
+                            filename=None,
+                            colourmap=plt.cm.viridis) -> str:
+    if not filename:
+        filename = ''.join(choices(ascii_letters, k=12))
+    file_path = Path(figures_path, filename + '.png')
+
+    f, axs = plt.subplots(subplots_height, subplots_width, figsize=figsize)
+    for i, ax in enumerate(axs.flatten()):
+        ax.imshow(eigenvectors[:,-i-1].reshape(image_height, image_width), cmap=colourmap)
+        ax.set_title("Autovector {}".format(i+1))
+        ax.axis('off')
+    plt.tight_layout()
+    plt.savefig(file_path)
+    return file_path
+
+
+
 parser = argparse.ArgumentParser("process_images")
 parser.add_argument("--use_smaller_images",
                     help="Decrease image resolution for faster computation time",
@@ -113,6 +137,9 @@ parser.add_argument("--use_smaller_images",
 parser.add_argument("--scale_down_factor",
                     help="Factor by which to scale down image resolution",
                     type=int, default=2)
+parser.add_argument("--number_of_eigenvectors",
+                    help="Number of eigenvectors to compute",
+                    type=int, default=100)
 parser.add_argument("--iterations",
                     help="Iterations for power method",
                     type=int, default=10)
@@ -125,15 +152,25 @@ args = parser.parse_args()
 print("Reading images...")
 images = read_images(Path(faces_path), args.use_smaller_images, args.scale_down_factor)
 h, w = images.shape[1], images.shape[2]
-EIGENBASE_SIZE = 100
 
-# print("Calculating covariance...")
-# flattened_images = flatten_images(images)
-# covariance = get_1d_covariance_matrix(flattened_images)
-# print("flattened_images shape: {}".format(flattened_images.shape))
+print("Calculating covariance...")
+flattened_images = flatten_images(images)
+covariance = get_1d_covariance_matrix(flattened_images)
+print("flattened_images shape: {}".format(flattened_images.shape))
 
-# print("Calculating eigenvector base...")
-# eigenvalues, eigenbase = get_eigenvalues_and_eigenvectors(covariance, EIGENBASE_SIZE, filename="amogus")
+print("Calculating eigenvector base...")
+iterations = args.iterations
+tolerance = args.tolerance
+eigenvalues, eigenbase = get_eigenvalues_and_eigenvectors(covariance, args.number_of_eigenvectors, iterations, tolerance, filename="amogus")
+
+subplots_h = 3
+subplots_w = 3
+filename = "eigenvectors_{}x{}_{}iterations_tolerance{}".format(subplots_h,
+                                                                subplots_w,
+                                                                iterations,
+                                                                tolerance)
+print("Saving eigenvector images...")
+save_eigenvector_figure(eigenbase, h, w, subplots_h, subplots_w, (12,12), filename)
 
 # print("Compressing images...")
 # compressed_images = compress_images_1DPCA(flattened_images, eigenbase, 30)
@@ -141,18 +178,18 @@ EIGENBASE_SIZE = 100
 # plt.imshow(compressed_images[0].reshape(h,w))
 # plt.show()
 
-print("Calculating eigenbase for 2DPCA...")
-eigenvalues, eigenbase = get_eigenbase_for_images(images,
-                                                  0,
-                                                  iters=args.iterations,
-                                                  tolerance=args.tolerance,
-                                                  get_all=True,
-                                                  filename="amogus")
+# print("Calculating eigenbase for 2DPCA...")
+# eigenvalues, eigenbase = get_eigenbase_for_images(images,
+#                                                   0,
+#                                                   iters=args.iterations,
+#                                                   tolerance=args.tolerance,
+#                                                   get_all=True,
+#                                                   filename="amogus")
 
-print("Compressing image...")
-compressed_image = compress_single_image_2DPCA(images[20], eigenbase, 20)
-plt.imshow(compressed_image)
-plt.show()
+# print("Compressing image...")
+# compressed_image = compress_single_image_2DPCA(images[20], eigenbase, 20)
+# plt.imshow(compressed_image)
+# plt.show()
 
 # f, axs = plt.subplots(3, 3, figsize=(12,12))
 # for i, ax in enumerate(axs.flatten()):
