@@ -6,72 +6,9 @@ from image_paths import * # TODO: rename image_paths since it also contains matr
 from pathlib import Path
 from random import choices
 from string import ascii_letters
-from support import read_images
+from utilities import * 
+from PCA import PCA
 
-# Common functions
-
-def save_matrix_for_deflation(M: np.array, iters=10, tolerance=1e-17, filename=None) -> str:
-    if not filename:
-        filename = ''.join(choices(ascii_letters, k=12))
-    file_path = Path(matrices_path, filename)
-    dimension = M.shape[0]
-    with open(file_path, 'w') as f:
-        f.write("%d\n" % dimension)
-        for i in range(dimension):
-            for j in range(dimension):
-                f.write("%.7f\n" % M[i,j])
-        f.write("%d\n" % iters)
-        f.write("%.20f" % tolerance)
-    
-    return str(file_path)
-
-def get_eigenvalues_and_eigenvectors(M: np.array,
-                                     k: int,
-                                     iters=10,
-                                     tolerance=1e-17,
-                                     filename=None,
-                                     get_all=False) -> (np.array, np.array):
-    if get_all:
-        number_of_eigenvalues = M.shape[0]
-    else:
-        number_of_eigenvalues = k
-
-    print("\tSaving matrix...")
-    filename = save_matrix_for_deflation(M, iters, tolerance, filename)
-    print("\tSaved matrix to file {}".format(filename))
-
-    print("\tDeflating...")
-    e, v = d.deflate(filename, np.ones(M.shape[0]), number_of_eigenvalues)
-    return np.array(e), np.array(v).T # return vectors as columns
-
-
-# 1DPCA
-
-def flatten_images(images: np.array) -> np.array:
-    square_images = np.stack(images)
-    flattened_images = square_images.reshape(square_images.shape[0], square_images[0].size)
-    return flattened_images
-
-
-def get_1d_covariance_matrix(flattened_images: np.array) -> np.array:
-    n = flattened_images.shape[0]
-    centred_images = flattened_images - np.mean(flattened_images, axis=0) # subtract average from each
-    covariance = centred_images.T @ centred_images
-    covariance = covariance / (n-1)
-    return covariance
-
-
-def reduce_dimensions(flattened_images: np.array, eigenbase: np.array, k: int) -> np.array:
-    return flattened_images @ (eigenbase[:, :k])
-
-
-def reconstruct_images_1DPCA(reduced_images: np.array, eigenbase: np.array, k: int) -> np.array:
-    return reduced_images @ eigenbase[:, :k].T
-
-
-def compress_images_1DPCA(flattened_images: np.array, eigenbase: np.array, k: int) -> np.array:
-    reduced_images = reduce_dimensions(flattened_images, eigenbase, k)
-    return reconstruct_images_1DPCA(reduced_images, eigenbase, k)
 
 
 # 2DPCA
@@ -154,10 +91,23 @@ images = read_images(Path(faces_path), args.use_smaller_images, args.scale_down_
 h, w = images.shape[1], images.shape[2]
 
 print("Calculating covariance...")
-flattened_images = flatten_images(images)
-covariance = get_1d_covariance_matrix(flattened_images)
+pca = PCA()
+flattened_images = pca.flatten_images(images)
+covariance = pca.create_covariance_matrix(flattened_images)
 print("flattened_images shape: {}".format(flattened_images.shape))
 
+#print("Calculating eigenbase for 2DPCA...")
+#eigenvalues, eigenbase = get_eigenbase_for_images(images,
+#                                                  0,
+#                                                  iters=args.iterations,
+#                                                  tolerance=args.tolerance,
+#                                                  get_all=True,
+#                                                  filename="amogus")
+#
+#print("Compressing image...")
+#compressed_image = compress_single_image_2DPCA(images[20], eigenbase, 20)
+#plt.imshow(compressed_image)
+#plt.show()
 print("Calculating eigenvector base...")
 iterations = args.iterations
 tolerance = args.tolerance
@@ -203,3 +153,10 @@ save_eigenvector_figure(eigenbase, h, w, subplots_h, subplots_w, (12,12), filena
 
 # plt.imshow(pca_reconstructed[1,:].reshape(h,w))
 # plt.show()
+
+pca = PCA()
+pca.fit(images)
+compressed_images = pca.transform(images)
+print(compressed_images[0].shape)
+plt.imshow(compressed_images[0].reshape(h, w))
+plt.show()
