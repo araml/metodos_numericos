@@ -6,6 +6,19 @@ from PCA import PCA
 from random import choices
 from string import ascii_letters
 
+
+def plot_eigenvalues(eigenvalues: np.array, filename: str):
+    file_path = Path(figures_path, filename + '.png')
+    x = np.arange(1, eigenvalues.size+1)
+    plt.plot(x, eigenvalues, '-o')
+    plt.xticks(x)
+    plt.xlabel("Número de componente")
+    plt.ylabel("Autovalor")
+    plt.title("{} primeros autovalores".format(eigenvalues.size))
+    plt.savefig(file_path)
+    return file_path
+
+
 def save_eigenvector_figure(eigenvectors: np.array,
                             image_height: int,
                             image_width: int,

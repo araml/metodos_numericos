@@ -70,15 +70,9 @@ print("number of eigenvectors: {}, iterations: {}, tolerance: {}".format(number_
 
 print("Reading images...")
 images = read_images(Path(faces_path), args.use_smaller_images, scale_down_factor)
-h, w = images.shape[1], images.shape[2]
 
 pca = PCA(number_of_eigenvectors, iterations, tolerance)
-pca.fit(images, "amogus")
 
-create_pca_image_comparison(pca, images, 120, number_of_components, (12,12), plt.cm.magma)
-create_pca_image_comparison(pca, images, 130, number_of_components, (12,12), plt.cm.magma)
-create_pca_image_comparison(pca, images, 140, number_of_components, (12,12), plt.cm.magma)
-create_pca_image_comparison(pca, images, 150, number_of_components, (12,12), plt.cm.magma)
-create_pca_image_comparison(pca, images, 160, number_of_components, (12,12), plt.cm.magma)
-create_pca_image_comparison(pca, images, 170, number_of_components, (12,12), plt.cm.magma)
-create_pca_image_comparison(pca, images, 180, number_of_components, (12,12), plt.cm.magma)
+covariance_matrix = pca.create_covariance_matrix(pca.flatten_images(images))
+eigenvalues, _ = get_eigenvalues_and_eigenvectors(covariance_matrix, number_of_eigenvectors, iterations, tolerance)
+plot_eigenvalues(eigenvalues, "{}_eigenvalues".format(eigenvalues.size))
