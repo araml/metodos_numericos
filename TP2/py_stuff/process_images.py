@@ -22,10 +22,9 @@ def get_eigenbase_for_images(images: np.array,
                              k: int,
                              iters=10,
                              tolerance=1e-17,
-                             filename=None,
-                             get_all=False) -> (np.array, np.array):
+                             filename=None) -> (np.array, np.array):
     G = get_image_covariance_matrix(images)
-    return get_eigenvalues_and_eigenvectors(G, k, iters, tolerance, filename, get_all)
+    return get_eigenvalues_and_eigenvectors(G, k, iters, tolerance, filename)
 
 
 def get_feature_vectors(image: np.array, eigenbase: np.array, k: int) -> np.array:
@@ -125,5 +124,5 @@ compressed_images = pca.transform(images, number_of_eigenvectors)
 # print(compressed_images[0].shape)
 # plt.imshow(compressed_images[0].reshape(h, w))
 
-save_image_comparison(images, compressed_images, 26, h, w, (12,12), "image_comparison_26")
+save_image_comparison(images, compressed_images, 36, h, w, (12,12), "image_comparison_36", colourmap=plt.cm.gray)
 plt.show()

@@ -9,8 +9,6 @@ class PCA:
         self.iterations = iterations
         self.tolerance = tolerance
 
-        self.flattened_images = None
-
     # TODO
     def change_PCA_dimension(self, dimension: int) -> None:
         pass
@@ -21,8 +19,8 @@ class PCA:
         return flattened_images
 
     def fit(self, images: np.array, filename = None) -> None: 
-        self.flattened_images = self.flatten_images(images)
-        covariance = self.create_covariance_matrix(self.flattened_images)
+        flattened_images = self.flatten_images(images)
+        covariance = self.create_covariance_matrix(flattened_images)
         self.eigenvalues, self.eigenbase = get_eigenvalues_and_eigenvectors(covariance, self.number_of_components, self.iterations, self.tolerance, filename)
 
     def transform(self, images: np.array, k: int = 30) -> np.array:
