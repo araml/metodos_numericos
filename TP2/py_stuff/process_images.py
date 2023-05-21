@@ -64,9 +64,8 @@ def save_eigenvector_figure(eigenvectors: np.array,
     return file_path
 
 
-def save_image_comparison(original_images: np.array,
-                          compressed_images: np.array,
-                          index: int,
+def save_image_comparison(original_image: np.array,
+                          compressed_image: np.array,
                           image_height: int,
                           image_width: int,
                           figsize: (int, int),
@@ -77,17 +76,24 @@ def save_image_comparison(original_images: np.array,
     file_path = Path(figures_path, filename + '.png')
     _, axs = plt.subplots(1, 2, figsize=figsize)
 
-    axs[0].imshow(original_images[index].reshape(image_height, image_width), cmap=colourmap)
+    axs[0].imshow(original_image.reshape(image_height, image_width), cmap=colourmap)
     axs[0].set_title("Imagen original")
     axs[0].axis('off')
 
-    axs[1].imshow(compressed_images[index].reshape(image_height, image_width), cmap=colourmap)
+    axs[1].imshow(compressed_image.reshape(image_height, image_width), cmap=colourmap)
     axs[1].set_title("Imagen comprimida")
     axs[1].axis('off')
 
     plt.tight_layout()
     plt.savefig(file_path)
     return file_path
+
+
+def create_pca_image_comparison(pca: PCA, images: np.array, image_index: int, number_of_components: int, figsize: (int, int), colourmap=plt.cm.viridis):
+    h, w = images.shape[1], images.shape[2]
+    original_image, compressed_image = pca.get_image_comparison(images, image_index, number_of_components)
+    filename = "image_comparison_{}_{}components_{}".format(image_index, number_of_components, colourmap)
+    return save_image_comparison(original_image, compressed_image, h, w, figsize, filename, colourmap)
 
 
 parser = argparse.ArgumentParser("process_images")
@@ -100,6 +106,9 @@ parser.add_argument("--scale_down_factor",
 parser.add_argument("--number_of_eigenvectors",
                     help="Number of eigenvectors to compute",
                     type=int, default=100)
+parser.add_argument("--number_of_components",
+                    help="Number of components to use",
+                    type=int, default=100)
 parser.add_argument("--iterations",
                     help="Iterations for power method",
                     type=int, default=10)
@@ -109,6 +118,7 @@ parser.add_argument("--tolerance",
 
 args = parser.parse_args()
 number_of_eigenvectors = args.number_of_eigenvectors
+number_of_components = args.number_of_components
 iterations = args.iterations
 tolerance = args.tolerance
 scale_down_factor = args.scale_down_factor
@@ -120,9 +130,11 @@ h, w = images.shape[1], images.shape[2]
 
 pca = PCA(number_of_eigenvectors, iterations, tolerance)
 pca.fit(images, "amogus")
-compressed_images = pca.transform(images, number_of_eigenvectors)
-# print(compressed_images[0].shape)
-# plt.imshow(compressed_images[0].reshape(h, w))
 
-save_image_comparison(images, compressed_images, 36, h, w, (12,12), "image_comparison_36", colourmap=plt.cm.gray)
-plt.show()
+create_pca_image_comparison(pca, images, 120, number_of_components, (12,12), plt.cm.magma)
+create_pca_image_comparison(pca, images, 130, number_of_components, (12,12), plt.cm.magma)
+create_pca_image_comparison(pca, images, 140, number_of_components, (12,12), plt.cm.magma)
+create_pca_image_comparison(pca, images, 150, number_of_components, (12,12), plt.cm.magma)
+create_pca_image_comparison(pca, images, 160, number_of_components, (12,12), plt.cm.magma)
+create_pca_image_comparison(pca, images, 170, number_of_components, (12,12), plt.cm.magma)
+create_pca_image_comparison(pca, images, 180, number_of_components, (12,12), plt.cm.magma)

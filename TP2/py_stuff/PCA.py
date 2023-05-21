@@ -33,3 +33,7 @@ class PCA:
         # subtract average from each
         centred_images = flattened_images - np.mean(flattened_images, axis=0) 
         return (centred_images.T @ centred_images) / (n - 1)
+    
+    def get_image_comparison(self, images: np.array, image_index: int, k: int = 30) -> (np.array, np.array):
+        compressed_images = self.transform(images, k)
+        return images[image_index], compressed_images[image_index]
