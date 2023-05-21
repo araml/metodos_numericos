@@ -6,7 +6,7 @@ eigen/
 figures/
 matrices/
 py_stuff/__pycache__
-py_stuff/image_paths.py
+py_stuff/data_paths.py
 py_stuff/*deflate*
 pybind11/
 tests/config_tests.h

@@ -1,4 +1,4 @@
-from image_paths import *
+from data_paths import *
 from matplotlib import pyplot as plt
 import numpy as np
 from pathlib import Path

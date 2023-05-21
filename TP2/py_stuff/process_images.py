@@ -2,7 +2,7 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 from figure_generation import *
-from image_paths import * # TODO: rename image_paths since it also contains matrix path now
+from data_paths import *
 from pathlib import Path
 from utilities import * 
 from PCA import PCA
