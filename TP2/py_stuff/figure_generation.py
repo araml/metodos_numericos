@@ -72,7 +72,7 @@ def create_pca_image_comparison(pca_engine,
                                 figsize: (int, int),
                                 colourmap=plt.cm.viridis) -> str:
     h, w = images.shape[1], images.shape[2]
-    pca_engine.change_PCA_dimension(k)
+    pca_engine.set_components_dimension(k)
     original_image = images[image_index]
     compressed_image = pca_engine.transform(np.array(image))[0]
     filename = "image_comparison_{}_{}components_{}".format(image_index, number_of_components, colourmap.name)
