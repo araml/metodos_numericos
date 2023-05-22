@@ -65,14 +65,15 @@ def save_image_comparison(original_image: np.array,
     plt.savefig(file_path)
     return file_path
 
-
-def create_pca_image_comparison(pca: PCA,
+def create_pca_image_comparison(pca_engine,
                                 images: np.array,
                                 image_index: int,
                                 number_of_components: int,
                                 figsize: (int, int),
                                 colourmap=plt.cm.viridis) -> str:
     h, w = images.shape[1], images.shape[2]
-    original_image, compressed_image = pca.get_image_comparison(images, image_index, number_of_components)
+    pca_engine.change_PCA_dimension(k)
+    original_image = images[image_index]
+    compressed_image = pca_engine.transform(np.array(image))[0]
     filename = "image_comparison_{}_{}components_{}".format(image_index, number_of_components, colourmap.name)
     return save_image_comparison(original_image, compressed_image, h, w, figsize, filename, colourmap)
