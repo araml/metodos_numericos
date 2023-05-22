@@ -6,39 +6,10 @@ from data_paths import *
 from pathlib import Path
 from utilities import * 
 from PCA import PCA
-
+from PCA2D import PCA2D
 
 
 # 2DPCA
-
-def get_image_covariance_matrix(images: np.array) -> np.array:
-    mean_pixel_values = np.mean(images, axis=0)
-    centred_images = images - mean_pixel_values
-    return np.mean(np.array([image.T @ image for image in centred_images]), axis=0)
-
-
-def get_eigenbase_for_images(images: np.array,
-                             k: int,
-                             iters=10,
-                             tolerance=1e-17,
-                             filename=None) -> (np.array, np.array):
-    G = get_image_covariance_matrix(images)
-    return get_eigenvalues_and_eigenvectors(G, k, iters, tolerance, filename)
-
-
-def get_feature_vectors(image: np.array, eigenbase: np.array, k: int) -> np.array:
-    return image @ eigenbase[:, :k]
-
-
-def reconstruct_image_2DPCA(feature_vectors: np.array, eigenbase: np.array, k: int) -> np.array:
-    return feature_vectors @ eigenbase[:, :k].T
-
-
-def compress_single_image_2DPCA(image: np.array, eigenbase: np.array, k: int) -> np.array:
-    feature_vectors = get_feature_vectors(image, eigenbase, k)
-    return reconstruct_image_2DPCA(feature_vectors, eigenbase, k)
-
-
 
 parser = argparse.ArgumentParser("process_images")
 parser.add_argument("--use_smaller_images",
@@ -71,8 +42,16 @@ print("number of eigenvectors: {}, iterations: {}, tolerance: {}".format(number_
 print("Reading images...")
 images = read_images(Path(faces_path), args.use_smaller_images, scale_down_factor)
 
-pca = PCA(number_of_eigenvectors, iterations, tolerance)
+#pca = PCA(number_of_eigenvectors, iterations, tolerance)
+#
+#covariance_matrix = pca.create_covariance_matrix(pca.flatten_images(images))
+#eigenvalues, _ = get_eigenvalues_and_eigenvectors(covariance_matrix, number_of_eigenvectors, iterations, tolerance)
+#plot_eigenvalues(eigenvalues, "{}_eigenvalues".format(eigenvalues.size))
+#
+#
 
-covariance_matrix = pca.create_covariance_matrix(pca.flatten_images(images))
-eigenvalues, _ = get_eigenvalues_and_eigenvectors(covariance_matrix, number_of_eigenvectors, iterations, tolerance)
-plot_eigenvalues(eigenvalues, "{}_eigenvalues".format(eigenvalues.size))
+pca_2d = PCA2D(15, iterations, tolerance, filename = "amogus")
+pca_2d.fit(images)
+compressed_image = pca_2d.transform(np.array(images[20]))
+plt.imshow(compressed_image)
+plt.show()
