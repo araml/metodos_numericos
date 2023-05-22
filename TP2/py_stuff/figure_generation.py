@@ -2,7 +2,7 @@ from data_paths import *
 from matplotlib import pyplot as plt
 import numpy as np
 from pathlib import Path
-from PCA import PCA
+from PCA import PCA, PCABase
 from random import choices
 from string import ascii_letters
 
@@ -65,15 +65,12 @@ def save_image_comparison(original_image: np.array,
     plt.savefig(file_path)
     return file_path
 
-def create_pca_image_comparison(pca_engine,
+def create_pca_image_comparison(pca_engine: PCABase,
                                 images: np.array,
                                 image_index: int,
-                                number_of_components: int,
                                 figsize: (int, int),
                                 colourmap=plt.cm.viridis) -> str:
     h, w = images.shape[1], images.shape[2]
-    pca_engine.set_components_dimension(k)
-    original_image = images[image_index]
-    compressed_image = pca_engine.transform(np.array(image))[0]
-    filename = "image_comparison_{}_{}components_{}".format(image_index, number_of_components, colourmap.name)
+    original_image, compressed_image = pca_engine.get_image_comparison(images, image_index)
+    filename = "image_comparison_{}_{}components_{}_{}".format(image_index, pca_engine.k, colourmap.name, pca_engine.name)
     return save_image_comparison(original_image, compressed_image, h, w, figsize, filename, colourmap)

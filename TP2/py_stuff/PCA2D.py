@@ -1,18 +1,15 @@
-import numpy as np 
+import numpy as np
+from PCA import PCABase
 from utilities import get_eigenvalues_and_eigenvectors 
 
-class PCA2D:
+class PCA2D(PCABase):
     def __init__(self, 
                  k: int, 
                  iterations: int = 10, 
                  tolerance: float = 1e-17,
                  filename: str = None):
-        self.eigenvectors = []
-        self.eigenvalues = []
-        self.k = k
-        self.tolerance = tolerance
-        self.iterations = iterations
-        self.filename = filename
+        super(PCA2D, self).__init__(k, iterations, tolerance, filename)
+        self.name = "2DPCA"
 
     def fit(self, images: np.array) -> None:
             G = self.get_image_covariance_matrix(images)
@@ -22,10 +19,15 @@ class PCA2D:
 
     def transform(self, images: np.array) -> np.array:
         compressed_images = []
-        for image in images: 
+        for image in images:
             compressed_images.append(self.compress_image(image))
 
         return compressed_images
+    
+    def get_image_comparison(self, images: np.array, 
+                             image_index: int) -> (np.array, np.array):
+        compressed_images = self.transform(images)
+        return images[image_index], compressed_images[image_index]
 
     def compress_image(self, image: np.array) -> np.array:
         feature_vectors = image @ self.eigenvectors[:, :self.k]
