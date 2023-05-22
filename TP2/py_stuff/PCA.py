@@ -15,9 +15,9 @@ class PCA:
 
     def change_PCA_dimension(self, dimension: int) -> None:
         if k > len(eigenvalues):
-            raise ValueError(f'Changed PCA components to {k} but max is
-                    {len(eigenvalues)}, please rerun `fit` if you want to use
-                    more components')
+            raise ValueError(f'Changed PCA components to {k} but max is'
+                    '{len(eigenvalues)}, please rerun `fit` if you want to use'
+                    'more components')
             
         self.k = dimension
 
