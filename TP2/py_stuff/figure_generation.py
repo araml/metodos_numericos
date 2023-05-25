@@ -65,6 +65,7 @@ def save_image_comparison(original_image: np.array,
     plt.savefig(file_path)
     return file_path
 
+
 def create_pca_image_comparison(pca_engine: PCABase,
                                 images: np.array,
                                 image_index: int,
@@ -74,3 +75,19 @@ def create_pca_image_comparison(pca_engine: PCABase,
     original_image, compressed_image = pca_engine.get_image_comparison(images, image_index)
     filename = "image_comparison_{}_{}components_{}_{}".format(image_index, pca_engine.k, colourmap.name, pca_engine.name)
     return save_image_comparison(original_image, compressed_image, h, w, figsize, filename, colourmap)
+
+
+def create_corrcoef_figure(pca_engine: PCABase,
+                           images: np.array,
+                           colourmap=plt.cm.GnBu):
+    centred_images = pca_engine.centre_images(images)
+    flattened_compressed_images = pca_engine.flatten_images(pca_engine.transform(images))
+    similarity = np.corrcoef(centred_images, flattened_compressed_images)
+    
+    filename = "corrcoef_{}components_{}_{}".format(pca_engine.k, colourmap.name, pca_engine.name)
+    file_path = Path(figures_path, filename + '.png')
+
+    plt.pcolor(similarity, cmap=colourmap)
+    cb = plt.colorbar()
+    plt.savefig(file_path)
+    cb.remove()

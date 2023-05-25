@@ -23,6 +23,17 @@ class PCABase:
     def get_image_comparison(self, images: np.array, 
                              image_index: int) -> (np.array, np.array):
         raise NotImplementedError("Must be implemented in derived class")
+    
+    def centre_images(self, images: np.array) -> np.array:
+        # subtract average from each
+        flattened_images = self.flatten_images(images)
+        return flattened_images - np.mean(flattened_images, axis=0)
+    
+    def flatten_images(self, images: np.array) -> np.array:
+        square_images = np.stack(images)
+        flattened_images = square_images.reshape(square_images.shape[0], 
+                                                 square_images[0].size)
+        return flattened_images
 
 
 class PCA(PCABase):
@@ -50,20 +61,13 @@ class PCA(PCABase):
 
     def create_covariance_matrix(self, flattened_images: np.array) -> np.array:
         n = flattened_images.shape[0]
-        # subtract average from each
-        centred_images = flattened_images - np.mean(flattened_images, axis=0)
+        centred_images = self.centre_images(flattened_images)
         return (centred_images.T @ centred_images) / (n - 1)
     
     def get_image_comparison(self, images: np.array, 
                              image_index: int) -> (np.array, np.array):
         compressed_images = self.transform(images)
         return images[image_index], compressed_images[image_index]
-
-    def flatten_images(self, images: np.array) -> np.array:
-        square_images = np.stack(images)
-        flattened_images = square_images.reshape(square_images.shape[0], 
-                                                 square_images[0].size)
-        return flattened_images
 
     def set_components_dimension(self, dimension: int) -> None:
         if self.k > len(self.eigenvalues):

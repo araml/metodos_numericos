@@ -8,8 +8,8 @@ from PCA import PCA
 from PCA2D import PCA2D
 import parser
 
-parser = create_parser()
-args = parser.parse_args()
+p = parser.create_parser()
+args = p.parse_args()
 number_of_eigenvectors = args.number_of_eigenvectors
 iterations = args.iterations
 tolerance = args.tolerance
