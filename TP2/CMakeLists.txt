@@ -5,7 +5,7 @@ enable_testing()
 
 option(BUILD_TEST "Builds a suite of tests")
 
-set(CMAKE_CXX_FLAGS "-ggdb -std=c++2a")
+set(CMAKE_CXX_FLAGS "-O2 -ggdb -std=c++2a")
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
    add_compile_options (-fdiagnostics-color=always)
@@ -21,7 +21,6 @@ endmacro()
 add_files(power_iteration)
 include_directories(src)
 include_directories(eigen)
-#find_package(Python 3.9 COMPONENTS Interpreter Development REQUIRED)
 add_subdirectory(pybind11)
 pybind11_add_module(deflate src/main.cpp ${power_iteration})
 
@@ -54,5 +53,9 @@ if (BUILD_TESTS)
 
     add_custom_test(test_eigen tests/test_eigen.cpp ${power_iteration})
     add_custom_test(test_read_matrix tests/test_read_matrix.cpp ${power_iteration})
+    
+    # Add python tests
+    add_test(NAME python-tests COMMAND 
+        ${PYTHON_EXECUTABLE} -m unittest discover "${CMAKE_CURRENT_SOURCE_DIR}/py_stuff")
 endif()
 
