@@ -27,6 +27,7 @@ pybind11_add_module(deflate src/main.cpp ${power_iteration})
 get_filename_component(FACES_PATH caras ABSOLUTE)
 get_filename_component(MATRICES_PATH matrices ABSOLUTE)
 get_filename_component(FIGURES_PATH figures ABSOLUTE)
+get_filename_component(FIGURES_EXPERIMENTS_PATH "caras_experimentos" ABSOLUTE)
 configure_file(py_stuff/data_paths.in.py ../py_stuff/data_paths.py)
 
 #TODO (create power iteration as a lib that links the tests/python lib)
@@ -52,7 +53,7 @@ if (BUILD_TESTS)
     configure_file(tests/config_tests.h.in ../tests/config_tests.h)
 
     add_custom_test(test_eigen tests/test_eigen.cpp ${power_iteration})
-    add_custom_test(test_read_matrix tests/test_read_matrix.cpp ${power_iteration})
+    #add_custom_test(test_read_matrix tests/test_read_matrix.cpp ${power_iteration})
     
     # Add python tests
     add_test(NAME python-tests COMMAND 

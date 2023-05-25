@@ -1,13 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import parser
-from data_paths import * # TODO: rename data_paths since it also contains matrix path now
+from data_paths import * 
 from figure_generation import *
 from pathlib import Path
 from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
-
+from parser import create_parser
 
 # No estoy entendiendo la dif entre este y 3b)
 def ejercicio_3a(pca_class,
@@ -43,37 +42,64 @@ def similarity_analysis(one_person: np.array, rest: np.array, Ks: list) -> None:
 
 
 # Ejercicio 3 c)
-# No se bien como escribir Peak signal to noise ratio en imágenes RGB..
-def quality_analysis(one_person: np.array, rest: np.array, pca_engine) -> None:
-    # TODO (Podríamos usar el mismo "entrenamiento" que para 3b tal vez)
-    pca = None 
-    if pca_or_2dpca:
-        pca = PCA()
+def quality_analysis(training_dataset: np.array,
+                     person_inside_dataset: np.array,
+                     args,
+                     person_outside_dataset: np.array = None,
+                     pca_or_2d_pca = True) -> None:
+    pca = None
+    print(training_dataset[0].shape)
+    h, w = training_dataset[0].shape[0], training_dataset[0].shape[1]
+    if pca_or_2d_pca:
+        pca = PCA(100, 100, args.tolerance)
     else:
-        pca = PCA2D(number_of_eigenvectors, iterations, tolerance, filename="amogus")
+        pca = PCA2D(args.number_of_eigenvectors, args.iterations, args.tolerance)
 
-    pca.fit(rest)
-    for original_image in one_person:
-        compressed_image = pca.transform(np.array(original_image))
-        # compare and graph
-    
+    pca.fit(training_dataset)
+    results = []
+    for original_image in person_inside_dataset:
+        compressed_image = pca.transform(np.array([original_image]))
+        # PCA flattens..
+        if pca_or_2d_pca: 
+            compressed_image = compressed_image.reshape(h, w)
+        # frobenius norm by default
+        print('Difference', np.linalg.norm(original_image - compressed_image))
+        results.append(np.linalg.norm(original_image - compressed_image))
+        
+    print(results) 
+    print(range(len(results)))
+    plt.plot(range(len(results)), results)
+    plt.show()
+
 
 
 # example on how to use corrcoef
-images = read_images(Path(faces_path), True, 8)
-ejercicio_3a(PCA2D, images, 1, 2)
 # similarity = np.corrcoef(images[0:100].reshape(100, -1))
 # plt.pcolor(similarity, cmap='GnBu')
 # plt.show()
 
-# if __name__ == '__main__': 
-#     parser = create_parser()
-#     parser.parse_args()
+if __name__ == '__main__': 
+    parser = create_parser()
+    args = parser.parse_args()
 
-#     images = read_images(Path(faces_path), args.usesmaller_images, 
-#                          args.scale_down_factor)
+    # Run excercise 3a
+    #images = read_images(Path(faces_path), True, 8)
+    #ejercicio_3a(PCA2D, images, 1, 2)
 
-#     quality_analysis(np.array(), images, True)
-#     quality_analysis(np.array(), images, False)
+    # Run excercise 3b
+    #similarity_analysis(np.array(), np.array(), [5, 20, 50])
+    
+    images = read_images(Path(faces_path), 
+                         args.use_smaller_images, 
+                         args.scale_down_factor)
+    
+    single_face = images[0:9]
+    print(type(single_face))
 
-#     similarity_analysis(np.array(), np.array(), [5, 20, 50])
+#    excluded_face = read_images(Path(figures_experiments_path + '/cara_excluida'),
+#            args.use_smaller_images, args.scale_down_factor)
+   
+    quality_analysis(images, single_face, args)
+    #quality_analysis(np.array(), images, False)
+
+

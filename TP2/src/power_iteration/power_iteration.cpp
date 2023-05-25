@@ -7,36 +7,6 @@
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 
-// TODO(interops with python, can we use doubles?)
-
-// Return matrix, iterations, tolerance
-// File format:
-// matrix dimension
-// matrix values, each separated by a newline
-// iterations
-// tolerance
-std::tuple<MatrixXd, size_t, float>
-read_matrix_iterations_tolerance(std::ifstream &infile) {
-    size_t matrix_dimension, iterations;
-    double value, tolerance;
-    MatrixXd M;
-
-    infile >> matrix_dimension;
-    M.resize(matrix_dimension, matrix_dimension);
-    
-    for (size_t i=0; i < matrix_dimension; i++) {
-        for (size_t j=0; j < matrix_dimension; j++) {
-            infile >> value;
-            M(i, j) = value;
-        }
-    }
-
-    infile >> iterations;
-    infile >> tolerance;
-    
-    return std::make_tuple(M, iterations, tolerance);
-}
-
 std::tuple<float, VectorXd, size_t>
 power_iteration_method(const MatrixXd &M, const VectorXd &x_0, size_t iters,
                 float eps) {
@@ -59,9 +29,10 @@ power_iteration_method(const MatrixXd &M, const VectorXd &x_0, size_t iters,
 }
 
 std::tuple<std::vector<float>, std::vector<VectorXd>>
-deflate_impl(MatrixXd M, const VectorXd &x_0, size_t iters, 
+deflate(MatrixXd M, const VectorXd &x_0, size_t iters, 
         size_t number_of_eigenvalues, float eps) { 
-    
+    std::cout << "Deflating" << std::endl;
+
     if (M.cols() != M.rows() || M.cols() < number_of_eigenvalues) { 
         std::cout << "Matrix is " << M.cols() << "x" << M.rows() << " and asked for ";
         std::cout << number_of_eigenvalues << " eigenvalues" << std::endl;
@@ -71,6 +42,7 @@ deflate_impl(MatrixXd M, const VectorXd &x_0, size_t iters,
     std::vector<float> eigenvalues;
     std::vector<VectorXd> eigenvectors;
     for (size_t i = 0; i < number_of_eigenvalues; i++) {
+        std::cout << "\rCalculating eigenvalue " << i << " of " << number_of_eigenvalues << std::flush;
         auto [l, v, j] = power_iteration_method(M, x_0, iters, eps);
         M = M - (l * v * v.transpose());
         eigenvalues.emplace_back(std::move(l));
@@ -78,11 +50,4 @@ deflate_impl(MatrixXd M, const VectorXd &x_0, size_t iters,
     }
 
     return std::make_tuple(eigenvalues, eigenvectors);
-}
-
-std::tuple<std::vector<float>, std::vector<VectorXd>>
-deflate(std::string filename, const VectorXd &x_0, size_t number_of_eigenvalues) {
-    std::ifstream infile(filename);
-    auto [M, iters, eps] = read_matrix_iterations_tolerance(infile);
-    return deflate_impl(M, x_0, iters, number_of_eigenvalues, eps);
 }

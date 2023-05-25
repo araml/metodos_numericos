@@ -7,7 +7,7 @@ class PCA2D(PCABase):
                  k: int, 
                  iterations: int = 10, 
                  tolerance: float = 1e-17,
-                 filename: str = None):
+                 filename: str = 'amogus'):
         super(PCA2D, self).__init__(k, iterations, tolerance, filename)
         self.name = "2DPCA"
 

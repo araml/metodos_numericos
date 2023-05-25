@@ -37,7 +37,7 @@ void test_deflate_single_eigen_value() {
     VectorXd v(2);
     v << 1, 1;
 
-    auto [ls, vs] = deflate_impl(B, v, 5000, 1, EPSILON);
+    auto [ls, vs] = deflate(B, v, 5000, 1, EPSILON);
     
     std::set<float> s(ls.begin(), ls.end());
     // We need to have *only* one of these 
@@ -53,7 +53,7 @@ void test_deflate_all_eigen_values() {
     VectorXd v(2);
     v << 1, 1;
 
-    auto [ls, vs] = deflate_impl(B, v, 5000, 2, EPSILON);
+    auto [ls, vs] = deflate(B, v, 5000, 2, EPSILON);
     
     std::set<float> s1(ls.begin(), ls.end());
     std::set<float> s2{1, -2};
@@ -79,7 +79,7 @@ void test_incorrect_number_of_eigenvalues() {
     v << 1, 1;
 
     try { 
-    auto [ls, vs] = deflate_impl(B, v, 5000, 10, EPSILON);
+    auto [ls, vs] = deflate(B, v, 5000, 10, EPSILON);
     } catch (...) { 
         return;
     }
@@ -108,6 +108,6 @@ int main() {
     test_deflate_single_eigen_value();
     test_deflate_all_eigen_values();
     test_incorrect_number_of_eigenvalues();
-test_check_eigen_values_pybind();
+    test_check_eigen_values_pybind();
     return 0;
 }

@@ -19,9 +19,9 @@ print("number of eigenvectors: {}, iterations: {}, tolerance: {}".format(number_
 print("Reading images...")
 images = read_images(Path(faces_path), args.use_smaller_images, scale_down_factor)
 
-pca = PCA2D(number_of_eigenvectors, iterations, tolerance, filename="amogus")
+pca = PCA2D(10, iterations, tolerance, filename="amogus")
 pca.fit(images)
-create_pca_image_comparison(pca, images, 36, (12, 12), plt.cm.magma)
+create_pca_image_comparison(pca, images, 10, (12, 12), plt.cm.magma)
 #
 #covariance_matrix = pca.create_covariance_matrix(pca.flatten_images(images))
 #eigenvalues, _ = get_eigenvalues_and_eigenvectors(covariance_matrix, number_of_eigenvectors, iterations, tolerance)

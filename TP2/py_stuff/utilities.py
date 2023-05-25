@@ -25,27 +25,5 @@ def get_eigenvalues_and_eigenvectors(M: np.array,
                                      iters = 10,
                                      tolerance = 1e-17,
                                      filename = 'amogus') -> (np.array, np.array):
-    print("\tSaving matrix...")
-    filename = save_matrix_for_deflation(M, iters, tolerance, filename)
-    print("\tSaved matrix to file {}".format(filename))
-
-    print("\tDeflating...")
-    e, v = d.deflate(filename, np.ones(M.shape[0]), k)
+    e, v = d.deflate(M, np.ones(M.shape[0]), iters, k, tolerance)
     return np.array(e), np.array(v).T # return vectors as columns
-
-# common functions
-
-def save_matrix_for_deflation(M: np.array, iters=10, tolerance=1e-17, filename=None) -> str:
-    if not filename:
-        filename = ''.join(choices(ascii_letters, k=12))
-    file_path = Path(matrices_path, filename)
-    dimension = M.shape[0]
-    with open(file_path, 'w') as f:
-        f.write("%d\n" % dimension)
-        for i in range(dimension):
-            for j in range(dimension):
-                f.write("%.7f\n" % M[i,j])
-        f.write("%d\n" % iters)
-        f.write("%.20f" % tolerance)
-    
-    return str(file_path)
