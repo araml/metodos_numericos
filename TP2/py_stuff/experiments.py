@@ -5,6 +5,7 @@ from data_paths import * # TODO: rename data_paths since it also contains matrix
 import matplotlib.pyplot as plt
 import PCA from PCA 
 import PCA2D from PCA2D
+import parser
 
 # No estoy entendiendo la dif entre este y 3b)
 def ejercicio_3a() -> None:
@@ -25,7 +26,8 @@ def similarity_analysis(one_person: np.array, rest: np.array, Ks: list) -> None
 
 # Ejercicio 3 c)
 # No se bien como escribir Peak signal to noise ratio en imágenes RGB..
-def quality_analysis(one_person: np.array, rest: np.array, bool pca_or_2dpca) -> None:
+def quality_analysis(one_person: np.array, rest: np.array, pca_engine) -> None:
+    # TODO (Podríamos usar el mismo "entrenamiento" que para 3b tal vez)
     pca = None 
     if pca_or_2dpca:
         pca = PCA()
@@ -45,3 +47,14 @@ similarity = np.corrcoef(images[0:3].reshape(3, -1))
 plt.pcolor(similarity, cmap='GnBu')
 plt.show()
 
+if __name__ == '__main__': 
+    parser = create_parser()
+    parser.parse_args()
+
+    images = read_images(Path(faces_path), args.usesmaller_images, 
+                         args.scale_down_factor)
+
+    quality_analysis(np.array(), images, True)
+    quality_analysis(np.array(), images, False)
+
+    similarity_analysis(np.array(), np.array(), [5, 20, 50])
