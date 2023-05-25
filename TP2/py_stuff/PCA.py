@@ -6,7 +6,7 @@ class PCABase:
                  k: int = 30, 
                  iterations: int = 10, 
                  tolerance: float = 1e-17,
-                 filename: str = None):
+                 filename: str = 'amogus'):
         self.eigenbase = []
         self.eigenvalues = []
         self.k = k
@@ -55,7 +55,9 @@ class PCA(PCABase):
                                                  self.tolerance, self.filename)
 
     def transform(self, images: np.array) -> np.array:
+        print('original_image.shape', images.shape)
         flattened_images = self.flatten_images(images)
+        print('flattened_images.shape', flattened_images.shape)
         reduced_images = flattened_images @ (self.eigenbase[:, :self.k]) # reduce dimensions
         return reduced_images @ self.eigenbase[:, :self.k].T
 
