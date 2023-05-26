@@ -64,11 +64,11 @@ def get_mean_similarities(images: np.array) -> (float, float):
     return (np.mean(mean_same_person_similarities), np.mean(mean_diff_person_similarities))
 
 
-def ejercicio_3b(images: np.array, Ks: list):
+def ejercicio_3b(images: np.array, Ks: list, iterations: int = 10, tolerance: float = 1e-17) -> None:
     max_k = max(Ks)
 
-    pca_1d = PCA(max_k)
-    pca_2d = PCA2D(max_k)
+    pca_1d = PCA(max_k, iterations, tolerance)
+    pca_2d = PCA2D(max_k, iterations, tolerance)
     pca_1d.fit(images)
     pca_2d.fit(images)
     
@@ -86,20 +86,22 @@ def ejercicio_3b(images: np.array, Ks: list):
         mean_same_person_similarities_2d.append(same_2d)
         mean_diff_person_similarities_2d.append(diff_2d)
 
-    plt.plot(Ks, mean_same_person_similarities_1d, '-o', label='mismo, 1D')
-    plt.plot(Ks, mean_diff_person_similarities_1d, '-o', label='distintos, 1D')
-    plt.plot(Ks, mean_same_person_similarities_2d, '-o', label='mismo, 2D')
-    plt.plot(Ks, mean_diff_person_similarities_2d, '-o', label='distintos, 2D')
-    plt.plot(Ks, [baseline_same] * len(Ks), '--', label="mismo, sin comprimir")
-    plt.plot(Ks, [baseline_diff] * len(Ks), '--', label="distintos, sin comprimir")
+    _, axes = plt.subplots(figsize=(8, 6))
+
+    axes.plot(Ks, mean_same_person_similarities_1d, '-o', label='mismo, 1D')
+    axes.plot(Ks, mean_diff_person_similarities_1d, '-o', label='distintos, 1D')
+    axes.plot(Ks, mean_same_person_similarities_2d, '-o', label='mismo, 2D')
+    axes.plot(Ks, mean_diff_person_similarities_2d, '-o', label='distintos, 2D')
+    axes.plot(Ks, [baseline_same] * len(Ks), '--', label="mismo, sin comprimir")
+    axes.plot(Ks, [baseline_diff] * len(Ks), '--', label="distintos, sin comprimir")
 
     plt.xlabel("Componentes usadas")
     plt.ylabel("Similaridad promedio")
-    plt.title("Similaridad promedio entre imágenes de una misma persona\ny de distintas personas para PCA y 2DPCA")
+    plt.title("Similaridad promedio entre imágenes de una misma persona\ny de distintas personas para PCA y 2DPCA\ncon {} iteraciones y tolerancia {}".format(iterations, tolerance))
     plt.xticks(Ks)
     plt.ylim(bottom=0.0)
     plt.legend()
-    file_path = Path(figures_path, "similaridad.png")
+    file_path = Path(figures_path, "similaridad_{}iteraciones_tolerancia{}.png".format(iterations, tolerance))
     plt.savefig(file_path)
 
 
@@ -108,11 +110,11 @@ def quality_analysis(training_dataset: np.array,
                      person_inside_dataset: np.array,
                      person_outside_dataset: np.array,
                      args,
-                     pca_or_2d_pca = True) -> None:
+                     use_1d = True) -> None:
     pca = None
     print(training_dataset[0].shape)
     h, w = training_dataset[0].shape[0], training_dataset[0].shape[1]
-    if pca_or_2d_pca:
+    if use_1d:
         pca = PCA(args.number_of_eigenvectors, args.iterations, args.tolerance)
     else:
         pca = PCA2D(args.number_of_eigenvectors, args.iterations, args.tolerance)
@@ -125,7 +127,7 @@ def quality_analysis(training_dataset: np.array,
         im1_compressed = pca.transform(np.array([im1]))
         im2_compressed = pca.transform(np.array([im2]))
         # PCA flattens..
-        if pca_or_2d_pca: 
+        if use_1d: 
             im1_compressed = im1_compressed.reshape(h, w)
             im2_compressed = im2_compressed.reshape(h, w)
         # frobenius norm by default
@@ -181,7 +183,8 @@ if __name__ == '__main__':
     # plot_3c()
     # pca = PCA2D(40, filename="amogus")
     # pca.fit(images)
-    ejercicio_3b(images, k_range)
+    for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
+        ejercicio_3b(images, k_range, its)
     # print(images.shape)
     #quality_analysis(images, single_person, excluded_person, args)
     #quality_analysis(np.array(), images, False)
