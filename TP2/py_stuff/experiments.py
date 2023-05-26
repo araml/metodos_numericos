@@ -7,9 +7,10 @@ from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
 from parser import create_parser
-import json
+from utilities import flatten_images
 
-# No estoy entendiendo la dif entre este y 3b)
+SAMPLES_PER_PERSON = 10
+
 def ejercicio_3a(pca_class,
                  images: np.array,
                  small_k: int,
@@ -29,17 +30,77 @@ def ejercicio_3a(pca_class,
     create_corrcoef_figure(pca_engine, images, colourmap)
 
 
-# Ejercicio 3b)
-# Maybe I'm not understanding this one, but should we reconstruct everyones 
-# images and then compare them?
-def similarity_analysis(one_person: np.array, rest: np.array, Ks: list) -> None:
+def mean_similarity_between_people(correlation_matrix: np.array,
+                                   person1: int,
+                                   person2: int) -> float:
+    start_row = person1 * SAMPLES_PER_PERSON
+    end_row = start_row + SAMPLES_PER_PERSON
+    start_column = person2 * SAMPLES_PER_PERSON
+    end_column = start_column + SAMPLES_PER_PERSON
+    submatrix = correlation_matrix[start_row:end_row, start_column:end_column]
+    return submatrix.mean()
+
+
+def get_compressed_mean_similarities(pca_engine: PCABase, images: np.array, k: int) -> (float, float):
+    pca_engine.set_components_dimension(k)
+    compressed_images = pca_engine.transform(images)
+    return get_mean_similarities(compressed_images)
+
+
+def get_mean_similarities(images: np.array) -> (float, float):
+    correlation_matrix = np.corrcoef(flatten_images(images))
+    number_of_people = correlation_matrix.shape[0] // SAMPLES_PER_PERSON
+    mean_same_person_similarities = []
+    mean_diff_person_similarities = []
+
+    for i in range(number_of_people):
+        mean_same_person_similarities.append(mean_similarity_between_people(correlation_matrix, i, i))
+        current_diff_person_similarities = []
+        for j in range(i+1, number_of_people):
+            current_diff_person_similarities.append(mean_similarity_between_people(correlation_matrix, i, j))
+        if len(current_diff_person_similarities):
+            mean_diff_person_similarities.append(np.mean(current_diff_person_similarities))
+    
+    return (np.mean(mean_same_person_similarities), np.mean(mean_diff_person_similarities))
+
+
+def ejercicio_3b(images: np.array, Ks: list):
+    max_k = max(Ks)
+
+    pca_1d = PCA(max_k)
+    pca_2d = PCA2D(max_k)
+    pca_1d.fit(images)
+    pca_2d.fit(images)
+    
+    mean_same_person_similarities_1d = []
+    mean_diff_person_similarities_1d = []
+    mean_same_person_similarities_2d = []
+    mean_diff_person_similarities_2d = []
+    baseline_same, baseline_diff = get_mean_similarities(images) # compare against uncompressed images
+
     for k in Ks:
-        # Reconstruct with k 
-        # single person/the rest 
-        similarity_matrix = np.corrcoef(one_person, rest)
-        plt.pcolor(similarity, cmap='GnBu')
-        plt.title(f'Similarity matrix with k = {k}')
-        plt.savefig(f'Similarity matrix with k = {k}')
+        same_1d, diff_1d = get_compressed_mean_similarities(pca_1d, images, k)
+        same_2d, diff_2d = get_compressed_mean_similarities(pca_2d, images, k)
+        mean_same_person_similarities_1d.append(same_1d)
+        mean_diff_person_similarities_1d.append(diff_1d)
+        mean_same_person_similarities_2d.append(same_2d)
+        mean_diff_person_similarities_2d.append(diff_2d)
+
+    plt.plot(Ks, mean_same_person_similarities_1d, '-o', label='mismo, 1D')
+    plt.plot(Ks, mean_diff_person_similarities_1d, '-o', label='distintos, 1D')
+    plt.plot(Ks, mean_same_person_similarities_2d, '-o', label='mismo, 2D')
+    plt.plot(Ks, mean_diff_person_similarities_2d, '-o', label='distintos, 2D')
+    plt.plot(Ks, [baseline_same] * len(Ks), '--', label="mismo, sin comprimir")
+    plt.plot(Ks, [baseline_diff] * len(Ks), '--', label="distintos, sin comprimir")
+
+    plt.xlabel("Componentes usadas")
+    plt.ylabel("Similaridad promedio")
+    plt.title("Similaridad promedio entre imágenes de una misma persona\ny de distintas personas para PCA y 2DPCA")
+    plt.xticks(Ks)
+    plt.ylim(bottom=0.0)
+    plt.legend()
+    file_path = Path(figures_path, "similaridad.png")
+    plt.savefig(file_path)
 
 
 # Ejercicio 3 c)
@@ -109,12 +170,19 @@ if __name__ == '__main__':
     images = read_images(Path(faces_path), 
                          args.use_smaller_images, 
                          args.scale_down_factor)
-
-    excluded_person = images[0:9]
-    images = images[10:]
-    single_person = images[0:9]
     
-    plot_3c()
+    max_components = min(images[0].shape)
+    k_range = np.linspace(1, max_components, 10, dtype=int)
+
+    # excluded_person = images[0:9]
+    # images = images[10:]
+    # single_person = images[0:9]
+    
+    # plot_3c()
+    # pca = PCA2D(40, filename="amogus")
+    # pca.fit(images)
+    ejercicio_3b(images, k_range)
+    # print(images.shape)
     #quality_analysis(images, single_person, excluded_person, args)
     #quality_analysis(np.array(), images, False)
 

@@ -27,3 +27,14 @@ def get_eigenvalues_and_eigenvectors(M: np.array,
                                      filename = 'amogus') -> (np.array, np.array):
     e, v = d.deflate(M, np.ones(M.shape[0]), iters, k, tolerance)
     return np.array(e), np.array(v).T # return vectors as columns
+
+def flatten_images(images: np.array) -> np.array:
+    square_images = np.stack(images)
+    flattened_images = square_images.reshape(square_images.shape[0], 
+                                                square_images[0].size)
+    return flattened_images
+
+def centre_images(images: np.array) -> np.array:
+    # subtract average from each
+    flattened_images = flatten_images(images)
+    return flattened_images - np.mean(flattened_images, axis=0)

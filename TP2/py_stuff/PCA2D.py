@@ -38,11 +38,3 @@ class PCA2D(PCABase):
         centred_images = images - mean_pixel_values
         return np.mean(np.array([image.T @ image for image in centred_images]),
                        axis = 0)
-
-    def set_components_dimension(self, dimension: int) -> None:
-        if self.k > len(self.eigenvalues):
-            raise ValueError(f'Changed 2DPCA components to {self.k} but max is'
-                    '{len(self.eigenvalues)}, please rerun `fit` if you want to'
-                    'use more components')
-            
-        self.k = dimension

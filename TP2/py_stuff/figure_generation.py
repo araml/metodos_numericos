@@ -5,6 +5,7 @@ from pathlib import Path
 from PCA import PCA, PCABase
 from random import choices
 from string import ascii_letters
+from utilities import centre_images, flatten_images
 
 
 def plot_eigenvalues(eigenvalues: np.array, filename: str):
@@ -80,8 +81,8 @@ def create_pca_image_comparison(pca_engine: PCABase,
 def create_corrcoef_figure(pca_engine: PCABase,
                            images: np.array,
                            colourmap=plt.cm.GnBu):
-    centred_images = pca_engine.centre_images(images)
-    flattened_compressed_images = pca_engine.flatten_images(pca_engine.transform(images))
+    centred_images = centre_images(images)
+    flattened_compressed_images = flatten_images(pca_engine.transform(images))
     similarity = np.corrcoef(centred_images, flattened_compressed_images)
     
     filename = "corrcoef_{}components_{}_{}".format(pca_engine.k, colourmap.name, pca_engine.name)
