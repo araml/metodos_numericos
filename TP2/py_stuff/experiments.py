@@ -146,18 +146,15 @@ def quality_analysis(training_dataset: np.array,
 # plt.pcolor(similarity, cmap='GnBu')
 # plt.show()
 
-def plot_3c() -> None:
-    results_in_dataset = [2132.9481474764225, 2136.4530386426954, 2182.0322211103885, 2157.0719449322187, 2137.33419595085, 2284.684520992702, 2247.1406287678465, 2185.737747347281, 2269.8563188969233]
-    results_outside_dataset = [3130.754605656874, 3018.222367863016, 2794.223061783219, 2880.040997885756, 3179.5160795734723, 3100.2603989432564, 3037.8798743827842, 3139.3008201829543, 2855.938714383691]
+def plot_3c(results_in_dataset, results_outside_dataset, pca_or_2d_pca = 'PCA') -> None:
     plt.plot(range(len(results_in_dataset)), results_in_dataset, 'b', label =
     'in_dataset')
     plt.plot(range(len(results_outside_dataset)), results_outside_dataset, 'r',
             label = 'out_dataset')
-    plt.title('Comparación del error de compresion de PCA entre imagenes en el dataset y fuera del mismo')
+    plt.title('Comparación de error usando ' + pca_or_2d_pca)
     plt.legend()
-    plt.show()
-    plt.savefig('Comparacion PCA')
-
+ #   plt.show()
+    plt.savefig('Comparacion ' + pca_or_2d_pca + '.png')
 
 def ejercicio_3d(images, Ks, repetitions):
     times_1d = []
@@ -199,16 +196,39 @@ if __name__ == '__main__':
     max_components = min(images[0].shape)
     k_range = np.linspace(1, max_components, 10, dtype=int)
 
-    # excluded_person = images[0:9]
-    # images = images[10:]
-    # single_person = images[0:9]
-    
+
+    # Run excercise 3c
     # plot_3c()
+    images = read_images(Path(faces_path), 
+                         args.use_smaller_images, 
+                         args.scale_down_factor)
+
+    excluded_person = images[0:9]
+    images = images[10:]
+    single_person = images[0:9]
+    
+    #plot_3c([2132.9481474764225, 2136.4530386426954, 2182.0322211103885, 2157.0719449322187, 2137.33419595085, 2284.684520992702, 2247.1406287678465, 2185.737747347281, 2269.8563188969233],
+             #[3130.754605656874, 3018.222367863016, 2794.223061783219, 2880.040997885756, 3179.5160795734723, 3100.2603989432564, 3037.8798743827842, 3139.3008201829543, 2855.938714383691])
+    
+    plot_3c([0.024624821439559588, 0.014855127744046017, 0.023833095351786383,
+            0.020675322510620646, 0.02048904116998715, 0.020135118454842265,
+            0.021557531941884703, 0.021177380106009815, 0.019908390917332035],
+            [0.01712156678349284, 0.01936335397976, 0.013107796604208636,
+            0.013114649371229742, 0.01525680879287523, 0.018899426783011118,
+            0.023547477358356873, 0.01866071609264942, 0.00821011870081827],
+            '2DPCA')
+
+    #quality_analysis(images, single_person, excluded_person, args)
+    # Runs 2DPCA
+    #quality_analysis(images, single_person, excluded_person, args, False)
+
+
+
     # pca = PCA2D(40, filename="amogus")
     # pca.fit(images)
     # for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
     #     ejercicio_3b(images, k_range, its)
-    ejercicio_3d(images, k_range, 50)
+    # ejercicio_3d(images, k_range, 50)
     # print(images.shape)
     #quality_analysis(images, single_person, excluded_person, args)
     #quality_analysis(np.array(), images, False)
