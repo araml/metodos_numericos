@@ -7,7 +7,7 @@ from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
 from parser import create_parser
-from utilities import flatten_images
+from utilities import flatten_images, get_average_execution_time
 
 SAMPLES_PER_PERSON = 10
 
@@ -158,6 +158,29 @@ def plot_3c() -> None:
     plt.show()
     plt.savefig('Comparacion PCA')
 
+
+def ejercicio_3d(images, Ks, repetitions):
+    times_1d = []
+    times_2d = []
+    for k in Ks:
+        pca_1d = PCA(k)
+        pca_2d = PCA2D(k)
+        t_1d = get_average_execution_time(pca_1d.fit, repetitions, images)
+        t_2d = get_average_execution_time(pca_2d.fit, repetitions, images)
+        times_1d.append(t_1d)
+        times_2d.append(t_2d)
+
+    _, axes = plt.subplots(figsize=(8, 6))
+    axes.plot(Ks, times_1d, '-o', label="PCA")
+    axes.plot(Ks, times_2d, '-o', label="2DPCA")
+    plt.xticks(Ks)
+    plt.xlabel("Autovectores calculados")
+    plt.ylabel("Tiempo de ejecución (en segundos)")
+    plt.title("Tiempo de ejecución en función de la cantidad de autovectores calculados,\npromedio sobre {} repeticiones".format(repetitions))
+    plt.legend()
+    file_path = Path(figures_path, "tiempo_{}repeticiones_dim{}.png".format(repetitions, images[0].shape))
+    plt.savefig(file_path)
+
 if __name__ == '__main__': 
     parser = create_parser()
     args = parser.parse_args()
@@ -183,8 +206,9 @@ if __name__ == '__main__':
     # plot_3c()
     # pca = PCA2D(40, filename="amogus")
     # pca.fit(images)
-    for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
-        ejercicio_3b(images, k_range, its)
+    # for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
+    #     ejercicio_3b(images, k_range, its)
+    ejercicio_3d(images, k_range, 50)
     # print(images.shape)
     #quality_analysis(images, single_person, excluded_person, args)
     #quality_analysis(np.array(), images, False)

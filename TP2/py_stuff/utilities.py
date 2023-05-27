@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import deflate as d
+import time
 from data_paths import *
 from pathlib import Path
 from random import choices
@@ -38,3 +39,15 @@ def centre_images(images: np.array) -> np.array:
     # subtract average from each
     flattened_images = flatten_images(images)
     return flattened_images - np.mean(flattened_images, axis=0)
+
+def measure_execution_time(function_to_measure, *args) -> float:
+    start_time = time.time()
+    function_to_measure(*args)
+    end_time = time.time()
+    return end_time-start_time
+
+def get_average_execution_time(function_to_measure, repetitions, *args) -> float:
+    execution_times = []
+    for i in range(repetitions):
+        execution_times.append(measure_execution_time(function_to_measure, *args))
+    return np.mean(execution_times)

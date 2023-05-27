@@ -11,9 +11,6 @@ def create_parser():
     parser.add_argument("--number_of_eigenvectors",
                         help="Number of eigenvectors to compute",
                         type=int, default=100)
-    parser.add_argument("--number_of_components",
-                        help="Number of components to use",
-                        type=int, default=100)
     parser.add_argument("--iterations",
                         help="Iterations for power method",
                         type=int, default=10)
