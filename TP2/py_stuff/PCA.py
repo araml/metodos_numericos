@@ -5,14 +5,12 @@ class PCABase:
     def __init__(self, 
                  k: int = 30, 
                  iterations: int = 10, 
-                 tolerance: float = 1e-17,
-                 filename: str = 'amogus'):
+                 tolerance: float = 1e-17):
         self.eigenbase = []
         self.eigenvalues = []
         self.k = k
         self.iterations = iterations
         self.tolerance = tolerance
-        self.filename = filename
 
     def fit(self, images: np.array) -> None:
         raise NotImplementedError("Must be implemented in derived class")
@@ -37,9 +35,8 @@ class PCA(PCABase):
     def __init__(self, 
                  k: int = 30, 
                  iterations: int = 10, 
-                 tolerance: float = 1e-17,
-                 filename: str = None):
-        super(PCA, self).__init__(k, iterations, tolerance, filename)
+                 tolerance: float = 1e-17):
+        super(PCA, self).__init__(k, iterations, tolerance)
         self.name = "1DPCA"
 
     def fit(self, images: np.array) -> None: 
@@ -49,7 +46,7 @@ class PCA(PCABase):
                 get_eigenvalues_and_eigenvectors(covariance, 
                                                  self.k, 
                                                  self.iterations, 
-                                                 self.tolerance, self.filename)
+                                                 self.tolerance)
 
     def transform(self, images: np.array) -> np.array:
         flattened_images = flatten_images(images)

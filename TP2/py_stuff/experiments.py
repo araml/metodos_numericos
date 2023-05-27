@@ -7,7 +7,7 @@ from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
 from parser import create_parser
-from utilities import flatten_images, get_average_execution_time
+from utilities import flatten_images, average_execution_time
 
 SAMPLES_PER_PERSON = 10
 
@@ -17,11 +17,10 @@ def ejercicio_3a(pca_class,
                  large_k: int,
                  iterations: int = 10,
                  tolerance: float = 1e-17,
-                 filename: str = "amogus",
                  colourmap = plt.cm.GnBu) -> None:
     assert(large_k > small_k and small_k > 0)
 
-    pca_engine = pca_class(large_k, iterations, tolerance, filename)
+    pca_engine = pca_class(large_k, iterations, tolerance)
     pca_engine.fit(images)
 
     create_corrcoef_figure(pca_engine, images, colourmap)
@@ -41,13 +40,13 @@ def mean_similarity_between_people(correlation_matrix: np.array,
     return submatrix.mean()
 
 
-def get_compressed_mean_similarities(pca_engine: PCABase, images: np.array, k: int) -> (float, float):
+def compressed_mean_similarities(pca_engine: PCABase, images: np.array, k: int) -> (float, float):
     pca_engine.set_components_dimension(k)
     compressed_images = pca_engine.transform(images)
-    return get_mean_similarities(compressed_images)
+    return mean_similarities(compressed_images)
 
 
-def get_mean_similarities(images: np.array) -> (float, float):
+def mean_similarities(images: np.array) -> (float, float):
     correlation_matrix = np.corrcoef(flatten_images(images))
     number_of_people = correlation_matrix.shape[0] // SAMPLES_PER_PERSON
     mean_same_person_similarities = []
@@ -76,11 +75,11 @@ def ejercicio_3b(images: np.array, Ks: list, iterations: int = 10, tolerance: fl
     mean_diff_person_similarities_1d = []
     mean_same_person_similarities_2d = []
     mean_diff_person_similarities_2d = []
-    baseline_same, baseline_diff = get_mean_similarities(images) # compare against uncompressed images
+    baseline_same, baseline_diff = mean_similarities(images) # compare against uncompressed images
 
     for k in Ks:
-        same_1d, diff_1d = get_compressed_mean_similarities(pca_1d, images, k)
-        same_2d, diff_2d = get_compressed_mean_similarities(pca_2d, images, k)
+        same_1d, diff_1d = compressed_mean_similarities(pca_1d, images, k)
+        same_2d, diff_2d = compressed_mean_similarities(pca_2d, images, k)
         mean_same_person_similarities_1d.append(same_1d)
         mean_diff_person_similarities_1d.append(diff_1d)
         mean_same_person_similarities_2d.append(same_2d)
@@ -97,11 +96,11 @@ def ejercicio_3b(images: np.array, Ks: list, iterations: int = 10, tolerance: fl
 
     plt.xlabel("Componentes usadas")
     plt.ylabel("Similaridad promedio")
-    plt.title("Similaridad promedio entre imágenes de una misma persona\ny de distintas personas para PCA y 2DPCA\ncon {} iteraciones y tolerancia {}".format(iterations, tolerance))
+    plt.title("Similaridad promedio entre imágenes de dimensión {}\ncon {} iteraciones y tolerancia {}".format(images[0].shape, iterations, tolerance))
     plt.xticks(Ks)
     plt.ylim(bottom=0.0)
     plt.legend()
-    file_path = Path(figures_path, "similaridad_{}iteraciones_tolerancia{}.png".format(iterations, tolerance))
+    file_path = Path(figures_path, "similaridad_{}iteraciones_tolerancia{}_dim{}.png".format(iterations, tolerance, images[0].shape))
     plt.savefig(file_path)
 
 
@@ -163,10 +162,10 @@ def ejercicio_3d(images, Ks, repetitions):
     times_1d = []
     times_2d = []
     for k in Ks:
-        pca_1d = PCA(k)
-        pca_2d = PCA2D(k)
-        t_1d = get_average_execution_time(pca_1d.fit, repetitions, images)
-        t_2d = get_average_execution_time(pca_2d.fit, repetitions, images)
+        pca_1d = PCA(k, iterations=5)
+        pca_2d = PCA2D(k, iterations=5)
+        t_1d = average_execution_time(pca_1d.fit, repetitions, images)
+        t_2d = average_execution_time(pca_2d.fit, repetitions, images)
         times_1d.append(t_1d)
         times_2d.append(t_2d)
 
@@ -182,22 +181,17 @@ def ejercicio_3d(images, Ks, repetitions):
     plt.savefig(file_path)
 
 if __name__ == '__main__': 
-    parser = create_parser()
+    parser = create_parser("experiments")
     args = parser.parse_args()
-
-    # Run excercise 3a
-    #images = read_images(Path(faces_path), True, 8)
-    #ejercicio_3a(PCA2D, images, 1, 2)
-
-    # Run excercise 3b
-    #similarity_analysis(np.array(), np.array(), [5, 20, 50])
     
     images = read_images(Path(faces_path), 
-                         args.use_smaller_images, 
                          args.scale_down_factor)
     
+    # Run excercise 3a
+    ejercicio_3a(PCA2D, images, 1, 2)
+
     max_components = min(images[0].shape)
-    k_range = np.linspace(1, max_components, 10, dtype=int)
+    k_range = np.linspace(1, max_components, 8, dtype=int)
 
     # excluded_person = images[0:9]
     # images = images[10:]
@@ -206,11 +200,9 @@ if __name__ == '__main__':
     # plot_3c()
     # pca = PCA2D(40, filename="amogus")
     # pca.fit(images)
-    # for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
-    #     ejercicio_3b(images, k_range, its)
-    ejercicio_3d(images, k_range, 50)
+    for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
+        ejercicio_3b(images, k_range, its)
+    # ejercicio_3d(images, k_range, 50)
     # print(images.shape)
     #quality_analysis(images, single_person, excluded_person, args)
     #quality_analysis(np.array(), images, False)
-
-

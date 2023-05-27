@@ -6,16 +6,15 @@ class PCA2D(PCABase):
     def __init__(self, 
                  k: int, 
                  iterations: int = 10, 
-                 tolerance: float = 1e-17,
-                 filename: str = 'amogus'):
-        super(PCA2D, self).__init__(k, iterations, tolerance, filename)
+                 tolerance: float = 1e-17):
+        super(PCA2D, self).__init__(k, iterations, tolerance)
         self.name = "2DPCA"
 
     def fit(self, images: np.array) -> None:
             G = self.get_image_covariance_matrix(images)
             self.eigenvalues, self.eigenvectors = \
                 get_eigenvalues_and_eigenvectors(G, self.k, self.iterations,
-                                                 self.tolerance, self.filename)
+                                                 self.tolerance)
 
     def transform(self, images: np.array) -> np.array:
         compressed_images = []
