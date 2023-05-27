@@ -42,7 +42,8 @@ deflate(MatrixXd M, const VectorXd &x_0, size_t iters,
     std::vector<float> eigenvalues;
     std::vector<VectorXd> eigenvectors;
     for (size_t i = 0; i < number_of_eigenvalues; i++) {
-        std::cout << "\rCalculating eigenvalue " << i << " of " << number_of_eigenvalues << std::endl << std::flush;
+        std::cout << "\rCalculating eigenvalue " << i + 1 << " of " 
+                  << number_of_eigenvalues << std::endl << std::flush;
         auto [l, v, j] = power_iteration_method(M, x_0, iters, eps);
         M = M - (l * v * v.transpose());
         eigenvalues.emplace_back(std::move(l));
