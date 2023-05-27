@@ -109,6 +109,9 @@ def PSNR(m1: np.array, m2: np.array) -> float:
     mse = (np.square(m1 - m2)).mean()
     return 20 * np.log10(255 / np.sqrt(mse))
 
+def normalize(m1: np.array) -> np.array:
+    return m1 / np.linalg.norm(m1)
+
 def quality_analysis(training_dataset: np.array,
                      person_inside_dataset: np.array,
                      person_outside_dataset: np.array,
@@ -142,15 +145,16 @@ def quality_analysis(training_dataset: np.array,
                 im1_compressed = im1_compressed.reshape(h, w)
                 im2_compressed = im2_compressed.reshape(h, w)
             # frobenius norm by default
-            r1.append(np.linalg.norm(im1 - im1_compressed))
+            r1.append(np.linalg.norm(normalize(im1) - normalize(im1_compressed)))
             p1.append(PSNR(im1, im1_compressed))
-            r2.append(np.linalg.norm(im2 - im2_compressed))
+            r2.append(np.linalg.norm(normalize(im2) - normalize(im2_compressed)))
             p2.append(PSNR(im2, im2_compressed))
         frobenius_error_in_dataset.append(r1)
-        psnr_error_in_dataset.append(p1)
+        psnr_error_in_dataset.append([x / max(p1) for x in p1])
         frobenius_error_outside_dataset.append(r2)
-        psnr_error_outside_dataset.append(p2)
-    
+        psnr_error_outside_dataset.append([x / max(p2) for x in p2])
+        
+
     print(frobenius_error_in_dataset) 
     print(psnr_error_in_dataset)
     print(frobenius_error_outside_dataset)
