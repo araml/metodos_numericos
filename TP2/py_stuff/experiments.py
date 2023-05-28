@@ -161,6 +161,35 @@ def quality_analysis(training_dataset: np.array,
     print(psnr_error_outside_dataset)
     
     
+    average = lambda l: [np.mean(x) for x in l]
+
+    frobenius_error_in_dataset = average(frobenius_error_in_dataset)
+    psnr_error_in_dataset = average(psnr_error_in_dataset)
+    frobenius_error_outside_dataset = average(frobenius_error_outside_dataset)
+    psnr_error_outside_dataset = average(psnr_error_outside_dataset)
+
+    _, axes = plt.subplots(figsize=(8, 6))
+
+    axes.plot(ks, frobenius_error_in_dataset, '-o', label='frobenius persona en el dataset')
+    axes.plot(ks, psnr_error_in_dataset, '-o', label='PSNR persona en el dataset')
+    axes.plot(ks, frobenius_error_outside_dataset, '-o', label='frobenius persona fuera del dataset')
+    axes.plot(ks, psnr_error_outside_dataset, '-o', label='PSNR persona fuera del dataset')
+
+    PCA_TYPE = 'PCA'
+    if not use_PCA:
+        PCA_TYPE = '2DPCA'
+
+    plt.xlabel('Componentes usadas')
+    plt.ylabel('Error')
+    plt.title(f'Comparación del error entre una persona adentro y fuera del'
+              f'dataset\n para distintas cantidades de componentes usando{PCA_TYPE}')
+    plt.xticks(ks)
+    plt.ylim(bottom=0.0)
+    plt.legend()
+    file_path = Path(figures_path, f'Comparacion de error con {PCA_TYPE}')
+    plt.savefig(file_path)
+
+    
 # example on how to use corrcoef
 # similarity = np.corrcoef(images[0:100].reshape(100, -1))
 # plt.pcolor(similarity, cmap='GnBu')
@@ -221,7 +250,9 @@ if __name__ == '__main__':
     
     #quality_analysis(images, single_person, excluded_person)
     # Runs 2DPCA
-    quality_analysis(images, single_person, excluded_person, [10], 10, False)
+    max_components = min(images[0].shape)
+    quality_analysis(images, single_person, excluded_person, 
+                     np.linspace(1, max_components, 8, dtype = int), 100, True)
 
 
     # pca = PCA2D(40, filename="amogus")
