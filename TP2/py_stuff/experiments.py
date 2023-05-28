@@ -7,7 +7,7 @@ from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
 from parser import create_parser
-from utilities import flatten_images, average_execution_time
+from utilities import average_execution_time, centre_images
 
 SAMPLES_PER_PERSON = 10
 PLOT_COLOURS = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -50,7 +50,7 @@ def compressed_mean_similarities(pca_engine: PCABase, images: np.array, k: int) 
 # Return mean of ALL similarities between photos of the same person
 # and mean of ALL similarities between photos of two different people
 def mean_similarities(images: np.array) -> (float, float):
-    correlation_matrix = np.corrcoef(flatten_images(images))
+    correlation_matrix = np.corrcoef(centre_images(images))
     number_of_people = correlation_matrix.shape[0] // SAMPLES_PER_PERSON
     mean_same_person_similarities = []
     mean_diff_person_similarities = []
