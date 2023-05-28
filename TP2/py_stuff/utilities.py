@@ -45,5 +45,6 @@ def measure_execution_time(function_to_measure, *args) -> float:
 def average_execution_time(function_to_measure, repetitions, *args) -> float:
     execution_times = []
     for i in range(repetitions):
+        print("Repetition {}".format(i))
         execution_times.append(measure_execution_time(function_to_measure, *args))
     return np.mean(execution_times)
