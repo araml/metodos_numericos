@@ -183,7 +183,7 @@ def quality_analysis(training_dataset: np.array,
     plt.xlabel('Componentes usadas')
     plt.ylabel('Error')
     plt.title(f'Comparación del error entre una persona adentro y fuera del'
-              f'dataset\n para distintas cantidades de componentes usando{PCA_TYPE}')
+              f'dataset\n para distintas cantidades de componentes usando {PCA_TYPE}')
     plt.xticks(ks)
     plt.ylim(bottom=0.0)
     plt.legend()
@@ -272,7 +272,7 @@ if __name__ == '__main__':
     # Runs 2DPCA
     max_components = min(images[0].shape)
     quality_analysis(images, single_person, excluded_person, 
-                     np.linspace(1, max_components, 8, dtype = int), 100, True)
+                     np.linspace(1, 1000, 8, dtype = int), 100, True)
 
 
     # pca = PCA2D(40, filename="amogus")
