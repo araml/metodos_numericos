@@ -142,7 +142,9 @@ def quality_analysis(people_inside_dataset: np.array,
     pca = None
     print(training_dataset[0].shape)
     # get max number of eigenvalues for training
+    ks = [k for k in ks if k <= len(training_dataset)]
     k = max(ks)
+    
     if use_PCA:
         pca = PCA(k, iterations)
     else:
@@ -261,15 +263,15 @@ if __name__ == '__main__':
                          args.scale_down_factor)
     
     # Run exercise 3a
-    ejercicio_3a(PCA2D, images, 1, 2)
+    #ejercicio_3a(PCA2D, images, 1, 2)
+    
+    #max_components = min(number_of_eigenvectors, images[0].size)
+    #if similarity_2dpca:
+    #    max_components = min(images[0].shape)
 
-    max_components = min(number_of_eigenvectors, images[0].size)
-    if similarity_2dpca:
-        max_components = min(images[0].shape)
-
-    k_range = np.linspace(1, max_components, 10, dtype=int)
-    for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
-        ejercicio_3b(images, k_range, use_2d=similarity_2dpca, iterations=its)
+    #k_range = np.linspace(1, max_components, 10, dtype=int)
+    #for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
+    #    ejercicio_3b(images, k_range, use_2d=similarity_2dpca, iterations=its)
     
     #max_components = min(images[0].shape)
     #quality_analysis(images, single_person, excluded_person)
@@ -280,8 +282,8 @@ if __name__ == '__main__':
         excluded_people = images[0: 9 * p]
         included_people = images[9 * p + 1:]
         quality_analysis(included_people, excluded_people, 
-                         np.linspace(1, 92, 23, dtype = int), 100, p, False) 
-                        #np.linspace(1, 1000, 100, dtype = int), 100, p, False)
+                         np.linspace(1, 1000, 100, dtype = int), 100, p, True)
+                #np.linspace(1, 92, 23, dtype = int), 100, p, False) 
 
 
     # pca = PCA2D(40, filename="amogus")
