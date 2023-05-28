@@ -10,7 +10,7 @@ from parser import create_parser
 from utilities import flatten_images, average_execution_time
 
 SAMPLES_PER_PERSON = 10
-LIGHT_ORANGE = "#ff7f0e"
+PLOT_COLOURS = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 def ejercicio_3a(pca_class,
                  images: np.array,
@@ -47,6 +47,8 @@ def compressed_mean_similarities(pca_engine: PCABase, images: np.array, k: int) 
     return mean_similarities(compressed_images)
 
 
+# Return mean of ALL similarities between photos of the same person
+# and mean of ALL similarities between photos of two different people
 def mean_similarities(images: np.array) -> (float, float):
     correlation_matrix = np.corrcoef(flatten_images(images))
     number_of_people = correlation_matrix.shape[0] // SAMPLES_PER_PERSON
@@ -64,44 +66,47 @@ def mean_similarities(images: np.array) -> (float, float):
     return (np.mean(mean_same_person_similarities), np.mean(mean_diff_person_similarities))
 
 
-def ejercicio_3b(images: np.array, Ks: list, iterations: int = 10, tolerance: float = 1e-17) -> None:
+# For a given dataset, 2DPCA has an inherently lower max component limit,
+# so we're making it optional -- this function can be run with just 1DPCA
+# and a higher max_k
+def ejercicio_3b(images: np.array,
+                 Ks: list,
+                 use_2d: bool,
+                 iterations: int = 10,
+                 tolerance: float = 1e-17) -> None:
     max_k = max(Ks)
 
     pca_1d = PCA(max_k, iterations, tolerance)
-    pca_2d = PCA2D(max_k, iterations, tolerance)
     pca_1d.fit(images)
-    pca_2d.fit(images)
+    if use_2d:
+        pca_2d = PCA2D(max_k, iterations, tolerance)
+        pca_2d.fit(images)
     
-    mean_same_person_similarities_1d = []
-    mean_diff_person_similarities_1d = []
-    mean_same_person_similarities_2d = []
-    mean_diff_person_similarities_2d = []
+    mean_similarities_1d, mean_similarities_2d = [], []
     baseline_same, baseline_diff = mean_similarities(images) # compare against uncompressed images
 
     for k in Ks:
-        same_1d, diff_1d = compressed_mean_similarities(pca_1d, images, k)
-        same_2d, diff_2d = compressed_mean_similarities(pca_2d, images, k)
-        mean_same_person_similarities_1d.append(same_1d)
-        mean_diff_person_similarities_1d.append(diff_1d)
-        mean_same_person_similarities_2d.append(same_2d)
-        mean_diff_person_similarities_2d.append(diff_2d)
+        mean_similarities_1d.append(compressed_mean_similarities(pca_1d, images, k))
+        if use_2d:
+            mean_similarities_2d.append(compressed_mean_similarities(pca_2d, images, k))
 
     _, axes = plt.subplots(figsize=(8, 6))
 
-    axes.plot(Ks, mean_same_person_similarities_1d, '-o', label='mismo, 1D')
-    axes.plot(Ks, mean_diff_person_similarities_1d, '-o', label='distintos, 1D')
-    axes.plot(Ks, mean_same_person_similarities_2d, '-o', label='mismo, 2D')
-    axes.plot(Ks, mean_diff_person_similarities_2d, '-o', label='distintos, 2D')
-    axes.plot(Ks, [baseline_same] * len(Ks), '--', label="mismo, sin comprimir")
-    axes.plot(Ks, [baseline_diff] * len(Ks), '--', label="distintos, sin comprimir")
+    axes.plot(Ks, [x[0] for x in mean_similarities_1d], '-o', label='mismo, 1D')
+    axes.plot(Ks, [x[1] for x in mean_similarities_1d], '-o', label='distintos, 1D')
+    if use_2d:
+        axes.plot(Ks, [x[0] for x in mean_similarities_2d], '-o', label='mismo, 2D')
+        axes.plot(Ks, [x[1] for x in mean_similarities_2d], '-o', label='distintos, 2D')
+    axes.plot(Ks, [baseline_same] * len(Ks), '--', label="mismo, sin comprimir", color=PLOT_COLOURS[4])
+    axes.plot(Ks, [baseline_diff] * len(Ks), '--', label="distintos, sin comprimir", color=PLOT_COLOURS[5])
 
     plt.xlabel("Componentes usadas")
     plt.ylabel("Similaridad promedio")
-    plt.title("Similaridad promedio entre imágenes de dimensión {}\ncon {} iteraciones y tolerancia {}".format(images[0].shape, iterations, tolerance))
+    plt.title(f"Similaridad promedio entre imágenes de dimensión {images[0].shape}\ncon {iterations} iteraciones y tolerancia {tolerance}")
     plt.xticks(Ks)
     plt.ylim(bottom=0.0)
     plt.legend()
-    file_path = Path(figures_path, "similaridad_{}iteraciones_tolerancia{}_dim{}.png".format(iterations, tolerance, images[0].shape))
+    file_path = Path(figures_path, f"similaridad_{iterations}iteraciones_tolerancia{tolerance}_dim{images[0].shape}_2d{use_2d}_max{max_k}.png")
     plt.savefig(file_path)
 
 
@@ -203,83 +208,63 @@ def plot_3c(results_in_dataset, results_outside_dataset, pca_or_2d_pca = 'PCA') 
             label = 'out_dataset')
     plt.title('Comparación de error usando ' + pca_or_2d_pca)
     plt.legend()
- #   plt.show()
     plt.savefig('Comparacion ' + pca_or_2d_pca + '.png')
 
-def ejercicio_3d(images, Ks, repetitions):
-    times_1d = []
-    times_2d = []
+
+# 1DPCA could take FOREVER so we're making it optional
+def ejercicio_3d(images: np.array,
+                 Ks: list,
+                 repetitions: int,
+                 use_1d: bool,
+                 scale: str = 'linear'):
+    times_1d, times_2d = [], []
     for k in Ks:
-        pca_1d = PCA(k, iterations=5)
-        pca_2d = PCA2D(k, iterations=5)
-        t_1d = average_execution_time(pca_1d.fit, repetitions, images)
-        t_2d = average_execution_time(pca_2d.fit, repetitions, images)
-        times_1d.append(t_1d)
-        times_2d.append(t_2d)
-
-    _, axes = plt.subplots(figsize=(8, 6))
-    axes.plot(Ks, times_1d, '-o', label="PCA")
-    axes.plot(Ks, times_2d, '-o', label="2DPCA")
-    plt.xticks(Ks)
-    plt.xlabel("Autovectores calculados")
-    plt.ylabel("Tiempo de ejecución (en segundos)")
-    plt.title("Tiempo de ejecución en función de la cantidad de autovectores calculados,\npromedio sobre {} repeticiones".format(repetitions))
-    plt.legend()
-    file_path = Path(figures_path, "tiempo_{}repeticiones_dim{}.png".format(repetitions, images[0].shape))
-    plt.savefig(file_path)
-
-
-def ejercicio_3d_2dpca(images, Ks, repetitions):
-    times_2d = []
-    for k in Ks:
+        if use_1d:
+            pca_1d = PCA(k, iterations=5)
+            t_1d = average_execution_time(pca_1d.fit, repetitions, images)
+            times_1d.append(t_1d)
         pca_2d = PCA2D(k, iterations=5)
         t_2d = average_execution_time(pca_2d.fit, repetitions, images)
         times_2d.append(t_2d)
 
     _, axes = plt.subplots(figsize=(8, 6))
-    axes.plot(Ks, times_2d, '-o', label="2DPCA", color=LIGHT_ORANGE)
+    if use_1d:
+        axes.plot(Ks, times_1d, '-o', label="PCA")
+    axes.plot(Ks, times_2d, '-o', label="2DPCA", color=PLOT_COLOURS[1])
     plt.xticks(Ks)
     plt.xlabel("Autovectores calculados")
     plt.ylabel("Tiempo de ejecución (en segundos)")
-    plt.yscale('log')
+    plt.yscale(scale)
     plt.title("Tiempo de ejecución en función de la cantidad de autovectores calculados,\npromedio sobre {} repeticiones".format(repetitions))
     plt.legend()
-    file_path = Path(figures_path, "tiempo_{}repeticiones_dim{}_2dpca.png".format(repetitions, images[0].shape))
+    file_path = Path(figures_path, "tiempo_{}repeticiones_dim{}_1d{}.png".format(repetitions, images[0].shape, use_1d))
     plt.savefig(file_path)
+
 
 if __name__ == '__main__': 
     parser = create_parser("experiments")
     args = parser.parse_args()
+    number_of_eigenvectors = args.number_of_eigenvectors
+    similarity_2dpca = args.similarity_2dpca
     
     images = read_images(Path(faces_path), 
                          args.scale_down_factor)
     
     # Run exercise 3a
-    # #ejercicio_3a(PCA2D, images, 1, 2)
+    ejercicio_3a(PCA2D, images, 1, 2)
 
-    #max_components = min(images[0].shape)
-    #k_range = np.linspace(1, max_components, 8, dtype=int)
+    max_components = min(number_of_eigenvectors, images[0].size)
+    if similarity_2dpca:
+        max_components = min(images[0].shape)
 
-    # excluded_person = images[0:9]
-    # images = images[10:]
-    # single_person = images[0:9]
+    k_range = np.linspace(1, max_components, 10, dtype=int)
+    for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
+        ejercicio_3b(images, k_range, use_2d=similarity_2dpca, iterations=its)
 
     excluded_person = images[0:9]
     images = images[10:]
     single_person = images[0:9]
     
-    #quality_analysis(images, single_person, excluded_person)
-    # Runs 2DPCA
-    max_components = min(images[0].shape)
     quality_analysis(images, single_person, excluded_person, 
                      np.linspace(1, max_components, 8, dtype = int), 100, True)
 
-
-    # pca = PCA2D(40, filename="amogus")
-    # pca.fit(images)
-    # for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
-    #     ejercicio_3b(images, k_range, its)
-    ejercicio_3d_2dpca(images, k_range, 50)
-    # print(images.shape)
-    #quality_analysis(images, single_person, excluded_person, args)
-    #quality_analysis(np.array(), images, False)

@@ -17,5 +17,8 @@ def create_parser(prog: str):
     parser.add_argument("--image_index",
                         help="Number of image to use for comparison",
                         type=int, default=69)
+    parser.add_argument("--similarity_2dpca",
+                        help="Whether or not to plot 2DPCA in similarity figure",
+                        action="store_true")
 
     return parser
