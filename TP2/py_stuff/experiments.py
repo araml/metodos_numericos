@@ -106,39 +106,89 @@ def ejercicio_3b(images: np.array, Ks: list, iterations: int = 10, tolerance: fl
 
 
 # Ejercicio 3 c)
+def PSNR(m1: np.array, m2: np.array) -> float:
+    mse = (np.square(m1 - m2)).mean()
+    return 20 * np.log10(255 / np.sqrt(mse))
+
+def normalize(m1: np.array) -> np.array:
+    return m1 / np.linalg.norm(m1)
+
 def quality_analysis(training_dataset: np.array,
                      person_inside_dataset: np.array,
                      person_outside_dataset: np.array,
-                     args,
-                     use_1d = True) -> None:
+                     ks: list = [10], 
+                     iterations: int = 100, 
+                     use_PCA = True) -> None:
     pca = None
     print(training_dataset[0].shape)
     h, w = training_dataset[0].shape[0], training_dataset[0].shape[1]
-    if use_1d:
-        pca = PCA(args.number_of_eigenvectors, args.iterations, args.tolerance)
+    # get max number of eigenvalues for training
+    k = max(ks)
+    if use_PCA:
+        pca = PCA(k, iterations)
     else:
-        pca = PCA2D(args.number_of_eigenvectors, args.iterations, args.tolerance)
+        pca = PCA2D(k, iterations)
 
     pca.fit(training_dataset)
-    results_in_dataset = []
-    results_outside_dataset = []
+    frobenius_error_in_dataset = []
+    psnr_error_in_dataset = []
+    frobenius_error_outside_dataset = []
+    psnr_error_outside_dataset = []
     # im1 is inside the dataset, im2 is excluded
-    for im1, im2 in zip(person_inside_dataset, person_outside_dataset):
-        im1_compressed = pca.transform(np.array([im1]))
-        im2_compressed = pca.transform(np.array([im2]))
-        # PCA flattens..
-        if use_1d: 
-            im1_compressed = im1_compressed.reshape(h, w)
-            im2_compressed = im2_compressed.reshape(h, w)
-        # frobenius norm by default
-        results_in_dataset.append(np.linalg.norm(im1 - im1_compressed))
-        results_outside_dataset.append(np.linalg.norm(im2 - im2_compressed))
+    for k in ks: 
+        r1, r2, p1, p2 = [], [], [], []
+        pca.set_components_dimension(k)
+        for im1, im2 in zip(person_inside_dataset, person_outside_dataset):
+            im1_compressed = pca.transform(np.array([im1]))
+            im2_compressed = pca.transform(np.array([im2]))
+            # PCA flattens..
+            if use_PCA: 
+                im1_compressed = im1_compressed.reshape(h, w)
+                im2_compressed = im2_compressed.reshape(h, w)
+            # frobenius norm by default
+            r1.append(np.linalg.norm(normalize(im1) - normalize(im1_compressed)))
+            p1.append(PSNR(im1, im1_compressed))
+            r2.append(np.linalg.norm(normalize(im2) - normalize(im2_compressed)))
+            p2.append(PSNR(im2, im2_compressed))
+        frobenius_error_in_dataset.append(r1)
+        psnr_error_in_dataset.append([x / max(p1) for x in p1])
+        frobenius_error_outside_dataset.append(r2)
+        psnr_error_outside_dataset.append([x / max(p2) for x in p2])
         
-    print(results_in_dataset) 
-    print(results_outside_dataset)
-    plt.plot(range(len(results_in_dataset)), results_in_dataset, 'b')
-    plt.plot(range(len(results_outside_dataset)), results_outside_dataset, 'r')
-    plt.show()
+
+    print(frobenius_error_in_dataset) 
+    print(psnr_error_in_dataset)
+    print(frobenius_error_outside_dataset)
+    print(psnr_error_outside_dataset)
+    
+    
+    average = lambda l: [np.mean(x) for x in l]
+
+    frobenius_error_in_dataset = average(frobenius_error_in_dataset)
+    psnr_error_in_dataset = average(psnr_error_in_dataset)
+    frobenius_error_outside_dataset = average(frobenius_error_outside_dataset)
+    psnr_error_outside_dataset = average(psnr_error_outside_dataset)
+
+    _, axes = plt.subplots(figsize=(8, 6))
+
+    axes.plot(ks, frobenius_error_in_dataset, '-o', label='frobenius persona en el dataset')
+    axes.plot(ks, psnr_error_in_dataset, '-o', label='PSNR persona en el dataset')
+    axes.plot(ks, frobenius_error_outside_dataset, '-o', label='frobenius persona fuera del dataset')
+    axes.plot(ks, psnr_error_outside_dataset, '-o', label='PSNR persona fuera del dataset')
+
+    PCA_TYPE = 'PCA'
+    if not use_PCA:
+        PCA_TYPE = '2DPCA'
+
+    plt.xlabel('Componentes usadas')
+    plt.ylabel('Error')
+    plt.title(f'Comparación del error entre una persona adentro y fuera del'
+              f'dataset\n para distintas cantidades de componentes usando{PCA_TYPE}')
+    plt.xticks(ks)
+    plt.ylim(bottom=0.0)
+    plt.legend()
+    file_path = Path(figures_path, f'Comparacion de error con {PCA_TYPE}')
+    plt.savefig(file_path)
 
     
 # example on how to use corrcoef
@@ -205,10 +255,10 @@ if __name__ == '__main__':
                          args.scale_down_factor)
     
     # Run exercise 3a
-    # ejercicio_3a(PCA2D, images, 1, 2)
+    # #ejercicio_3a(PCA2D, images, 1, 2)
 
-    max_components = min(images[0].shape)
-    k_range = np.linspace(1, max_components, 8, dtype=int)
+    #max_components = min(images[0].shape)
+    #k_range = np.linspace(1, max_components, 8, dtype=int)
 
     # excluded_person = images[0:9]
     # images = images[10:]
@@ -218,21 +268,11 @@ if __name__ == '__main__':
     images = images[10:]
     single_person = images[0:9]
     
-    #plot_3c([2132.9481474764225, 2136.4530386426954, 2182.0322211103885, 2157.0719449322187, 2137.33419595085, 2284.684520992702, 2247.1406287678465, 2185.737747347281, 2269.8563188969233],
-             #[3130.754605656874, 3018.222367863016, 2794.223061783219, 2880.040997885756, 3179.5160795734723, 3100.2603989432564, 3037.8798743827842, 3139.3008201829543, 2855.938714383691])
-    
-    plot_3c([0.024624821439559588, 0.014855127744046017, 0.023833095351786383,
-            0.020675322510620646, 0.02048904116998715, 0.020135118454842265,
-            0.021557531941884703, 0.021177380106009815, 0.019908390917332035],
-            [0.01712156678349284, 0.01936335397976, 0.013107796604208636,
-            0.013114649371229742, 0.01525680879287523, 0.018899426783011118,
-            0.023547477358356873, 0.01866071609264942, 0.00821011870081827],
-            '2DPCA')
-
-    #quality_analysis(images, single_person, excluded_person, args)
+    #quality_analysis(images, single_person, excluded_person)
     # Runs 2DPCA
-    #quality_analysis(images, single_person, excluded_person, args, False)
-
+    max_components = min(images[0].shape)
+    quality_analysis(images, single_person, excluded_person, 
+                     np.linspace(1, max_components, 8, dtype = int), 100, True)
 
 
     # pca = PCA2D(40, filename="amogus")
