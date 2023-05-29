@@ -8,6 +8,8 @@ from PCA2D import PCA2D
 from utilities import read_images
 from parser import create_parser
 from utilities import average_execution_time, centre_images
+from threading import Thread
+from multiprocessing import Process
 
 SAMPLES_PER_PERSON = 10
 PLOT_COLOURS = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -278,13 +280,21 @@ if __name__ == '__main__':
     # Runs 2DPCA
 
     people = [5, 10, 20, 40]
+    threads = []
     for p in people: 
         excluded_people = images[0: 9 * p]
         included_people = images[9 * p + 1:]
-        quality_analysis(included_people, excluded_people, 
-                         np.linspace(1, 1000, 100, dtype = int), 100, p, True)
+        th = Process(target = quality_analysis, 
+                     args = (included_people, excluded_people, 
+                            np.linspace(1, 1000, 50, dtype = int), 100, p, True))
+        threads.append(th)
                 #np.linspace(1, 92, 23, dtype = int), 100, p, False) 
 
+    for t in threads:
+        t.start()
+
+    for t in threads:
+        t.join()
 
     # pca = PCA2D(40, filename="amogus")
     # pca.fit(images)
