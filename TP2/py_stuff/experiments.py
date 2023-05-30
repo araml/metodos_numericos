@@ -104,7 +104,7 @@ def ejercicio_3b(images: np.array,
     plt.ylabel("Similaridad promedio")
     plt.title(f"Similaridad promedio entre imágenes de dimensión {images[0].shape}\ncon {iterations} iteraciones y tolerancia {tolerance}")
     plt.xticks(Ks)
-    plt.ylim(bottom=0.0)
+    plt.ylim(bottom = -0.1, top = 1.1)
     plt.legend()
     file_path = Path(figures_path, f"similaridad_{iterations}iteraciones_tolerancia{tolerance}_dim{images[0].shape}_2d{use_2d}_max{max_k}.png")
     plt.savefig(file_path)
@@ -251,20 +251,20 @@ if __name__ == '__main__':
                          args.scale_down_factor)
     
     # Run exercise 3a
-    ejercicio_3a(PCA2D, images, 1, 2)
+    # ejercicio_3a(PCA2D, images, 1, 2)
 
-    max_components = min(number_of_eigenvectors, images[0].size)
-    if similarity_2dpca:
-        max_components = min(images[0].shape)
+    max_components_1dpca = min(number_of_eigenvectors, images[0].size)
+    max_components_both = min(images[0].shape)
 
-    k_range = np.linspace(1, max_components, 10, dtype=int)
+    k_range_1dpca = np.linspace(1, max_components_1dpca, 10, dtype=int)
+    k_range_both = np.linspace(1, max_components_both, 10, dtype=int)
     for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
-        ejercicio_3b(images, k_range, use_2d=similarity_2dpca, iterations=its)
+        ejercicio_3b(images, k_range_1dpca, use_2d=False, iterations=its)
+        ejercicio_3b(images, k_range_both, use_2d=True, iterations=its)
 
-    excluded_person = images[0:9]
-    images = images[10:]
-    single_person = images[0:9]
+    # excluded_person = images[0:9]
+    # images = images[10:]
+    # single_person = images[0:9]
     
-    quality_analysis(images, single_person, excluded_person, 
-                     np.linspace(1, 1000, 8, dtype = int), 100, True)
-
+    # quality_analysis(images, single_person, excluded_person, 
+    #                  np.linspace(1, 1000, 8, dtype = int), 100, True)
