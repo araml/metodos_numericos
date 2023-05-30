@@ -41,8 +41,6 @@ class PCA2D(PCABase):
     def get_eigenfaces(self) -> np.array:
         eigenfaces = []
         feature_vectors = self.mean_pixel_values @ self.eigenvectors[:, :self.k]
-        print(feature_vectors.shape)
-        print(self.eigenvectors.T.shape)
         for i in range(self.k):
             # outer product of feature vectors and eigenvectors
             column = feature_vectors[:,i].reshape(-1, 1)
