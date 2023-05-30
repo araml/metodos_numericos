@@ -29,5 +29,11 @@ def create_parser(prog: str):
     parser.add_argument("--eigenface_grid_width",
                         help="Eigenface grid width",
                         type=int, default=2)
+    parser.add_argument("--large_k",
+                        help="Larger k value for corrcoef figure generation",
+                        type=int, default=10)
+    parser.add_argument("--small_k",
+                        help="Smaller k value for corrcoef figure generation",
+                        type=int, default=1)
 
     return parser

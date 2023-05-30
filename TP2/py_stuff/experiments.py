@@ -14,23 +14,6 @@ from multiprocessing import Process
 SAMPLES_PER_PERSON = 10
 PLOT_COLOURS = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-def create_compression_corrcoef_figures(pca_class,
-                                        images: np.array,
-                                        small_k: int,
-                                        large_k: int,
-                                        iterations: int = 10,
-                                        tolerance: float = 1e-17,
-                                        colourmap = plt.cm.GnBu) -> None:
-    assert(large_k > small_k and small_k > 0)
-
-    pca_engine = pca_class(large_k, iterations, tolerance)
-    pca_engine.fit(images)
-
-    create_corrcoef_figure(pca_engine, images, colourmap)
-
-    pca_engine.set_components_dimension(small_k)
-    create_corrcoef_figure(pca_engine, images, colourmap)
-
 
 def mean_similarity_between_people(correlation_matrix: np.array,
                                    person1: int,

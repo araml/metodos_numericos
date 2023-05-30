@@ -39,5 +39,9 @@ elif figure_function == "save_eigenvector_figure":
     pca2d.fit(images)
     save_eigenvector_figure(pca, h, w, (8, 8))
     save_eigenvector_figure(pca2d, h, w, (8, 8))
+elif figure_function == "create_compression_corrcoef_figures":
+    large_k, small_k = args.large_k, args.small_k
+    create_compression_corrcoef_figures(PCA, images, small_k, large_k, iterations, tolerance)
+    create_compression_corrcoef_figures(PCA2D, images, small_k, large_k, iterations, tolerance)
 else:
     raise ValueError("Unknown figure function")
