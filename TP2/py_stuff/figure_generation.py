@@ -8,37 +8,36 @@ from string import ascii_letters
 from utilities import centre_images, flatten_images
 
 
-def plot_eigenvalues(eigenvalues: np.array, filename: str):
-    file_path = Path(figures_path, filename + '.png')
+def plot_eigenvalues(pca_engine: PCABase):
+    eigenvalues = pca_engine.eigenvalues
     x = np.arange(1, eigenvalues.size+1)
     plt.plot(x, eigenvalues, '-o')
     plt.xticks(x)
     plt.xlabel("Número de componente")
     plt.ylabel("Autovalor")
-    plt.title("{} primeros autovalores".format(eigenvalues.size))
+    plt.title(f"{eigenvalues.size} primeros autovalores, {pca_engine.name}")
+    file_path = Path(figures_path, f"{eigenvalues.size}autovalores_{pca_engine.name}.png")
     plt.savefig(file_path)
+    plt.clf()
     return file_path
 
 
-def save_eigenvector_figure(eigenvectors: np.array,
-                            image_height: int,
-                            image_width: int,
+def save_eigenvector_figure(pca_engine: PCABase,
                             subplots_height: int,
                             subplots_width: int,
                             figsize: (int, int),
-                            filename=None,
                             colourmap=plt.cm.viridis) -> str:
-    if not filename:
-        filename = ''.join(choices(ascii_letters, k=12))
-    file_path = Path(figures_path, filename + '.png')
-
+    eigenfaces = pca_engine.get_eigenfaces()
     _, axs = plt.subplots(subplots_height, subplots_width, figsize=figsize)
     for i, ax in enumerate(axs.flatten()):
-        ax.imshow(eigenvectors[:,i].reshape(image_height, image_width), cmap=colourmap)
+        ax.imshow(eigenfaces[i], cmap=colourmap)
         ax.set_title("Autovector {}".format(i+1))
         ax.axis('off')
     plt.tight_layout()
+    file_path = Path(figures_path,
+        f"{subplots_height*subplots_width}eigenfaces_{pca_engine.name}_{colourmap.name}.png")
     plt.savefig(file_path)
+    plt.clf()
     return file_path
 
 
@@ -64,9 +63,10 @@ def save_image_comparison(original_image: np.array,
     axs[1].axis('off')
 
     plt.tight_layout()
+    plt.savefig(file_path)
     if show_image:
         plt.show()
-    plt.savefig(file_path)
+    plt.clf()
     return file_path
 
 

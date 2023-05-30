@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
+import parser
 from figure_generation import *
 from data_paths import *
 from pathlib import Path
 from utilities import * 
 from PCA import PCA
 from PCA2D import PCA2D
-import parser
 
 p = parser.create_parser("create_image_comparison")
 args = p.parse_args()

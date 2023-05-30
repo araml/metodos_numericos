@@ -23,5 +23,11 @@ def create_parser(prog: str):
     parser.add_argument("--show_image_comparison",
                         help="Whether or not to display image comparison before saving it",
                         action="store_true")
+    parser.add_argument("--eigenface_grid_height",
+                        help="Eigenface grid height",
+                        type=int, default=2)
+    parser.add_argument("--eigenface_grid_width",
+                        help="Eigenface grid width",
+                        type=int, default=2)
 
     return parser

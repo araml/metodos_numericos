@@ -33,7 +33,19 @@ class PCA2D(PCABase):
         return feature_vectors @ self.eigenvectors[:, :self.k].T
 
     def get_image_covariance_matrix(self, images: np.array) -> np.array:
-        mean_pixel_values = np.mean(images, axis = 0)
-        centred_images = images - mean_pixel_values
+        self.mean_pixel_values = np.mean(images, axis = 0)
+        centred_images = images - self.mean_pixel_values
         return np.mean(np.array([image.T @ image for image in centred_images]),
                        axis = 0)
+    
+    def get_eigenfaces(self) -> np.array:
+        eigenfaces = []
+        feature_vectors = self.mean_pixel_values @ self.eigenvectors[:, :self.k]
+        print(feature_vectors.shape)
+        print(self.eigenvectors.T.shape)
+        for i in range(self.k):
+            # outer product of feature vectors and eigenvectors
+            column = feature_vectors[:,i].reshape(-1, 1)
+            row = self.eigenvectors.T[i].reshape(1, -1)
+            eigenfaces.append(column @ row)
+        return np.array(eigenfaces)

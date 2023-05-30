@@ -6,7 +6,7 @@ class PCABase:
                  k: int = 30, 
                  iterations: int = 10, 
                  tolerance: float = 1e-17):
-        self.eigenbase = []
+        self.eigenvectors = []
         self.eigenvalues = []
         self.k = k
         self.iterations = iterations
@@ -16,6 +16,9 @@ class PCABase:
         raise NotImplementedError("Must be implemented in derived class")
 
     def transform(self, images: np.array) -> np.array:
+        raise NotImplementedError("Must be implemented in derived class")
+    
+    def get_eigenfaces(self) -> np.array:
         raise NotImplementedError("Must be implemented in derived class")
     
     def get_image_comparison(self, images: np.array, 
@@ -40,9 +43,10 @@ class PCA(PCABase):
         self.name = "1DPCA"
 
     def fit(self, images: np.array) -> None: 
+        self.height, self.width = images[0].shape
         flattened_images = flatten_images(images)
         covariance = self.create_covariance_matrix(flattened_images)
-        self.eigenvalues, self.eigenbase = \
+        self.eigenvalues, self.eigenvectors = \
                 get_eigenvalues_and_eigenvectors(covariance, 
                                                  self.k, 
                                                  self.iterations, 
@@ -50,13 +54,17 @@ class PCA(PCABase):
 
     def transform(self, images: np.array) -> np.array:
         flattened_images = flatten_images(images)
-        reduced_images = flattened_images @ (self.eigenbase[:, :self.k]) # reduce dimensions
-        return reduced_images @ self.eigenbase[:, :self.k].T
+        reduced_images = flattened_images @ (self.eigenvectors[:, :self.k]) # reduce dimensions
+        return reduced_images @ self.eigenvectors[:, :self.k].T
 
     def create_covariance_matrix(self, flattened_images: np.array) -> np.array:
         n = flattened_images.shape[0]
         centred_images = centre_images(flattened_images)
         return (centred_images.T @ centred_images) / (n - 1)
+    
+    def get_eigenfaces(self) -> np.array:
+        transposed_eigenvectors = self.eigenvectors.transpose()
+        return np.array([e.reshape(self.height, self.width) for e in transposed_eigenvectors])
     
     def get_image_comparison(self, images: np.array, 
                              image_index: int) -> (np.array, np.array):
