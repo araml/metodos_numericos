@@ -20,5 +20,8 @@ def create_parser(prog: str):
     parser.add_argument("--similarity_2dpca",
                         help="Whether or not to plot 2DPCA in similarity figure",
                         action="store_true")
+    parser.add_argument("--show_image_comparison",
+                        help="Whether or not to display image comparison before saving it",
+                        action="store_true")
 
     return parser

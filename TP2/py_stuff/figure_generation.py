@@ -48,7 +48,8 @@ def save_image_comparison(original_image: np.array,
                           image_width: int,
                           figsize: (int, int),
                           filename=None,
-                          colourmap=plt.cm.viridis) -> str:
+                          colourmap=plt.cm.viridis,
+                          show_image=False) -> str:
     if not filename:
         filename = ''.join(choices(ascii_letters, k=12))
     file_path = Path(figures_path, filename + '.png')
@@ -63,6 +64,8 @@ def save_image_comparison(original_image: np.array,
     axs[1].axis('off')
 
     plt.tight_layout()
+    if show_image:
+        plt.show()
     plt.savefig(file_path)
     return file_path
 
@@ -70,12 +73,15 @@ def save_image_comparison(original_image: np.array,
 def create_pca_image_comparison(pca_engine: PCABase,
                                 images: np.array,
                                 image_index: int,
-                                figsize: (int, int),
-                                colourmap=plt.cm.viridis) -> str:
+                                figsize: (int, int) = (8, 8),
+                                colourmap = plt.cm.viridis,
+                                show_image: bool = False) -> str:
     h, w = images.shape[1], images.shape[2]
     original_image, compressed_image = pca_engine.get_image_comparison(images, image_index)
-    filename = "image_comparison_{}_{}components_{}_{}".format(image_index, pca_engine.k, colourmap.name, pca_engine.name)
-    return save_image_comparison(original_image, compressed_image, h, w, figsize, filename, colourmap)
+    filename = "image_comparison_{}_{}components_{}_{}".format(image_index,
+    pca_engine.k, colourmap.name, pca_engine.name)
+    return save_image_comparison(original_image, compressed_image, h, w, figsize, filename,
+                                 colourmap, show_image)
 
 
 def create_corrcoef_figure(pca_engine: PCABase,
