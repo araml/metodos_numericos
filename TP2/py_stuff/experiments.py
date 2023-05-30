@@ -8,6 +8,8 @@ from PCA2D import PCA2D
 from utilities import read_images
 from parser import create_parser
 from utilities import average_execution_time, centre_images
+from threading import Thread
+from multiprocessing import Process
 
 SAMPLES_PER_PERSON = 10
 PLOT_COLOURS = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -118,17 +120,33 @@ def PSNR(m1: np.array, m2: np.array) -> float:
 def normalize(m1: np.array) -> np.array:
     return m1 / np.linalg.norm(m1)
 
-def quality_analysis(training_dataset: np.array,
-                     person_inside_dataset: np.array,
-                     person_outside_dataset: np.array,
+def calculate_error(images: np.array, pca, use_PCA: bool) -> (np.array, np.array):
+    f, p = [], []
+    h, w = images[0].shape
+    for im in images:
+        im_compressed = pca.transform(np.array([im]))
+        # PCA flattens..
+        if use_PCA: 
+            im_compressed = im_compressed.reshape(h, w)
+        # frobenius norm by default
+        f.append(np.linalg.norm(normalize(im) - normalize(im_compressed)))
+        p.append(PSNR(im, im_compressed))
+    
+    return f, [x / max(p) for x in p]
+
+def quality_analysis(people_inside_dataset: np.array,
+                     people_outside_dataset: np.array,
                      ks: list = [10], 
                      iterations: int = 100, 
+                     N_outside: int = 5,
                      use_PCA = True) -> None:
+    training_dataset = people_inside_dataset
     pca = None
     print(training_dataset[0].shape)
-    h, w = training_dataset[0].shape[0], training_dataset[0].shape[1]
     # get max number of eigenvalues for training
+    ks = [k for k in ks if k <= len(training_dataset)]
     k = max(ks)
+    
     if use_PCA:
         pca = PCA(k, iterations)
     else:
@@ -141,24 +159,14 @@ def quality_analysis(training_dataset: np.array,
     psnr_error_outside_dataset = []
     # im1 is inside the dataset, im2 is excluded
     for k in ks: 
-        r1, r2, p1, p2 = [], [], [], []
         pca.set_components_dimension(k)
-        for im1, im2 in zip(person_inside_dataset, person_outside_dataset):
-            im1_compressed = pca.transform(np.array([im1]))
-            im2_compressed = pca.transform(np.array([im2]))
-            # PCA flattens..
-            if use_PCA: 
-                im1_compressed = im1_compressed.reshape(h, w)
-                im2_compressed = im2_compressed.reshape(h, w)
-            # frobenius norm by default
-            r1.append(np.linalg.norm(normalize(im1) - normalize(im1_compressed)))
-            p1.append(PSNR(im1, im1_compressed))
-            r2.append(np.linalg.norm(normalize(im2) - normalize(im2_compressed)))
-            p2.append(PSNR(im2, im2_compressed))
-        frobenius_error_in_dataset.append(r1)
-        psnr_error_in_dataset.append([x / max(p1) for x in p1])
-        frobenius_error_outside_dataset.append(r2)
-        psnr_error_outside_dataset.append([x / max(p2) for x in p2])
+        
+        f1, p1 = calculate_error(people_inside_dataset, pca, use_PCA)
+        f2, p2 = calculate_error(people_outside_dataset, pca, use_PCA)
+        frobenius_error_in_dataset.append(f1)
+        psnr_error_in_dataset.append(p1)
+        frobenius_error_outside_dataset.append(f2)
+        psnr_error_outside_dataset.append(p2)
         
 
     print(frobenius_error_in_dataset) 
@@ -176,10 +184,15 @@ def quality_analysis(training_dataset: np.array,
 
     _, axes = plt.subplots(figsize=(8, 6))
 
-    axes.plot(ks, frobenius_error_in_dataset, '-o', label='frobenius persona en el dataset')
-    axes.plot(ks, psnr_error_in_dataset, '-o', label='PSNR persona en el dataset')
-    axes.plot(ks, frobenius_error_outside_dataset, '-o', label='frobenius persona fuera del dataset')
-    axes.plot(ks, psnr_error_outside_dataset, '-o', label='PSNR persona fuera del dataset')
+    N_inside = 41 - N_outside
+    axes.plot(ks, frobenius_error_in_dataset, '-o',
+              label=f'frobenius con {N_inside} personas en el dataset')
+    axes.plot(ks, psnr_error_in_dataset, '-o', 
+              label=f'PSNR con {N_inside} personas en el dataset')
+    axes.plot(ks, frobenius_error_outside_dataset, '-o', 
+              label=f'frobenius {N_outside} personas fuera del dataset')
+    axes.plot(ks, psnr_error_outside_dataset, '-o', 
+              label=f'PSNR con {N_outside} personas fuera del dataset')
 
     PCA_TYPE = 'PCA'
     if not use_PCA:
@@ -187,12 +200,13 @@ def quality_analysis(training_dataset: np.array,
 
     plt.xlabel('Componentes usadas')
     plt.ylabel('Error')
-    plt.title(f'Comparación del error entre una persona adentro y fuera del'
+    plt.title(f'Comparación del error entre {N_inside} personas adentro y {N_outside} fuera del'
               f'dataset\n para distintas cantidades de componentes usando {PCA_TYPE}')
     plt.xticks(ks)
     plt.ylim(bottom=0.0)
     plt.legend()
-    file_path = Path(figures_path, f'Comparacion de error con {PCA_TYPE}')
+    file_path = Path(figures_path, f'Comparacion de error con '
+                     f'{PCA_TYPE}_adentro_{N_inside}_afuera_{N_outside}')
     plt.savefig(file_path)
 
     
@@ -251,20 +265,42 @@ if __name__ == '__main__':
                          args.scale_down_factor)
     
     # Run exercise 3a
-    # ejercicio_3a(PCA2D, images, 1, 2)
-
-    max_components_1dpca = min(number_of_eigenvectors, images[0].size)
-    max_components_both = min(images[0].shape)
-
-    k_range_1dpca = np.linspace(1, max_components_1dpca, 10, dtype=int)
-    k_range_both = np.linspace(1, max_components_both, 10, dtype=int)
-    for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
-        ejercicio_3b(images, k_range_1dpca, use_2d=False, iterations=its)
-        ejercicio_3b(images, k_range_both, use_2d=True, iterations=its)
-
-    # excluded_person = images[0:9]
-    # images = images[10:]
-    # single_person = images[0:9]
+    #ejercicio_3a(PCA2D, images, 1, 2)
     
-    # quality_analysis(images, single_person, excluded_person, 
-    #                  np.linspace(1, 1000, 8, dtype = int), 100, True)
+    #max_components = min(number_of_eigenvectors, images[0].size)
+    #if similarity_2dpca:
+    #    max_components = min(images[0].shape)
+
+    #k_range = np.linspace(1, max_components, 10, dtype=int)
+    #for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
+    #    ejercicio_3b(images, k_range, use_2d=similarity_2dpca, iterations=its)
+    
+    #max_components = min(images[0].shape)
+    #quality_analysis(images, single_person, excluded_person)
+    # Runs 2DPCA
+
+    people = [5, 10, 20, 40]
+    threads = []
+    for p in people: 
+        excluded_people = images[0: 9 * p]
+        included_people = images[9 * p + 1:]
+        th = Process(target = quality_analysis, 
+                     args = (included_people, excluded_people, 
+                            np.linspace(1, 1000, 50, dtype = int), 100, p, True))
+        threads.append(th)
+                #np.linspace(1, 92, 23, dtype = int), 100, p, False) 
+
+    for t in threads:
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    # pca = PCA2D(40, filename="amogus")
+    # pca.fit(images)
+    # for its in [1, 2, 3, 4, 5, 8, 10, 15, 20]:
+    #     ejercicio_3b(images, k_range, its)
+    #ejercicio_3d_2dpca(images, k_range, 50)
+    # print(images.shape)
+    #quality_analysis(images, single_person, excluded_person, args)
+    #quality_analysis(np.array(), images, False)
