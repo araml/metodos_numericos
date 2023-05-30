@@ -7,7 +7,7 @@ from PCA import PCA
 from PCA2D import PCA2D
 import parser
 
-p = parser.create_parser("process_images")
+p = parser.create_parser("create_image_comparison")
 args = p.parse_args()
 number_of_eigenvectors = args.number_of_eigenvectors
 iterations = args.iterations
