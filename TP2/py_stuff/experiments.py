@@ -14,13 +14,13 @@ from multiprocessing import Process
 SAMPLES_PER_PERSON = 10
 PLOT_COLOURS = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-def ejercicio_3a(pca_class,
-                 images: np.array,
-                 small_k: int,
-                 large_k: int,
-                 iterations: int = 10,
-                 tolerance: float = 1e-17,
-                 colourmap = plt.cm.GnBu) -> None:
+def create_compression_corrcoef_figures(pca_class,
+                                        images: np.array,
+                                        small_k: int,
+                                        large_k: int,
+                                        iterations: int = 10,
+                                        tolerance: float = 1e-17,
+                                        colourmap = plt.cm.GnBu) -> None:
     assert(large_k > small_k and small_k > 0)
 
     pca_engine = pca_class(large_k, iterations, tolerance)
@@ -71,12 +71,12 @@ def mean_similarities(images: np.array) -> (float, float):
 # For a given dataset, 2DPCA has an inherently lower max component limit,
 # so we're making it optional -- this function can be run with just 1DPCA
 # and a higher max_k
-def ejercicio_3b(images: np.array,
-                 Ks: list,
-                 use_2d: bool,
-                 iterations: int = 10,
-                 tolerance: float = 1e-17) -> None:
-    max_k = max(Ks)
+def create_pca_similarity_figure(images: np.array,
+                                 ks: list,
+                                 use_2d: bool,
+                                 iterations: int = 10,
+                                 tolerance: float = 1e-17) -> None:
+    max_k = max(ks)
 
     pca_1d = PCA(max_k, iterations, tolerance)
     pca_1d.fit(images)
@@ -87,25 +87,25 @@ def ejercicio_3b(images: np.array,
     mean_similarities_1d, mean_similarities_2d = [], []
     baseline_same, baseline_diff = mean_similarities(images) # compare against uncompressed images
 
-    for k in Ks:
+    for k in ks:
         mean_similarities_1d.append(compressed_mean_similarities(pca_1d, images, k))
         if use_2d:
             mean_similarities_2d.append(compressed_mean_similarities(pca_2d, images, k))
 
     _, axes = plt.subplots(figsize=(8, 6))
 
-    axes.plot(Ks, [x[0] for x in mean_similarities_1d], '-o', label='mismo, 1D')
-    axes.plot(Ks, [x[1] for x in mean_similarities_1d], '-o', label='distintos, 1D')
+    axes.plot(ks, [x[0] for x in mean_similarities_1d], '-o', label='mismo, 1D')
+    axes.plot(ks, [x[1] for x in mean_similarities_1d], '-o', label='distintos, 1D')
     if use_2d:
-        axes.plot(Ks, [x[0] for x in mean_similarities_2d], '-o', label='mismo, 2D')
-        axes.plot(Ks, [x[1] for x in mean_similarities_2d], '-o', label='distintos, 2D')
-    axes.plot(Ks, [baseline_same] * len(Ks), '--', label="mismo, sin comprimir", color=PLOT_COLOURS[4])
-    axes.plot(Ks, [baseline_diff] * len(Ks), '--', label="distintos, sin comprimir", color=PLOT_COLOURS[5])
+        axes.plot(ks, [x[0] for x in mean_similarities_2d], '-o', label='mismo, 2D')
+        axes.plot(ks, [x[1] for x in mean_similarities_2d], '-o', label='distintos, 2D')
+    axes.plot(ks, [baseline_same] * len(ks), '--', label="mismo, sin comprimir", color=PLOT_COLOURS[4])
+    axes.plot(ks, [baseline_diff] * len(ks), '--', label="distintos, sin comprimir", color=PLOT_COLOURS[5])
 
     plt.xlabel("Componentes usadas")
     plt.ylabel("Similaridad promedio")
     plt.title(f"Similaridad promedio entre imágenes de dimensión {images[0].shape}\ncon {iterations} iteraciones y tolerancia {tolerance}")
-    plt.xticks(Ks)
+    plt.xticks(ks)
     plt.ylim(bottom = -0.1, top = 1.1)
     plt.legend()
     file_path = Path(figures_path, f"similaridad_{iterations}iteraciones_tolerancia{tolerance}_dim{images[0].shape}_2d{use_2d}_max{max_k}.png")
@@ -226,13 +226,13 @@ def plot_3c(results_in_dataset, results_outside_dataset, pca_or_2d_pca = 'PCA') 
 
 
 # 1DPCA could take FOREVER so we're making it optional
-def ejercicio_3d(images: np.array,
-                 Ks: list,
-                 repetitions: int,
-                 use_1d: bool,
-                 scale: str = 'linear'):
+def create_execution_time_figure(images: np.array,
+                                 ks: list,
+                                 repetitions: int,
+                                 use_1d: bool,
+                                 scale: str = 'linear'):
     times_1d, times_2d = [], []
-    for k in Ks:
+    for k in ks:
         if use_1d:
             pca_1d = PCA(k, iterations=5)
             t_1d = average_execution_time(pca_1d.fit, repetitions, images)
@@ -243,9 +243,9 @@ def ejercicio_3d(images: np.array,
 
     _, axes = plt.subplots(figsize=(8, 6))
     if use_1d:
-        axes.plot(Ks, times_1d, '-o', label="PCA")
-    axes.plot(Ks, times_2d, '-o', label="2DPCA", color=PLOT_COLOURS[1])
-    plt.xticks(Ks)
+        axes.plot(ks, times_1d, '-o', label="PCA")
+    axes.plot(ks, times_2d, '-o', label="2DPCA", color=PLOT_COLOURS[1])
+    plt.xticks(ks)
     plt.xlabel("Autovectores calculados")
     plt.ylabel("Tiempo de ejecución (en segundos)")
     plt.yscale(scale)
