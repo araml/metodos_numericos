@@ -11,8 +11,8 @@ from utilities import centre_images, flatten_images
 def plot_eigenvalues(pca_engine: PCABase):
     eigenvalues = pca_engine.eigenvalues
     x = np.arange(1, eigenvalues.size+1)
-    plt.plot(x, eigenvalues, '-o')
-    plt.xticks(x)
+    plt.plot(x, eigenvalues)
+    # plt.xticks(x)
     plt.xlabel("Número de componente")
     plt.ylabel("Autovalor")
     plt.title(f"{eigenvalues.size} primeros autovalores, {pca_engine.name}")

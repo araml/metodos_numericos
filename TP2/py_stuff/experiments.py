@@ -58,7 +58,8 @@ def create_pca_similarity_figure(images: np.array,
                                  ks: list,
                                  use_2d: bool,
                                  iterations: int = 10,
-                                 tolerance: float = 1e-17) -> None:
+                                 tolerance: float = 1e-17,
+                                 scale: str = "linear") -> None:
     max_k = max(ks)
 
     pca_1d = PCA(max_k, iterations, tolerance)
@@ -89,10 +90,13 @@ def create_pca_similarity_figure(images: np.array,
     plt.ylabel("Similaridad promedio")
     plt.title(f"Similaridad promedio entre imágenes de dimensión {images[0].shape}\ncon {iterations} iteraciones y tolerancia {tolerance}")
     plt.xticks(ks)
-    plt.ylim(bottom = -0.1, top = 1.1)
+    if scale == "linear":
+        plt.ylim(bottom = -0.1, top = 1.1)
+    plt.yscale(scale)
     plt.legend()
-    file_path = Path(figures_path, f"similaridad_{iterations}iteraciones_tolerancia{tolerance}_dim{images[0].shape}_2d{use_2d}_max{max_k}.png")
+    file_path = Path(figures_path, f"similaridad_{iterations}iteraciones_tolerancia{tolerance}_dim{images[0].shape}_2d{use_2d}_max{max_k}_{scale}.png")
     plt.savefig(file_path)
+    plt.clf()
 
 
 # Ejercicio 3 c)
