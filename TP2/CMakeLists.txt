@@ -5,7 +5,7 @@ enable_testing()
 
 option(BUILD_TEST "Builds a suite of tests")
 
-set(CMAKE_CXX_FLAGS "-O2 -ggdb -std=c++2a")
+set(CMAKE_CXX_FLAGS "-O2 -ggdb -std=c++2a -fopenmp")
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
    add_compile_options (-fdiagnostics-color=always)

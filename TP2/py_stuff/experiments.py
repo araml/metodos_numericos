@@ -133,7 +133,8 @@ def quality_analysis(people_inside_dataset: np.array,
     pca = None
     print(training_dataset[0].shape)
     # get max number of eigenvalues for training
-    ks = [k for k in ks if k <= len(training_dataset)]
+    h, w = people_inside_dataset[0].shape
+    ks = [k for k in ks if k <= h * w]
     k = max(ks)
     
     if use_PCA:
@@ -275,7 +276,7 @@ if __name__ == '__main__':
         included_people = images[9 * p + 1:]
         th = Process(target = quality_analysis, 
                      args = (included_people, excluded_people, 
-                            np.linspace(1, 1000, 50, dtype = int), 100, p, True))
+                            np.linspace(1, 200, 50, dtype = int), 100, p, True))
         threads.append(th)
                 #np.linspace(1, 92, 23, dtype = int), 100, p, False) 
 
