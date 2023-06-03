@@ -59,7 +59,7 @@ def create_pca_similarity_figure(images: np.array,
                                  use_2d: bool,
                                  iterations: int = 10,
                                  tolerance: float = 1e-17,
-                                 scale: str = "linear") -> None:
+                                 plot_same = True) -> None:
     max_k = max(ks)
 
     pca_1d = PCA(max_k, iterations, tolerance)
@@ -78,23 +78,25 @@ def create_pca_similarity_figure(images: np.array,
 
     _, axes = plt.subplots(figsize=(8, 6))
 
-    axes.plot(ks, [x[0] for x in mean_similarities_1d], '-o', label='mismo, 1D')
-    axes.plot(ks, [x[1] for x in mean_similarities_1d], '-o', label='distintos, 1D')
+    if plot_same:
+        axes.plot(ks, [x[0] for x in mean_similarities_1d], '-o', label='mismo, 1D')
+    axes.plot(ks, [x[1] for x in mean_similarities_1d], '-o', label='distintos, 1D', color=PLOT_COLOURS[1])
     if use_2d:
-        axes.plot(ks, [x[0] for x in mean_similarities_2d], '-o', label='mismo, 2D')
-        axes.plot(ks, [x[1] for x in mean_similarities_2d], '-o', label='distintos, 2D')
-    axes.plot(ks, [baseline_same] * len(ks), '--', label="mismo, sin comprimir", color=PLOT_COLOURS[4])
+        if plot_same:
+            axes.plot(ks, [x[0] for x in mean_similarities_2d], '-o', label='mismo, 2D', color=PLOT_COLOURS[2])
+        axes.plot(ks, [x[1] for x in mean_similarities_2d], '-o', label='distintos, 2D', color=PLOT_COLOURS[3])
+    if plot_same:
+        axes.plot(ks, [baseline_same] * len(ks), '--', label="mismo, sin comprimir", color=PLOT_COLOURS[4])
     axes.plot(ks, [baseline_diff] * len(ks), '--', label="distintos, sin comprimir", color=PLOT_COLOURS[5])
 
     plt.xlabel("Componentes usadas")
     plt.ylabel("Similaridad promedio")
     plt.title(f"Similaridad promedio entre imágenes de dimensión {images[0].shape}\ncon {iterations} iteraciones y tolerancia {tolerance}")
     plt.xticks(ks)
-    if scale == "linear":
+    if plot_same:
         plt.ylim(bottom = -0.1, top = 1.1)
-    plt.yscale(scale)
     plt.legend()
-    file_path = Path(figures_path, f"similaridad_{iterations}iteraciones_tolerancia{tolerance}_dim{images[0].shape}_2d{use_2d}_max{max_k}_{scale}.png")
+    file_path = Path(figures_path, f"similaridad_{iterations}iteraciones_tolerancia{tolerance}_dim{images[0].shape}_2d{use_2d}_max{max_k}_mismo{plot_same}.png")
     plt.savefig(file_path)
     plt.clf()
 

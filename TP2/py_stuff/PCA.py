@@ -18,6 +18,9 @@ class PCABase:
     def transform(self, images: np.array) -> np.array:
         raise NotImplementedError("Must be implemented in derived class")
     
+    def project_images(self, images: np.array) -> np.array:
+        raise NotImplementedError("Must be implemented in derived class")
+        
     def get_eigenfaces(self) -> np.array:
         raise NotImplementedError("Must be implemented in derived class")
     
@@ -53,9 +56,8 @@ class PCA(PCABase):
                                                  self.tolerance)
 
     def transform(self, images: np.array) -> np.array:
-        flattened_images = flatten_images(images)
-        reduced_images = flattened_images @ (self.eigenvectors[:, :self.k]) # reduce dimensions
-        return reduced_images @ self.eigenvectors[:, :self.k].T
+        projected_images = self.project_images(images)
+        return projected_images @ self.eigenvectors[:, :self.k].T
 
     def create_covariance_matrix(self, flattened_images: np.array) -> np.array:
         n = flattened_images.shape[0]
@@ -70,3 +72,7 @@ class PCA(PCABase):
                              image_index: int) -> (np.array, np.array):
         compressed_images = self.transform(images)
         return images[image_index], compressed_images[image_index]
+    
+    def project_images(self, images: np.array) -> np.array:
+        flattened_images = flatten_images(images)
+        return flattened_images @ (self.eigenvectors[:, :self.k]) # reduce dimensions

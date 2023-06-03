@@ -11,17 +11,19 @@ class PCA2D(PCABase):
         self.name = "2DPCA"
 
     def fit(self, images: np.array) -> None:
-            G = self.get_image_covariance_matrix(images)
-            self.eigenvalues, self.eigenvectors = \
-                get_eigenvalues_and_eigenvectors(G, self.k, self.iterations,
-                                                 self.tolerance)
+        G = self.get_image_covariance_matrix(images)
+        self.eigenvalues, self.eigenvectors = \
+            get_eigenvalues_and_eigenvectors(G, self.k, self.iterations,
+                                                self.tolerance)
 
     def transform(self, images: np.array) -> np.array:
-        compressed_images = []
-        for image in images:
-            compressed_images.append(self.compress_image(image))
+        projected_images = self.project_images(images)
+        return [image @ self.eigenvectors[:, :self.k].T for image in projected_images]
+        # compressed_images = []
+        # for image in images:
+        #     compressed_images.append(self.compress_image(image))
 
-        return compressed_images
+        # return compressed_images
     
     def get_image_comparison(self, images: np.array, 
                              image_index: int) -> (np.array, np.array):
@@ -31,6 +33,15 @@ class PCA2D(PCABase):
     def compress_image(self, image: np.array) -> np.array:
         feature_vectors = image @ self.eigenvectors[:, :self.k]
         return feature_vectors @ self.eigenvectors[:, :self.k].T
+    
+    def project_single_image(self, image: np.array) -> np.array:
+        return image @ self.eigenvectors[:, :self.k]
+    
+    def project_images(self, images: np.array) -> np.array:
+        projected_images = []
+        for image in images:
+            projected_images.append(self.project_single_image(image))
+        return np.array(projected_images)
 
     def get_image_covariance_matrix(self, images: np.array) -> np.array:
         self.mean_pixel_values = np.mean(images, axis = 0)
