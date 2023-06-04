@@ -11,14 +11,10 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from data_paths import * 
-from figure_generation import *
 from pathlib import Path
-from PCA import *
+from PCA import PCA
 from PCA2D import PCA2D
 from utilities import read_images
-from utilities import average_execution_time, centre_images
-from threading import Thread
-from multiprocessing import Process
 
 
 # Ejercicio 3 c)
@@ -217,8 +213,7 @@ def experimento_3c() -> None:
  #                            iterations, p, t)
 
     # Test finer range
-    components = np.linspace(158, 221, 30, dtype = int)
-    people_range = [(20, 158, 221), (10, 253, 316), (5, 316, 379)]
+    people_range = [(10, 253, 316), (5, 316, 379)] #[(20, 158, 221), 
     for N_excluded, r1, r2 in people_range: 
         components = np.linspace(r1, r2, 30, dtype = int)
         excluded_people = images[0: 10 * N_excluded]

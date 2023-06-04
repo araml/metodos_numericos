@@ -1,17 +1,13 @@
 import numpy as np
 import parser
 from pathlib import Path
-from utilities import read_images
 from data_paths import * 
 from figure_generation import *
 from pathlib import Path
 from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
-from parser import create_parser
 from utilities import average_execution_time, centre_images
-from threading import Thread
-from multiprocessing import Process
 
 SAMPLES_PER_PERSON = 10
 PLOT_COLOURS = plt.rcParams['axes.prop_cycle'].by_key()['color']
