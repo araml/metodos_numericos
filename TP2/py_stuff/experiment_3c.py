@@ -130,7 +130,7 @@ def quality_analysis(people_inside_dataset: np.array,
               label=f'frobenius {N_outside} personas fuera del dataset')
     axes.plot(ks, psnr_error_outside_dataset, '-o', 
               label=f'PSNR con {N_outside} personas fuera del dataset')
-    axes.xaxis.set_minor_locator(plt.MultipleLocator(4))
+    #axes.xaxis.set_minor_locator(plt.MultipleLocator(10))
 
     PCA_TYPE = 'PCA'
     if not use_PCA:
@@ -140,7 +140,7 @@ def quality_analysis(people_inside_dataset: np.array,
     plt.ylabel('Error')
     plt.title(f'Comparación del error entre {N_inside} personas adentro y {N_outside} fuera del'
               f' dataset\n para distintas cantidades de componentes usando {PCA_TYPE}')
-    plt.xticks(ks)
+    plt.xticks(ks, rotation = 45)
     plt.ylim(bottom=0.0)
     plt.legend()
     file_path = Path(figures_path, f'Comparacion de error con '
@@ -201,19 +201,30 @@ def test_significant_features(training_dataset: np.array, p1: np.array,
 
 def experimento_3c() -> None:
     images = read_images(Path(faces_path))
-    
     images_bearded = read_images(Path(faces_path + '/../caras_con_barba'))
     images_unbearded = read_images(Path(faces_path + '/../caras_sin_barba'))
     people = [5, 10, 20, 40]
-    threads = []
-    for t in [False]:
-        components = np.linspace(1, 600, 20, dtype = int)
-        if not t:
-            components = np.linspace(1, 300, 60, dtype = int)
-        for p in people: 
-            excluded_people = images[0: 10 * p]
-            included_people = images[10 * p:]
-            quality_analysis(included_people, excluded_people, components, 10, p, t)
+ #   for t in [True, False]:
+ #       components = np.linspace(1, 600, 20, dtype = int)
+ #       iterations = 100
+ #       if not t:
+ #           components = np.linspace(1, 300, 60, dtype = int)
+ #           iterations = 10
+ #       for p in people: 
+ #           excluded_people = images[0: 10 * p]
+ #           included_people = images[10 * p:]
+ #           quality_analysis(included_people, excluded_people, components, 
+ #                            iterations, p, t)
+
+    # Test finer range
+    components = np.linspace(158, 221, 30, dtype = int)
+    people_range = [(20, 158, 221), (10, 253, 316), (5, 316, 379)]
+    for N_excluded, r1, r2 in people_range: 
+        components = np.linspace(r1, r2, 30, dtype = int)
+        excluded_people = images[0: 10 * N_excluded]
+        included_people = images[10 * N_excluded:]
+        quality_analysis(included_people, excluded_people, components, 100,
+                         N_excluded, use_PCA = True)
                          
  #   p1 = images[140:150]
  #   p2 = images[60:70]
