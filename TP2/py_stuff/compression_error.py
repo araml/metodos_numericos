@@ -62,7 +62,8 @@ def quality_analysis(people_inside_dataset: np.array,
                      iterations: int = 100, 
                      N_outside: int = 5,
                      use_PCA = True, 
-                     save_images = False) -> None:
+                     save_images = False, 
+                     legend: str = '') -> None:
     training_dataset = people_inside_dataset
     pca = None
     print(training_dataset[0].shape)
@@ -92,9 +93,9 @@ def quality_analysis(people_inside_dataset: np.array,
         pca.set_components_dimension(k)
         
         f1, p1 = calculate_error(people_inside_dataset, pca, use_PCA, 
-                                 save_images, f'{k}_components_inside')
+                                 save_images, f'{legend}{k}_components_inside')
         f2, p2 = calculate_error(people_outside_dataset, pca, use_PCA,
-                                 save_images, f'{k}components_outside')
+                                 save_images, f'{legend}{k}components_outside')
         frobenius_error_in_dataset.append(f1)
         psnr_error_in_dataset.append(p1)
         frobenius_error_outside_dataset.append(f2)
@@ -200,45 +201,46 @@ def run_compression_error_experiment() -> None:
     images_bearded = read_images(Path(faces_path + '/../caras_con_barba'))
     images_unbearded = read_images(Path(faces_path + '/../caras_sin_barba'))
     people = [5, 10, 20, 40]
- #   for t in [True, False]:
- #       components = np.linspace(1, 600, 20, dtype = int)
- #       iterations = 100
- #       if not t:
- #           components = np.linspace(1, 300, 60, dtype = int)
- #           iterations = 10
- #       for p in people: 
- #           excluded_people = images[0: 10 * p]
- #           included_people = images[10 * p:]
- #           quality_analysis(included_people, excluded_people, components, 
- #                            iterations, p, t)
+    
+    for t in [True, False]:
+        components = np.linspace(1, 600, 20, dtype = int)
+        iterations = 100
+        if not t:
+            components = np.linspace(1, 300, 60, dtype = int)
+            iterations = 10
+        for p in people: 
+            excluded_people = images[0: 10 * p]
+            included_people = images[10 * p:]
+            quality_analysis(included_people, excluded_people, components, 
+                             iterations, p, t)
 
     # Test finer range
-    people_range = [(10, 253, 316), (5, 316, 379)] #[(20, 158, 221), 
+    people_range = [(20, 158, 221), (10, 253, 316), (5, 316, 379)] # 
     for N_excluded, r1, r2 in people_range: 
         components = np.linspace(r1, r2, 30, dtype = int)
         excluded_people = images[0: 10 * N_excluded]
         included_people = images[10 * N_excluded:]
         quality_analysis(included_people, excluded_people, components, 100,
-                         N_excluded, use_PCA = True)
-                         
- #   p1 = images[140:150]
- #   p2 = images[60:70]
- #   dataset = np.concatenate([images[0:60], images[70:140], images[150:]])
- #   
- #   test_significant_features(dataset, p1, p2, 
- #                             [5, 10, 15, 20, 60, 92], 150, 
- #                             use_PCA = True,
- #                             legend1 = 'p1_b', 
- #                             legend2 = 'p2_w') 
+                         N_excluded, use_PCA = True, legend = 'finer')
+     
+    p1 = images[140:150]
+    p2 = images[60:70]
+    dataset = np.concatenate([images[0:60], images[70:140], images[150:]])
     
- #   random_person = images_unbearded[30:40]
- #   dataset = np.concatenate([images_unbearded[0:30], images_unbearded[40:]])
- #
- #   test_significant_features(dataset, random_person, images_bearded[10:20], 
- #                             [5, 10, 15, 20, 60, 92], 150, 
- #                             use_PCA = False,
- #                             legend1 = 'unbearded', 
- #                             legend2 = 'bearded') 
+    test_significant_features(dataset, p1, p2, 
+                              [5, 10, 15, 20, 60, 92], 150, 
+                              use_PCA = True,
+                              legend1 = 'p1_b', 
+                              legend2 = 'p2_w') 
+   
+    random_person = images_unbearded[30:40]
+    dataset = np.concatenate([images_unbearded[0:30], images_unbearded[40:]])
+ 
+    test_significant_features(dataset, random_person, images_bearded[10:20], 
+                              [5, 10, 15, 20, 60, 92], 150, 
+                              use_PCA = False,
+                              legend1 = 'unbearded', 
+                              legend2 = 'bearded') 
 
 if __name__ == '__main__': 
     run_compression_error_experiment()
