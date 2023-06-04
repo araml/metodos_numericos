@@ -1,3 +1,13 @@
+# TODO(comment out if your cpu doesn't crash :)'
+import os
+os.environ["OMP_NUM_THREADS"] = "4" 
+os.environ["OPENBLAS_NUM_THREADS"] = "4" 
+os.environ["MKL_NUM_THREADS"] = "4" 
+os.environ["VECLIB_MAXIMUM_THREADS"] = "4" 
+os.environ["NUMEXPR_NUM_THREADS"] = "4" 
+
+import sys
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from data_paths import * 
@@ -10,6 +20,7 @@ from parser import create_parser
 from utilities import average_execution_time, centre_images
 from threading import Thread
 from multiprocessing import Process
+
 
 # Ejercicio 3 c)
 def PSNR(m1: np.array, m2: np.array) -> float:
@@ -146,7 +157,7 @@ def compare_and_savefig(pca, images: np.array, ks:np.array, legend: str,
     if use_PCA: 
         pca_str = 'PCA'
     for im in images:
-        _, axs = plt.subplots(2, 3, figsize = (6, 6))
+        _, axs = plt.subplots(2, 3, figsize = (8, 6))
         for i, ax in enumerate(axs.flatten()):
             h, w = images[0].shape
             k = ks[i]
@@ -169,9 +180,10 @@ def compare_and_savefig(pca, images: np.array, ks:np.array, legend: str,
         idx = idx + 1
 
 
-def test_significant_features(training_dataset: np.array, colored_person: np.array, 
-                              noncolored_person: np.array, ks: np.array, K: int,  
-                              iterations = 10, use_PCA = False) -> None:
+def test_significant_features(training_dataset: np.array, p1: np.array, 
+                              p2: np.array, ks: np.array, K: int,  
+                              iterations = 10, use_PCA = False, 
+                              legend1: str = '', legend2: str = '') -> None:
     max_k = max(ks + [K])
 
     if use_PCA:
@@ -184,8 +196,8 @@ def test_significant_features(training_dataset: np.array, colored_person: np.arr
 
     pca.fit(training_dataset)
     
-    compare_and_savefig(pca, colored_person, ks, 'colored_person', use_PCA = use_PCA)
-    compare_and_savefig(pca, noncolored_person, ks, 'noncolored_person', use_PCA = use_PCA)
+    compare_and_savefig(pca, p1, ks, legend1, use_PCA = use_PCA)
+    compare_and_savefig(pca, p2, ks, legend2, use_PCA = use_PCA)
 
 
 if __name__ == '__main__': 
@@ -196,55 +208,37 @@ if __name__ == '__main__':
     
     images = read_images(Path(faces_path), 
                          args.scale_down_factor)
-
- #   people = [5, 10, 20, 40]
- #   threads = []
- #   for t in [True]:
- #       components = np.linspace(1, 600, 20, dtype = int)
- #       if not t:
- #           components = np.linspace(1, 300, 60, dtype = int)
- #       for p in people: 
- #           excluded_people = images[0: 10 * p]
- #           included_people = images[10 * p:]
- #           quality_analysis(included_people, excluded_people, components, 10, p, t)
-
-    people = [40]
-    threads = []
-    for p in people: 
-        excluded_people = images[0: 10 * p]
-        included_people = images[10 * p:]
-        quality_analysis(included_people, excluded_people, 
-                         np.linspace(1, 64, 32, dtype = int), 100, p, True)
- 
-    people = [20]
-    threads = []
-    for p in people: 
-        excluded_people = images[0: 10 * p]
-        included_people = images[10 * p:]
-        quality_analysis(included_people, excluded_people, 
-                         np.linspace(347, 410, 32, dtype = int), 100, p, True)
- 
-    people = [10]
-    threads = []
-    for p in people: 
-        excluded_people = images[0: 10 * p]
-        included_people = images[10 * p:]
-        quality_analysis(included_people, excluded_people, 
-                         np.linspace(253, 316, 32, dtype = int), 100, p, True)
-
-    people = [5]
-    threads = []
-    for p in people: 
-        excluded_people = images[0: 10 * p]
-        included_people = images[10 * p:]
-        quality_analysis(included_people, excluded_people, 
-                         np.linspace(316, 380, 32, dtype = int), 100, p, True)
-                         
-                         
-                         
-    colored_person = images[140:150]
-    noncolored_person = images[60:70]
-    dataset = np.concatenate([images[0:60], images[70:140], images[150:]])
     
-    test_significant_features(dataset, colored_person, noncolored_person, 
-                              [5, 10, 15, 20, 60, 92], 150, use_PCA = False) 
+    images_bearded = read_images(Path(faces_path + '/../caras_con_barba'),
+                                    args.scale_down_factor)
+    images_unbearded = read_images(Path(faces_path + '/../caras_sin_barba'),
+                                    args.scale_down_factor)
+    people = [5, 10, 20, 40]
+    threads = []
+    for t in [False]:
+        components = np.linspace(1, 600, 20, dtype = int)
+        if not t:
+            components = np.linspace(1, 300, 60, dtype = int)
+        for p in people: 
+            excluded_people = images[0: 10 * p]
+            included_people = images[10 * p:]
+            quality_analysis(included_people, excluded_people, components, 10, p, t)
+                         
+ #   p1 = images[140:150]
+ #   p2 = images[60:70]
+ #   dataset = np.concatenate([images[0:60], images[70:140], images[150:]])
+ #   
+ #   test_significant_features(dataset, p1, p2, 
+ #                             [5, 10, 15, 20, 60, 92], 150, 
+ #                             use_PCA = True,
+ #                             legend1 = 'p1_b', 
+ #                             legend2 = 'p2_w') 
+    
+ #   random_person = images_unbearded[30:40]
+ #   dataset = np.concatenate([images_unbearded[0:30], images_unbearded[40:]])
+ #
+ #   test_significant_features(dataset, random_person, images_bearded[10:20], 
+ #                             [5, 10, 15, 20, 60, 92], 150, 
+ #                             use_PCA = False,
+ #                             legend1 = 'unbearded', 
+ #                             legend2 = 'bearded') 
