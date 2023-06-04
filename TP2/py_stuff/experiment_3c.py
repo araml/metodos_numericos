@@ -16,7 +16,6 @@ from pathlib import Path
 from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
-from parser import create_parser
 from utilities import average_execution_time, centre_images
 from threading import Thread
 from multiprocessing import Process
@@ -200,19 +199,11 @@ def test_significant_features(training_dataset: np.array, p1: np.array,
     compare_and_savefig(pca, p2, ks, legend2, use_PCA = use_PCA)
 
 
-if __name__ == '__main__': 
-    parser = create_parser("experiments")
-    args = parser.parse_args()
-    number_of_eigenvectors = args.number_of_eigenvectors
-    similarity_2dpca = args.similarity_2dpca
+def experimento_3c() -> None:
+    images = read_images(Path(faces_path))
     
-    images = read_images(Path(faces_path), 
-                         args.scale_down_factor)
-    
-    images_bearded = read_images(Path(faces_path + '/../caras_con_barba'),
-                                    args.scale_down_factor)
-    images_unbearded = read_images(Path(faces_path + '/../caras_sin_barba'),
-                                    args.scale_down_factor)
+    images_bearded = read_images(Path(faces_path + '/../caras_con_barba'))
+    images_unbearded = read_images(Path(faces_path + '/../caras_sin_barba'))
     people = [5, 10, 20, 40]
     threads = []
     for t in [False]:
@@ -242,3 +233,6 @@ if __name__ == '__main__':
  #                             use_PCA = False,
  #                             legend1 = 'unbearded', 
  #                             legend2 = 'bearded') 
+
+if __name__ == '__main__': 
+    experimento_3c()
