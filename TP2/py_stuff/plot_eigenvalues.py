@@ -4,7 +4,7 @@ from figure_generation import plot_eigenvalues
 from pathlib import Path
 from utilities import read_images
 
-def plot_eigenvalues_experiment() -> None:
+def run_plot_eigenvalues_experiment() -> None:
     p = parser.create_parser("plot_eigenvalues")
     args = p.parse_args()
     number_of_eigenvectors = args.number_of_eigenvectors

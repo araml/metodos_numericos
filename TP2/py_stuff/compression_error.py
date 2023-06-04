@@ -195,7 +195,7 @@ def test_significant_features(training_dataset: np.array, p1: np.array,
     compare_and_savefig(pca, p2, ks, legend2, use_PCA = use_PCA)
 
 
-def experimento_3c() -> None:
+def run_compression_error_experiment() -> None:
     images = read_images(Path(faces_path))
     images_bearded = read_images(Path(faces_path + '/../caras_con_barba'))
     images_unbearded = read_images(Path(faces_path + '/../caras_sin_barba'))
@@ -241,4 +241,4 @@ def experimento_3c() -> None:
  #                             legend2 = 'bearded') 
 
 if __name__ == '__main__': 
-    experimento_3c()
+    run_compression_error_experiment()
