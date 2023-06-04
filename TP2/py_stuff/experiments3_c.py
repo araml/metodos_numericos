@@ -138,6 +138,54 @@ def quality_analysis(people_inside_dataset: np.array,
     plt.savefig(file_path)
 
 
+def compare_and_savefig(pca, images: np.array, ks:np.array, legend: str,
+                        use_PCA: bool = False) -> None:
+
+    idx = 0
+    pca_str = '2DPCA'
+    if use_PCA: 
+        pca_str = 'PCA'
+    for im in images:
+        _, axs = plt.subplots(2, 3, figsize = (6, 6))
+        for i, ax in enumerate(axs.flatten()):
+            h, w = images[0].shape
+            k = ks[i]
+            pca.set_components_dimension(k)
+            im_compressed = im
+            if use_PCA:
+                im_compressed = pca.transform([im])
+            else:
+                im_compressed = pca.transform(im)
+            # PCA flattens..
+            if use_PCA: 
+                im_compressed = im_compressed.reshape(h, w)
+
+            ax.imshow(im_compressed, cmap = plt.cm.gray)
+            ax.set_title(f'{k} componentes')
+            ax.axis('off')
+        plt.tight_layout()
+        plt.savefig(Path(figures_path, f'{legend}_{idx}_{pca_str}'))
+        plt.clf()
+        idx = idx + 1
+
+
+def test_significant_features(training_dataset: np.array, colored_person: np.array, 
+                              noncolored_person: np.array, ks: np.array, K: int,  
+                              iterations = 10, use_PCA = False) -> None:
+    max_k = max(ks + [K])
+
+    if use_PCA:
+        pca = PCA(max_k, iterations)
+    else:
+        h, w = training_dataset[0].shape
+        shape = training_dataset[0]
+        max_k = min([max_k, h, w])
+        pca = PCA2D(max_k, iterations)
+
+    pca.fit(training_dataset)
+    
+    compare_and_savefig(pca, colored_person, ks, 'colored_person', use_PCA = use_PCA)
+    compare_and_savefig(pca, noncolored_person, ks, 'noncolored_person', use_PCA = use_PCA)
 
 
 if __name__ == '__main__': 
@@ -191,3 +239,12 @@ if __name__ == '__main__':
         included_people = images[10 * p:]
         quality_analysis(included_people, excluded_people, 
                          np.linspace(316, 380, 32, dtype = int), 100, p, True)
+                         
+                         
+                         
+    colored_person = images[140:150]
+    noncolored_person = images[60:70]
+    dataset = np.concatenate([images[0:60], images[70:140], images[150:]])
+    
+    test_significant_features(dataset, colored_person, noncolored_person, 
+                              [5, 10, 15, 20, 60, 92], 150, use_PCA = False) 
