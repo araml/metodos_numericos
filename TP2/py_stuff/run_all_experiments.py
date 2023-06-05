@@ -1,7 +1,7 @@
 from corrcoef_figure import run_corrcoef_experiment
 from similarity_figure import run_similarity_experiment
 from compression_error import run_compression_error_experiment
-from plot_eigenvalues import plot_eigenvalues_experiment
+from plot_eigenvalues import run_plot_eigenvalues_experiment
 from eigenvector_figure import run_eigenvector_figure_experiment
 
 if __name__ == '__main__':

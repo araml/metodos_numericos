@@ -7,7 +7,7 @@ from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
 
-def eigenvector_figure() -> None: 
+def run_eigenvector_figure_experiment() -> None: 
     p = parser.create_parser("eigenvector_figure")
     p.add_argument("--eigenface_grid_height",
                    help="Eigenface grid height",
