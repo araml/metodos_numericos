@@ -59,6 +59,19 @@ void test_convergent_matrix() {
     std::cout << "Convergent matrix OK" << std::endl;
 }
 
+void test_matrix_vs_sum_method() { 
+    MatrixXd M(2, 2);
+    M << 2, 1, 1, 2;
+    VectorXd b = ones(2);
+    
+    Eigen::FullPivLU<Eigen::MatrixXd> lu(M);
+    auto x1 = jacobi_matrix(M, b, 1000, EPSILON);
+    auto x2 = jacobi_sum_method(M, b, 1000, EPSILON);
+
+    assert((x1 - x2).norm() < EPSILON);
+    std::cout << "Test sum vs matrix method" << std::endl;
+}
+
 int main() {
     test_diagonal_zeros_matrix();
     test_non_convergent_matrix();

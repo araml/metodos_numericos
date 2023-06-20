@@ -41,7 +41,8 @@ if (BUILD_TESTS)
     add_custom_test(test_gs tests/test_gs.cpp ${metodos_iterativos})
     
     # Add python tests
-    add_test(NAME python-tests COMMAND 
-        ${PYTHON_EXECUTABLE} -m unittest discover "${CMAKE_CURRENT_SOURCE_DIR}/py_stuff")
+    # Uncomment when we have python tests..
+    #add_test(NAME python-tests COMMAND 
+    #    ${PYTHON_EXECUTABLE} -m unittest discover "${CMAKE_CURRENT_SOURCE_DIR}/py_stuff")
 endif()
 
