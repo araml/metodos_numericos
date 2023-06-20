@@ -19,6 +19,8 @@ TEST_CASE("test matrix with zeros in the diagonal") {
     
     REQUIRE_THROWS_WITH(jacobi_matrix(M, b), 
                         doctest::Contains("Matrix has zeros in diagonal"));
+    REQUIRE_THROWS_WITH(jacobi_sum_method(M, b), 
+                        doctest::Contains("Matrix has zeros in diagonal"));
 }
 
 TEST_CASE("test non convergent matrix") {
@@ -26,7 +28,10 @@ TEST_CASE("test non convergent matrix") {
     M << 0.5, 1, 1, 0.5;
     VectorXd b = ones(2);
     
-    REQUIRE_THROWS_WITH(jacobi_matrix(M, b), doctest::Contains("Matrix does not converge"));
+    REQUIRE_THROWS_WITH(jacobi_matrix(M, b),
+                        doctest::Contains("Matrix does not converge"));
+    REQUIRE_THROWS_WITH(jacobi_sum_method(M, b),
+                        doctest::Contains("Matrix does not converge"));
 }
 
 TEST_CASE("test convergent matrix") {

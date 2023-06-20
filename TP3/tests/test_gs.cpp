@@ -19,6 +19,8 @@ TEST_CASE("test matrix with zeros in the diagonal") {
 
     REQUIRE_THROWS_WITH(gauss_seidel_matrix(M, b),
                         doctest::Contains("Matrix has zeros in diagonal"));
+    REQUIRE_THROWS_WITH(gauss_seidel_sum_method(M, b),
+                        doctest::Contains("Matrix has zeros in diagonal"));
 }
 
 TEST_CASE("test non convergent matrix") {
@@ -27,6 +29,8 @@ TEST_CASE("test non convergent matrix") {
     VectorXd b = ones(2);
     
     REQUIRE_THROWS_WITH(gauss_seidel_matrix(M, b),
+                        doctest::Contains("Matrix does not converge"));
+    REQUIRE_THROWS_WITH(gauss_seidel_sum_method(M, b),
                         doctest::Contains("Matrix does not converge"));
 }
 
@@ -50,8 +54,6 @@ TEST_CASE("test compare gauss seidel matrix vs sum method") {
     Eigen::FullPivLU<Eigen::MatrixXd> lu(M);
     auto v1 = gauss_seidel_matrix(M, b, 1000, EPSILON);
     auto v2 = gauss_seidel_sum_method(M, b, 1000, EPSILON);
-    
-    std::cout << v1 << std::endl << v2 << std::endl;
 
     CHECK((v1 - v2).norm() < EPSILON);
 }
