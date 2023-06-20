@@ -21,7 +21,9 @@ endmacro()
 add_files(metodos_iterativos)
 include_directories(src)
 include_directories(eigen)
+include_directories(doctest)
 add_subdirectory(pybind11)
+add_subdirectory(doctest)
 
 if (BUILD_TESTS)
     macro(add_custom_test name file)
@@ -31,7 +33,7 @@ if (BUILD_TESTS)
         include_directories(tests)
         add_test(NAME ${name} COMMAND ${name}
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        target_link_libraries(${name} ${LIBRARIES} "-lpthread")
+        target_link_libraries(${name} ${LIBRARIES} "-lpthread" doctest)
     endmacro()
 
     # get_filename_component(TEST_FILE_PATH tests/test_data ABSOLUTE)
@@ -41,7 +43,8 @@ if (BUILD_TESTS)
     add_custom_test(test_gs tests/test_gs.cpp ${metodos_iterativos})
     
     # Add python tests
-    add_test(NAME python-tests COMMAND 
-        ${PYTHON_EXECUTABLE} -m unittest discover "${CMAKE_CURRENT_SOURCE_DIR}/py_stuff")
+    # Uncomment when we have python tests..
+    #add_test(NAME python-tests COMMAND 
+    #    ${PYTHON_EXECUTABLE} -m unittest discover "${CMAKE_CURRENT_SOURCE_DIR}/py_stuff")
 endif()
 

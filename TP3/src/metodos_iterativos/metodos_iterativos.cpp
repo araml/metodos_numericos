@@ -3,6 +3,7 @@
 #include <metodos_iterativos.h>
 #include <stdexcept>
 #include <string>
+#include <ranges>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -71,7 +72,8 @@ VectorXd gauss_seidel_matrix(const MatrixXd &matrix,
     return x;
 }
 
-VectorXd gaussSeidel(MatrixXd &matrix, VectorXd &b, int iterations=10000, double eps=1e-6) {
+// Esto es jacobi me parece..
+VectorXd gaussSeidel(MatrixXd &matrix, VectorXd &b, int iterations, double eps) {
     int n = matrix.cols();
     VectorXd x = VectorXd::Random(n);
     for (int iter = 0; iter < iterations; iter++) {
@@ -94,5 +96,54 @@ VectorXd gaussSeidel(MatrixXd &matrix, VectorXd &b, int iterations=10000, double
 VectorXd gaussianElimination(MatrixXd& matrix, VectorXd &b) {
     Eigen::FullPivLU<Eigen::MatrixXd> lu(matrix);
     VectorXd x = lu.solve(b);
+    return x;
+}
+
+VectorXd jacobi_sum_method(const MatrixXd &m, VectorXd &b, 
+                           int iterations, double eps) {
+    int n = m.cols();
+    VectorXd x = VectorXd::Random(n);
+    for (int iter : std::views::iota(0, iterations)) {
+        VectorXd x_ant = x;
+        for (int i : std::views::iota(0, n)) { 
+            float x_i = b(i);
+            for (size_t j : std::views::iota(0, n)) { 
+                if (i != j)
+                    x_i -= m.coeff(i, j) * x_ant(j);
+            }
+            x_i *= 1/m.coeff(i, i);
+            x(i) = x_i;
+        }
+        if ((x - x_ant).norm() < eps) { 
+            return x;
+        }
+    }
+    return x;
+}
+
+VectorXd gauss_seidel_sum_method(const MatrixXd &m, VectorXd &b,
+                                 int iterations, double eps) { 
+    int n = m.cols();
+    VectorXd x = VectorXd::Random(n);
+    for (int iter : std::views::iota(0, iterations)) {
+        VectorXd x_ant = x;
+        for (int i : std::views::iota(0, n)) { 
+            float x_i = b(i);
+            for (size_t j : std::views::iota(i + 1, n)) { 
+                if (i != j)
+                    x_i -= m.coeff(i, j) * x_ant(j);
+            }
+            
+            for (size_t j : std::views::iota(0, i)) { 
+                x_i -= m.coeff(i, j) * x(j);
+            }
+
+            x_i *= 1/m.coeff(i, i);
+            x(i) = x_i;
+        }
+        if ((x - x_ant).norm() < eps) { 
+            return x;
+        }
+    }
     return x;
 }
