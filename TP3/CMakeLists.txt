@@ -38,6 +38,7 @@ if (BUILD_TESTS)
     # configure_file(tests/config_tests.h.in ../tests/config_tests.h)
 
     add_custom_test(test_jacobi tests/test_jacobi.cpp ${metodos_iterativos})
+    add_custom_test(test_gs tests/test_gs.cpp ${metodos_iterativos})
     
     # Add python tests
     add_test(NAME python-tests COMMAND 

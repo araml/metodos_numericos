@@ -3,7 +3,6 @@
 #include <iostream>
 #include <math.h>
 #include <metodos_iterativos.h>
-#include <set>
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;

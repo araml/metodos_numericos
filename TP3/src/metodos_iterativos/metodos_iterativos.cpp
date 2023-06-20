@@ -4,8 +4,6 @@
 #include <stdexcept>
 #include <string>
 
-using namespace std;
-
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -30,13 +28,40 @@ VectorXd jacobi_matrix(const MatrixXd &matrix,
     MatrixXd D = matrix.diagonal().asDiagonal();
     MatrixXd L = (-matrix).triangularView<Eigen::StrictlyLower>();
     MatrixXd U = (-matrix).triangularView<Eigen::StrictlyUpper>();
-    MatrixXd DInverse = D.inverse();
-    MatrixXd LplusU = L + U;
+    MatrixXd D_inverse = D.inverse();
+    MatrixXd L_plus_U = L + U;
 
     VectorXd x = VectorXd::Random(n);
     for (int i = 0; i < iterations; i++) {
         VectorXd prev_x = x;
-        x = DInverse * (LplusU*x + b);
+        x = D_inverse * (L_plus_U*x + b);
+        if ((x - prev_x).norm() < eps) {
+            return x;
+        }
+    }
+
+    throw std::logic_error("Matrix does not converge");
+    return x;
+}
+
+VectorXd gauss_seidel_matrix(const MatrixXd &matrix,
+                             const VectorXd &b,
+                             int iterations,
+                             double eps) {
+    int n = matrix.cols();
+    for (int i = 0; i < n; i++) {
+        if (matrix(i, i) == 0)
+            throw std::logic_error("Matrix has zeros in diagonal");
+    }
+    MatrixXd D = matrix.diagonal().asDiagonal();
+    MatrixXd L = (-matrix).triangularView<Eigen::StrictlyLower>();
+    MatrixXd U = (-matrix).triangularView<Eigen::StrictlyUpper>();
+    MatrixXd D_minus_L_inverse = (D - L).inverse();
+
+    VectorXd x = VectorXd::Random(n);
+    for (int i = 0; i < iterations; i++) {
+        VectorXd prev_x = x;
+        x = D_minus_L_inverse * (U*x + b);
         if ((x - prev_x).norm() < eps) {
             return x;
         }

@@ -10,3 +10,8 @@ Eigen::VectorXd jacobi_matrix(const Eigen::MatrixXd &matrix,
 
 Eigen::VectorXd gaussianElimination(Eigen::MatrixXd& matrix,
                                     Eigen::VectorXd &b);
+
+Eigen::VectorXd gauss_seidel_matrix(const Eigen::MatrixXd &matrix,
+                                    const Eigen::VectorXd &b,
+                                    int iterations=10000,
+                                    double eps=1e-6);
