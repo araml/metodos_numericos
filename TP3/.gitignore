@@ -1,4 +1,5 @@
 .vscode/
 build/
+doctest/
 eigen/
 pybind11/

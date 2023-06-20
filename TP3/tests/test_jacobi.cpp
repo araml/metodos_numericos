@@ -40,7 +40,7 @@ TEST_CASE("test convergent matrix") {
     VectorXd b = ones(2);
     
     Eigen::FullPivLU<Eigen::MatrixXd> lu(M);
-    auto expected = gaussianElimination(M, b);
+    auto expected = gaussian_elimination(M, b);
     auto j = jacobi_matrix(M, b, 1000, EPSILON);
 
     CHECK((expected-j).norm() < EPSILON);

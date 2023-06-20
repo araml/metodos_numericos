@@ -1,9 +1,9 @@
 #include <fstream>
 #include <iostream>
 #include <metodos_iterativos.h>
+#include <ranges>
 #include <stdexcept>
 #include <string>
-#include <ranges>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -15,6 +15,12 @@ VectorXd ones(int size) {
         res(i) = 1;
     }
     return res;
+}
+
+VectorXd gaussian_elimination(MatrixXd& m, VectorXd &b) {
+    Eigen::FullPivLU<Eigen::MatrixXd> lu(m);
+    VectorXd x = lu.solve(b);
+    return x;
 }
 
 VectorXd jacobi_matrix(const MatrixXd &m,
@@ -69,12 +75,6 @@ VectorXd gauss_seidel_matrix(const MatrixXd &m,
     }
 
     throw std::logic_error("Matrix does not converge");
-    return x;
-}
-
-VectorXd gaussianElimination(MatrixXd& m, VectorXd &b) {
-    Eigen::FullPivLU<Eigen::MatrixXd> lu(m);
-    VectorXd x = lu.solve(b);
     return x;
 }
 
