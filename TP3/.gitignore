@@ -2,4 +2,5 @@
 build/
 doctest/
 eigen/
+py_stuff/*cpython*
 pybind11/

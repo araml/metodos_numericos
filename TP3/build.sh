@@ -20,6 +20,6 @@ else
     ninja
 fi
 
-# echo "Copying deflate to Python folder"
-# cp metodos_iterativos.cpython* ../py/
-# echo "Copied deflate to Python folder"
+echo "Copying iterative_methods to Python folder"
+cp iterative_methods.cpython* ../py_stuff/
+echo "Copied iterative_methods to Python folder"
