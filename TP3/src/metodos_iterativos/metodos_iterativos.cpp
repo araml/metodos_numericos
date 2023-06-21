@@ -23,8 +23,8 @@ VectorXd gaussian_elimination(MatrixXd& m, VectorXd &b) {
     return x;
 }
 
-VectorXd jacobi_matrix(const MatrixXd &m, const VectorXd &x_0,
-                       const VectorXd &b, int iterations,
+VectorXd jacobi_matrix(const MatrixXd &m, const VectorXd &b,
+                       const VectorXd &x_0, int iterations,
                        double eps) {
     int n = m.cols();
     for (int i = 0; i < n; i++) {
@@ -50,8 +50,8 @@ VectorXd jacobi_matrix(const MatrixXd &m, const VectorXd &x_0,
     return x;
 }
 
-VectorXd gauss_seidel_matrix(const MatrixXd &m, const VectorXd &x_0,
-                             const VectorXd &b, int iterations,
+VectorXd gauss_seidel_matrix(const MatrixXd &m, const VectorXd &b,
+                             const VectorXd &x_0, int iterations,
                              double eps) {
     int n = m.cols();
     for (int i = 0; i < n; i++) {
@@ -63,7 +63,7 @@ VectorXd gauss_seidel_matrix(const MatrixXd &m, const VectorXd &x_0,
     MatrixXd U = (-m).triangularView<Eigen::StrictlyUpper>();
     MatrixXd D_minus_L_inverse = (D - L).inverse();
 
-    VectorXd x = x_0;
+    VectorXd x = x_0;   
     for (int i = 0; i < iterations; i++) {
         VectorXd prev_x = x;
         x = D_minus_L_inverse * (U*x + b);
@@ -104,8 +104,8 @@ VectorXd jacobi_sum_method(const MatrixXd &m,
     return x;
 }
 
-VectorXd gauss_seidel_sum_method(const MatrixXd &m, const VectorXd &x_0,
-                                 const VectorXd &b, int iterations,
+VectorXd gauss_seidel_sum_method(const MatrixXd &m, const VectorXd &b,
+                                 const VectorXd &x_0, int iterations,
                                  double eps) { 
     int n = m.cols();
     VectorXd x = x_0;
