@@ -76,11 +76,13 @@ VectorXd gauss_seidel_matrix(const MatrixXd &m, const VectorXd &x_0,
     return x;
 }
 
-VectorXd jacobi_sum_method(const MatrixXd &m, VectorXd &x_0,
-                           VectorXd &b, int iterations,
+VectorXd jacobi_sum_method(const MatrixXd &m,
+                           const VectorXd &b, 
+                           const VectorXd &x_0,
+                           int iterations,
                            double eps) {
     int n = m.cols();
-    VectorXd x = VectorXd::Random(n);
+    VectorXd x = x_0;
     for (int iter : std::views::iota(0, iterations)) {
         VectorXd prev_x = x;
         for (int i : std::views::iota(0, n)) {
@@ -102,11 +104,11 @@ VectorXd jacobi_sum_method(const MatrixXd &m, VectorXd &x_0,
     return x;
 }
 
-VectorXd gauss_seidel_sum_method(const MatrixXd &m, VectorXd &x_0,
-                                 VectorXd &b, int iterations,
+VectorXd gauss_seidel_sum_method(const MatrixXd &m, const VectorXd &x_0,
+                                 const VectorXd &b, int iterations,
                                  double eps) { 
     int n = m.cols();
-    VectorXd x = VectorXd::Random(n);
+    VectorXd x = x_0;
     for (int iter : std::views::iota(0, iterations)) {
         VectorXd prev_x = x;
         for (int i : std::views::iota(0, n)) {
