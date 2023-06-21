@@ -49,7 +49,7 @@ if (BUILD_TESTS)
     
     # Add python tests
     # Uncomment when we have python tests..
-    #add_test(NAME python-tests COMMAND 
-    #    ${PYTHON_EXECUTABLE} -m unittest discover "${CMAKE_CURRENT_SOURCE_DIR}/py_stuff")
+    add_test(NAME python-tests COMMAND 
+        ${PYTHON_EXECUTABLE} -m unittest discover "${CMAKE_CURRENT_SOURCE_DIR}/py")
 endif()
 

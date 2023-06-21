@@ -6,7 +6,7 @@ def measure_execution_time(function_to_measure, *args) -> float:
     start_time = time.time()
     function_to_measure(*args)
     end_time = time.time()
-    return end_time-start_time
+    return end_time - start_time
 
 m = np.array([[2, 1], [1, 2]])
 x_0 = np.array([1, 1])
