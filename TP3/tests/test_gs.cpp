@@ -44,7 +44,7 @@ TEST_CASE("test convergent matrix") {
     
     Eigen::FullPivLU<Eigen::MatrixXd> lu(M);
     auto expected = gaussian_elimination(M, b);
-    auto j = gauss_seidel_matrix(M, b, x_0, 1000, EPSILON);
+    auto [j, i] = gauss_seidel_matrix(M, b, x_0, 1000, EPSILON);
 
     CHECK((expected-j).norm() < EPSILON);
 }
@@ -56,8 +56,8 @@ TEST_CASE("test compare gauss seidel matrix vs sum method") {
     VectorXd x_0 = ones(2);
     
     Eigen::FullPivLU<Eigen::MatrixXd> lu(M);
-    auto v1 = gauss_seidel_matrix(M, b, x_0, 1000, EPSILON);
-    auto v2 = gauss_seidel_sum_method(M, b, x_0, 1000, EPSILON);
+    auto [v1, i1] = gauss_seidel_matrix(M, b, x_0, 1000, EPSILON);
+    auto [v2, i2] = gauss_seidel_sum_method(M, b, x_0, 1000, EPSILON);
 
     CHECK((v1 - v2).norm() < EPSILON);
 }

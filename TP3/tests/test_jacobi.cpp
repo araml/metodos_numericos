@@ -44,7 +44,7 @@ TEST_CASE("test convergent matrix") {
     
     Eigen::FullPivLU<Eigen::MatrixXd> lu(M);
     auto expected = gaussian_elimination(M, b);
-    auto j = jacobi_matrix(M, b, x_0, 1000, EPSILON);
+    auto [j, i] = jacobi_matrix(M, b, x_0, 1000, EPSILON);
 
     CHECK((expected-j).norm() < EPSILON);
 }
@@ -56,8 +56,8 @@ TEST_CASE("test matrix vs sum method") {
     VectorXd x_0 = ones(2);
     
     Eigen::FullPivLU<Eigen::MatrixXd> lu(M);
-    auto x1 = jacobi_matrix(M, b, x_0, 1000, EPSILON);
-    auto x2 = jacobi_sum_method(M, b, x_0, 1000, EPSILON);
+    auto [x1, i1] = jacobi_matrix(M, b, x_0, 1000, EPSILON);
+    auto [x2, i2] = jacobi_sum_method(M, b, x_0, 1000, EPSILON);
 
     CHECK((x1 - x2).norm() < EPSILON);
 }
