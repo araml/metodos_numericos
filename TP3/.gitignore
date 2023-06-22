@@ -4,3 +4,4 @@ doctest/
 eigen/
 py/*cpython*
 pybind11/
+*__pycache__*
