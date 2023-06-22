@@ -117,4 +117,4 @@ plot_time_complexity(["jacobi_matrix", "jacobi_sum_method", "gauss_seidel_matrix
 measure_ge_time_complexity(DIMENSIONS, REPETITIONS, 1, 10, "gaussian_elimination.csv")
 
 plot_time_complexity(["jacobi_matrix", "gauss_seidel_matrix", "gaussian_elimination"],
-                     "iterative_matrix_vs_elimination_time_complexity_png")
+                     "iterative_matrix_vs_elimination_time_complexity.png")
