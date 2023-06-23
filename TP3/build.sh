@@ -21,5 +21,5 @@ else
 fi
 
 echo "Copying iterative_methods to Python folder"
-cp iterative_methods.cpython* ../py/
+cp iterative_methods_c.cpython* ../py/
 echo "Copied iterative_methods to Python folder"

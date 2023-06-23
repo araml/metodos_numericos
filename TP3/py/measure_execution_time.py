@@ -79,40 +79,21 @@ def plot_time_complexity(methods: list, filename: str, scale: str = 'linear'):
     plt.ylabel("Tiempo de ejecución promedio (en segundos)")
     plt.tight_layout()
     plt.savefig(filename)
+    plt.clf()
 
 
 REPETITIONS = 50
 DIMENSIONS = range(100, 1600, 100)
+ITERATIVE_METHOD_NAMES = ["jacobi_matrix", "jacobi_sum_method",
+                          "gauss_seidel_matrix", "gauss_seidel_sum_method"]
 
-# TODO: export methods to a file where they're easily indexable by name
 # TODO: create folders for CSVs and figures
-measure_iterative_time_complexity(iterative_methods.jacobi_matrix,
-                                  DIMENSIONS,
-                                  REPETITIONS,
-                                  1, 10,
-                                  "jacobi_matrix.csv",
-                                  10000, 1e-17)
-measure_iterative_time_complexity(iterative_methods.jacobi_sum_method,
-                                  DIMENSIONS,
-                                  REPETITIONS,
-                                  1, 10,
-                                  "jacobi_sum_method.csv",
-                                  10000, 1e-17)
-measure_iterative_time_complexity(iterative_methods.gauss_seidel_matrix,
-                                  DIMENSIONS,
-                                  REPETITIONS,
-                                  1, 10,
-                                  "gauss_seidel_matrix.csv",
-                                  10000, 1e-17)
-measure_iterative_time_complexity(iterative_methods.gauss_seidel_sum_method,
-                                  DIMENSIONS,
-                                  REPETITIONS,
-                                  1, 10,
-                                  "gauss_seidel_sum_method.csv",
-                                  10000, 1e-17)
+for name in ITERATIVE_METHOD_NAMES:
+    measure_iterative_time_complexity(
+        iterative_methods.methods_by_name[name], DIMENSIONS,REPETITIONS,
+        1, 10,f"{name}.csv",10000, 1e-17)
 
-plot_time_complexity(["jacobi_matrix", "jacobi_sum_method", "gauss_seidel_matrix", "gauss_seidel_sum_method"],
-                     "iterative_methods_time_complexity.png")
+plot_time_complexity(ITERATIVE_METHOD_NAMES, "iterative_methods_time_complexity.png")
 
 measure_ge_time_complexity(DIMENSIONS, REPETITIONS, 1, 10, "gaussian_elimination.csv")
 

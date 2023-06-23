@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(iterative_methods, m){
+PYBIND11_MODULE(iterative_methods_c, m){
     m.doc() = "iterative_methods";
     m.def("gaussian_elimination", &gaussian_elimination);
     m.def("jacobi_matrix", &jacobi_matrix);

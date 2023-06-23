@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from iterative_methods import *
+from iterative_methods_c import *
 
 class testPybind(unittest.TestCase):
     def test_jacobi_matrix(self):
