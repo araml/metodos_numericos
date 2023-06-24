@@ -32,8 +32,8 @@ def gauss_seidel_sum_method(m: np.array,
                             eps: float = 1e-6) -> (np.array, int):
     return iterative_methods_c.gauss_seidel_sum_method(m, b, x_0, iterations, eps)
 
+# we don't include gaussian elimination because it's a baseline
 methods_by_name = {
-    "gaussian_elimination": gaussian_elimination,
     "jacobi_matrix": jacobi_matrix,
     "jacobi_sum_method": jacobi_sum_method,
     "gauss_seidel_matrix": gauss_seidel_matrix,
