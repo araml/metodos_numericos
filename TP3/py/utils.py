@@ -18,7 +18,7 @@ def create_test_case(dimension: int, low: int, high: int, diagonal_expansion_fac
 # going to be, in fact we could force it to be singular by adding a zeroe'd eigenvalue.
 def try_create_convergent_matrix(dimension: int, 
                                 low: float = 0,
-                                high: float = 1000, 
+                                high: float = 100, 
                                 seed: float = None) -> (np.array, np.array, np.array):
 
     if seed:

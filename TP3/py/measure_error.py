@@ -8,31 +8,40 @@ def measure_n2_error(iterative_method_to_measure, m, x_0, b, iterations, eps) ->
     actual_result, _ = iterative_method_to_measure(m, x_0, b, iterations, eps)
     return np.linalg.norm(expected_result-actual_result, ord=2)
 
-def run_error_experiment(max_dim: int = 1000):
+def run_error_experiment(max_dim: int = 200):
     steps = int(max_dim/10)
-    jm = js = gsm = gss = []
+    jm = []
+    js = []
+    gsm = []
+    gss = []
     for dim in range(steps, max_dim, steps):
+        print(dim)
         m, x, b = try_create_convergent_matrix(dim)
         v1, _ = jacobi_matrix(m, b, x)
-        jm.append(abs(v1 - b))
+        jm.append(np.linalg.norm(v1 - b))
         v2, _ = jacobi_sum_method(m, b, x)
-        js.append(abs(v2 - b))
+        js.append(np.linalg.norm(v2 - b))
         v3, _ = gauss_seidel_matrix(m, b, x)
-        gsm.append(abs(v3 - b))
+        gsm.append(np.linalg.norm(v3 - b))
         v4, _ = gauss_seidel_sum_method(m, b, x)
-        gss.append(abs(v4 - b))
+        gss.append(np.linalg.norm(v4 - b))
      
 
-    xs = range(0, max_dim, steps)
-    axes.plot(xs, jm, '-o',                           
+    xs = range(steps, max_dim, steps)
+    print(jm)
+    print(js)
+    print(gsm)
+    print(gss)
+
+    plt.plot(xs, jm, '-o', color = 'red',                          
               label=f'Jacobi matriz')       
-    axes.plot(xs, js, '-o',                                
+    plt.plot(xs, js, '-o', color = 'green',                              
               label=f'Jacobi suma')            
-    axes.plot(xs, gsm, '-o',                      
+    plt.plot(xs, gsm, '-o', color = 'blue',                      
               label=f'Gauss-seidel matriz')      
-    axes.plot(xs, gss, '-o',                           
+    plt.plot(xs, gss, '-o', color = 'yellow',                          
               label=f'Gauss-seidel suma')       
-    
+    plt.show()
 
 if __name__ == '__main__':
     run_error_experiment()
