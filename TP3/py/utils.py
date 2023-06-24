@@ -16,8 +16,10 @@ def create_test_case(dimension: int, low: int, high: int, diagonal_expansion_fac
 # not only diagonal nor DDM) P * M * P^-1
 # Note: the resulting matrix might not be invertible, although it most likely is
 # going to be, in fact we could force it to be singular by adding a zeroe'd eigenvalue.
-def try_create_convergent_matrix(dimension: int, low: float = 0, high: float =
-                                 1000, seed: float = None):
+def try_create_convergent_matrix(dimension: int, 
+                                low: float = 0,
+                                high: float = 1000, 
+                                seed: float = None) -> (np.array, np.array, np.array):
 
     if seed:
         np.random.seed(seed)
@@ -40,4 +42,4 @@ def try_create_convergent_matrix(dimension: int, low: float = 0, high: float =
             continue
     M = P@D@P_inv
     x = np.random.randint(low, high, size = dimension)
-    return (M, x, M@x)
+    return M, x, M@x

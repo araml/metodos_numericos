@@ -49,8 +49,7 @@ std::tuple<VectorXd, int> jacobi_matrix(
         }
     }
 
-    throw std::logic_error("Matrix does not converge");
-    return std::make_tuple(x, -1);
+    return std::make_tuple(x, iterations);
 }
 
 std::tuple<VectorXd, int> gauss_seidel_matrix(
@@ -77,9 +76,9 @@ std::tuple<VectorXd, int> gauss_seidel_matrix(
             return std::make_tuple(x, i);
         }
     }
+    
 
-    throw std::logic_error("Matrix does not converge");
-    return std::make_tuple(x, -1);
+    return std::make_tuple(x, iterations);
 }
 
 std::tuple<VectorXd, int> jacobi_sum_method(
@@ -107,8 +106,8 @@ std::tuple<VectorXd, int> jacobi_sum_method(
             return std::make_tuple(x, iter);
         }
     }
-    throw std::logic_error("Matrix does not converge");
-    return std::make_tuple(x, -1);
+
+    return std::make_tuple(x, iterations);
 }
 
 std::tuple<VectorXd, int> gauss_seidel_sum_method(
@@ -141,6 +140,5 @@ std::tuple<VectorXd, int> gauss_seidel_sum_method(
             return std::make_tuple(x, iter);
         }
     }
-    throw std::logic_error("Matrix does not converge");
-    return std::make_tuple(x, -1);
+    return std::make_tuple(x, iterations);
 }
