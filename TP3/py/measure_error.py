@@ -8,25 +8,27 @@ def measure_n2_error(iterative_method_to_measure, m, x_0, b, iterations, eps) ->
     actual_result, _ = iterative_method_to_measure(m, x_0, b, iterations, eps)
     return np.linalg.norm(expected_result-actual_result, ord=2)
 
-def run_error_experiment(max_dim: int = 1000):
+def run_error_experiment(max_dim: int = 900):
     steps = int(max_dim/10)
     jm = []
     js = []
     gsm = []
     gss = []
-    for dim in range(steps, max_dim, steps):
-        m, x, b = create_diagonally_dominant_matrix(dim)
-        v1, _ = jacobi_matrix(m, b, x)
+
+    xs = range(steps, max_dim, 900)
+    for dim in xs:
+        m, _, b = create_diagonally_dominant_matrix(dim)
+        x = np.random.randint(low = 0, high = 100, size = dim)
+        v1, iters = jacobi_matrix(m, b, x, iterations = 500000)
         jm.append(np.linalg.norm(v1 - b))
-        v2, _ = jacobi_sum_method(m, b, x)
+        v2, _ = jacobi_sum_method(m, b, x, iterations = 500000)
         js.append(np.linalg.norm(v2 - b))
-        v3, _ = gauss_seidel_matrix(m, b, x)
+        v3, _ = gauss_seidel_matrix(m, b, x, iterations = 500000)
         gsm.append(np.linalg.norm(v3 - b))
-        v4, _ = gauss_seidel_sum_method(m, b, x)
+        v4, _ = gauss_seidel_sum_method(m, b, x, iterations = 500000)
         gss.append(np.linalg.norm(v4 - b))
      
 
-    xs = range(steps, max_dim, steps)
 
     plt.plot(xs, jm, '-o', color = 'red',                          
               label=f'Jacobi matriz')       
