@@ -1,6 +1,8 @@
-import csv
 import iterative_methods
 import numpy as np
+import pandas as pd
+import os
+import seaborn as sns
 import time
 from matplotlib import pyplot as plt
 from utils import create_test_case
@@ -37,13 +39,18 @@ def measure_iterative_time_complexity(iterative_method,
                                       high: int,
                                       filename: str,
                                       *args) -> None:
+    if os.path.exists(filename):
+        os.remove(filename)
+    dict = {"dimension": [], "time": []}
     for d in dimensions:
         x_0 = np.random.randint(1, 10, size=d)
         execution_times = measure_time_for_dimension(
             iterative_method, d, repetitions, low, high, x_0, *args)
-        with open(filename, 'a', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=';')
-            writer.writerow([d] + execution_times)
+        for e in execution_times:
+            dict["dimension"].append(d)
+            dict["time"].append(e)
+    df = pd.DataFrame(data=dict)
+    df.to_csv(filename, sep='\t', index=False)
 
 
 # sorry for repeated code pattern but i couldn't find a way around x_0
@@ -52,28 +59,30 @@ def measure_ge_time_complexity(dimensions: list,
                                low: int,
                                high: int,
                                filename: str) -> None:
+    if os.path.exists(filename):
+        os.remove(filename)
+    dict = {"dimension": [], "time": []}
     for d in dimensions:
         execution_times = measure_time_for_dimension(
             iterative_methods.gaussian_elimination, d, repetitions, low, high)
-        with open(filename, 'a', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=';')
-            writer.writerow([d] + execution_times)
+        for e in execution_times:
+            dict["dimension"].append(d)
+            dict["time"].append(e)
+    df = pd.DataFrame(data=dict)
+    df.to_csv(filename, sep='\t', index=False)
 
 
 def plot_time_complexity(methods: list, filename: str, scale: str = 'linear'):
-    ax1 = plt.subplot()
+    datasets = []
     for method in methods:
-        data = {}
-        with open(f"{method}.csv", newline='') as csvfile:
-            reader = csv.reader(csvfile, delimiter=';')
-            for row in reader:
-                dimension, measurements = row[0], row[1:]
-                data[dimension] = np.mean([float(m) for m in measurements])
-            dimensions = data.keys()
-            plt.plot(dimensions, [data[d] for d in dimensions], '-o', label=method)
-            ax1.set_xticks([str(d) for d in dimensions])
-            ax1.set_xticklabels([str(d) for d in dimensions], rotation=90)
-    plt.legend()
+        df = pd.read_csv(f"{method}.csv", sep='\t')
+        time_means = df.groupby("dimension").mean()
+        datasets.append(time_means.assign(method=method))
+    
+    g = sns.lineplot(pd.concat(datasets), x="dimension", y="time",
+                     hue="method", marker='o')
+    g.set_xticks(datasets[0].axes[0].to_list())
+    g.tick_params(axis='x', rotation=90)
     plt.yscale(scale)
     plt.xlabel("Dimensión de la matriz")
     plt.ylabel("Tiempo de ejecución promedio (en segundos)")
@@ -82,7 +91,7 @@ def plot_time_complexity(methods: list, filename: str, scale: str = 'linear'):
     plt.clf()
 
 
-REPETITIONS = 50
+REPETITIONS = 100
 DIMENSIONS = range(100, 1600, 100)
 ITERATIVE_METHOD_NAMES = ["jacobi_matrix", "jacobi_sum_method",
                           "gauss_seidel_matrix", "gauss_seidel_sum_method"]
@@ -90,8 +99,8 @@ ITERATIVE_METHOD_NAMES = ["jacobi_matrix", "jacobi_sum_method",
 # TODO: create folders for CSVs and figures
 for name in ITERATIVE_METHOD_NAMES:
     measure_iterative_time_complexity(
-        iterative_methods.methods_by_name[name], DIMENSIONS,REPETITIONS,
-        1, 10,f"{name}.csv",10000, 1e-17)
+        iterative_methods.methods_by_name[name], DIMENSIONS, REPETITIONS,
+        1, 10, f"{name}.csv", 10000, 1e-17)
 
 plot_time_complexity(ITERATIVE_METHOD_NAMES, "iterative_methods_time_complexity.png")
 
