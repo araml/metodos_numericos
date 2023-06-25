@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import seaborn as sns
+from data_paths import csvs_path, figures_path
 from matplotlib import pyplot as plt
 from iterative_methods import *
 from utils import *
@@ -18,7 +19,8 @@ def measure_iterations(iterative_method,
     while len(all_iterations) < repetitions:
         x_0 = np.random.randint(low, high, dimension)
         try:
-            m, _, b = create_test_case(dimension, low, high, diagonal_expansion_factor)
+            m, _, b = create_test_case(dimension, low, high,
+                                       diagonal_expansion_factor)
             _, iterations = iterative_method(m, b, x_0, *args)
             all_iterations.append(iterations)
         except:
@@ -34,8 +36,9 @@ def measure_iterations_growing_diagonal(iterative_method,
                                         diagonal_expansion_factors: list,
                                         filename: str,
                                         *args) -> None:
-    if os.path.exists(filename):
-        os.remove(filename)
+    full_path = os.path.join(csvs_path, filename)
+    if os.path.exists(full_path):
+        os.remove(full_path)
     dict = {"factor": [], "iterations": []}
     for d in diagonal_expansion_factors:
         iterations = measure_iterations(
@@ -44,22 +47,21 @@ def measure_iterations_growing_diagonal(iterative_method,
             dict["factor"].append(d)
             dict["iterations"].append(it)
     df = pd.DataFrame(data=dict)
-    df.to_csv(filename, sep='\t', index=False)
+    df.to_csv(full_path, sep='\t', index=False)
 
 
 def violin_plot_iterations(factors_to_plot: list,
                            csv_filename: str,
                            figure_filename: str,
                            y_scale: str) -> None:
-    df = pd.read_csv(csv_filename, sep='\t')
+    df = pd.read_csv(os.path.join(csvs_path, csv_filename), sep='\t')
     df = df[df["factor"].isin(factors_to_plot)]
     plt.figure(figsize=(8,6))
-
-    g = sns.violinplot(df, x="factor", y="iterations", color="orange")
+    g = sns.violinplot(df, x="factor", y="iterations", color="tab:orange")
     g.set_yscale(y_scale)
     g.set_xlabel("Factor de expansión de la diagonal")
     g.set_ylabel("Cantidad de iteraciones hasta converger")
-    plt.savefig(figure_filename)
+    plt.savefig(os.path.join(figures_path, figure_filename))
     plt.close()
 
 
@@ -67,14 +69,15 @@ def box_plot_iterations(factors_to_plot: list,
                         csv_filename: str,
                         figure_filename: str,
                         y_scale: str = "linear"):
-    df = pd.read_csv(csv_filename, sep='\t')
+    df = pd.read_csv(os.path.join(csvs_path, csv_filename), sep='\t')
     df = df[df["factor"].isin(factors_to_plot)]
     plt.figure(figsize=(8,6))
-    g = sns.boxplot(df, x="factor", y="iterations", color="orange", flierprops={"marker": '.'})
+    g = sns.boxplot(df, x="factor", y="iterations", color="tab:orange",
+                    flierprops={"marker": '.'})
     g.set_yscale(y_scale)
     g.set_xlabel("Factor de expansión de la diagonal")
     g.set_ylabel("Cantidad de iteraciones hasta converger")
-    plt.savefig(figure_filename)
+    plt.savefig(os.path.join(figures_path, figure_filename))
     plt.close()
 
 
@@ -88,16 +91,18 @@ def line_plot_iterations(methods: list,
                          high_q: float = 0.75) -> None:
     datasets = []
     for method in methods:
-        df = pd.read_csv(f"{method}_iterations.csv", sep='\t')
+        df = pd.read_csv(os.path.join(csvs_path, f"{method}_iterations.csv"),
+                         sep='\t')
         df = df[df["factor"].isin(factors_to_plot)]
         if remove_outliers:
             df = df[df.groupby("factor").iterations.\
-                transform(lambda x : (x < x.quantile(high_q)) & (x > x.quantile(low_q))).eq(1)]
+                transform(lambda x : (x < x.quantile(high_q)) & \
+                          (x > x.quantile(low_q))).eq(1)]
         iteration_means = df.groupby("factor").mean()
         datasets.append(iteration_means.assign(method=method))
 
     g = sns.lineplot(pd.concat(datasets), x="factor", y="iterations",
-                     hue="method", style="method", markers=True, dashes=False)
+                     hue="method", marker='o')
     g.set_xticks(datasets[0].axes[0].to_list())
     if rotate_xticklabels:
         g.tick_params(axis='x', rotation=90)
@@ -105,7 +110,7 @@ def line_plot_iterations(methods: list,
     plt.xlabel("Factor de expansión de la diagonal")
     plt.ylabel("Cantidad promedio de iteraciones hasta converger")
     plt.tight_layout()
-    plt.savefig(figure_filename)
+    plt.savefig(os.path.join(figures_path, figure_filename))
     plt.close()
 
 

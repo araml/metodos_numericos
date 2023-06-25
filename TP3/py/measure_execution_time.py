@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import seaborn as sns
 import time
+from data_paths import csvs_path, figures_path
 from matplotlib import pyplot as plt
 from utils import create_test_case
 
@@ -39,8 +40,9 @@ def measure_iterative_time_complexity(iterative_method,
                                       high: int,
                                       filename: str,
                                       *args) -> None:
-    if os.path.exists(filename):
-        os.remove(filename)
+    full_path = os.path.join(csvs_path, filename)
+    if os.path.exists(full_path):
+        os.remove(full_path)
     dict = {"dimension": [], "time": []}
     for d in dimensions:
         x_0 = np.random.randint(1, 10, size=d)
@@ -50,7 +52,7 @@ def measure_iterative_time_complexity(iterative_method,
             dict["dimension"].append(d)
             dict["time"].append(e)
     df = pd.DataFrame(data=dict)
-    df.to_csv(filename, sep='\t', index=False)
+    df.to_csv(full_path, sep='\t', index=False)
 
 
 # sorry for repeated code pattern but i couldn't find a way around x_0
@@ -59,8 +61,9 @@ def measure_ge_time_complexity(dimensions: list,
                                low: int,
                                high: int,
                                filename: str) -> None:
-    if os.path.exists(filename):
-        os.remove(filename)
+    full_path = os.path.join(csvs_path, filename)
+    if os.path.exists(full_path):
+        os.remove(full_path)
     dict = {"dimension": [], "time": []}
     for d in dimensions:
         execution_times = measure_time_for_dimension(
@@ -69,13 +72,13 @@ def measure_ge_time_complexity(dimensions: list,
             dict["dimension"].append(d)
             dict["time"].append(e)
     df = pd.DataFrame(data=dict)
-    df.to_csv(filename, sep='\t', index=False)
+    df.to_csv(full_path, sep='\t', index=False)
 
 
 def plot_time_complexity(methods: list, filename: str, scale: str = 'linear'):
     datasets = []
     for method in methods:
-        df = pd.read_csv(f"{method}.csv", sep='\t')
+        df = pd.read_csv(os.path.join(csvs_path, f"{method}_time.csv"), sep='\t')
         time_means = df.groupby("dimension").mean()
         datasets.append(time_means.assign(method=method))
     
@@ -87,7 +90,8 @@ def plot_time_complexity(methods: list, filename: str, scale: str = 'linear'):
     plt.xlabel("Dimensión de la matriz")
     plt.ylabel("Tiempo de ejecución promedio (en segundos)")
     plt.tight_layout()
-    plt.savefig(filename)
+
+    plt.savefig(os.path.join(figures_path, filename))
     plt.clf()
 
 
@@ -96,15 +100,14 @@ DIMENSIONS = range(100, 1600, 100)
 ITERATIVE_METHOD_NAMES = ["jacobi_matrix", "jacobi_sum_method",
                           "gauss_seidel_matrix", "gauss_seidel_sum_method"]
 
-# TODO: create folders for CSVs and figures
 for name in ITERATIVE_METHOD_NAMES:
     measure_iterative_time_complexity(
         iterative_methods.methods_by_name[name], DIMENSIONS, REPETITIONS,
-        1, 10, f"{name}.csv", 10000, 1e-17)
+        1, 10, f"{name}_time.csv", 10000, 1e-17)
 
 plot_time_complexity(ITERATIVE_METHOD_NAMES, "iterative_methods_time_complexity.png")
 
-measure_ge_time_complexity(DIMENSIONS, REPETITIONS, 1, 10, "gaussian_elimination.csv")
+measure_ge_time_complexity(DIMENSIONS, REPETITIONS, 1, 10, "gaussian_elimination_time.csv")
 
 plot_time_complexity(["jacobi_matrix", "gauss_seidel_matrix", "gaussian_elimination"],
                      "iterative_matrix_vs_elimination_time_complexity.png")

@@ -1,7 +1,9 @@
 .vscode/
 build/
+csvs/
 doctest/
 eigen/
+figures/
 py/*cpython*
 py/data_paths.py
 pybind11/
