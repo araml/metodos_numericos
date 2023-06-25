@@ -30,6 +30,11 @@ add_library(iterative SHARED ${metodos_iterativos})
 pybind11_add_module(iterative_methods_c src/main.cpp)
 target_link_libraries(iterative_methods_c PRIVATE iterative)
 
+get_filename_component(CSVS_PATH csvs ABSOLUTE)
+get_filename_component(FIGURES_PATH figures ABSOLUTE)
+configure_file(py/data_paths.in.py ../py/data_paths.py)
+
+
 if (BUILD_TESTS)
     macro(add_custom_test name file)
         string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" bare_name ${file})

@@ -3,6 +3,7 @@ build/
 doctest/
 eigen/
 py/*cpython*
+py/data_paths.py
 pybind11/
 *__pycache__*
 *.csv
