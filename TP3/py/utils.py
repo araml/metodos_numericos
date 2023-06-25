@@ -37,6 +37,8 @@ def remove_outliers(data, low_q, high_q):
     return [x for x in data if x >= low_cutoff and x <= high_cutoff]
 
 
+# Edit: Although this should guarantee that Ax converges to something it doesn't 
+# guarantees it will under jacobi or gauss seidel
 # The idea is to create a diagonal matrix D whose entries are all < 1 and then 
 # try to create another matrix P that is inversible, because we know that 
 # similar matrix have the same eigenvalues we can create a new matrix (That is
@@ -67,6 +69,24 @@ def try_create_convergent_matrix(dimension: int,
             break
         except: 
             continue
+    
     M = P@D@P_inv
-    x = np.random.randint(low, high, size = dimension)
+    x = np.random.randint(low=low, high=high, size=dimension)
     return M, x, M@x
+
+def create_diagonally_dominant_matrix(dimension: int, 
+                                      low: float = 0, high: float = 100, 
+                                      seed: float = None) -> (np.array, np.array, np.array):
+
+    if seed:
+        np.random.seed(seed)
+
+    m = np.random.randint(low=low, high=high, size=(dimension, dimension))
+
+
+    for i in range(dimension):
+        max_row = m.sum(axis = 1)[i] - m[i, i]
+        m[i, i] = np.random.random() * abs(high - max_row) + max_row
+
+    x = np.random.randint(low=low, high=high, size=dimension)
+    return m, x, m@x
