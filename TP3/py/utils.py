@@ -32,6 +32,11 @@ def read_data_from_csv(keys_to_read: list, csv_filename: str, key_type, value_ty
                 data.append([value_type(v) for v in values])
     return x_values, data
 
+def remove_outliers(data, low_q, high_q):
+    low_cutoff, high_cutoff = np.quantile(data, (low_q, high_q))
+    return [x for x in data if x >= low_cutoff and x <= high_cutoff]
+
+
 # The idea is to create a diagonal matrix D whose entries are all < 1 and then 
 # try to create another matrix P that is inversible, because we know that 
 # similar matrix have the same eigenvalues we can create a new matrix (That is
