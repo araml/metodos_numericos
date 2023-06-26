@@ -15,18 +15,18 @@ def run_error_experiment(max_dim: int = 900):
     gsm = []
     gss = []
 
-    xs = range(steps, max_dim, 900)
+    xs = range(steps, max_dim, steps)
     for dim in xs:
         m, _, b = create_diagonally_dominant_matrix(dim)
         x = np.random.randint(low = 0, high = 100, size = dim)
         v1, iters = jacobi_matrix(m, b, x, iterations = 500000)
-        jm.append(np.linalg.norm(v1 - b))
+        jm.append(np.linalg.norm(m@v1 - b))
         v2, _ = jacobi_sum_method(m, b, x, iterations = 500000)
-        js.append(np.linalg.norm(v2 - b))
+        js.append(np.linalg.norm(m@v2 - b))
         v3, _ = gauss_seidel_matrix(m, b, x, iterations = 500000)
-        gsm.append(np.linalg.norm(v3 - b))
+        gsm.append(np.linalg.norm(m@v3 - b))
         v4, _ = gauss_seidel_sum_method(m, b, x, iterations = 500000)
-        gss.append(np.linalg.norm(v4 - b))
+        gss.append(np.linalg.norm(m@v4 - b))
      
 
 
