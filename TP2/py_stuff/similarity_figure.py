@@ -23,10 +23,10 @@ def mean_similarity_between_people(correlation_matrix: np.array,
     return submatrix.mean()
 
 
-def compressed_mean_similarities(pca_engine: PCABase, images: np.array, k: int) -> (float, float):
+def projected_mean_similarities(pca_engine: PCABase, images: np.array, k: int) -> (float, float):
     pca_engine.set_components_dimension(k)
-    compressed_images = pca_engine.transform(images)
-    return mean_similarities(compressed_images)
+    projected_images = pca_engine.project_images(images)
+    return mean_similarities(projected_images)
 
 
 # Return mean of ALL similarities between photos of the same person
@@ -69,9 +69,9 @@ def create_pca_similarity_figure(images: np.array,
     baseline_same, baseline_diff = mean_similarities(images) # compare against uncompressed images
 
     for k in ks:
-        mean_similarities_1d.append(compressed_mean_similarities(pca_1d, images, k))
+        mean_similarities_1d.append(projected_mean_similarities(pca_1d, images, k))
         if use_2d:
-            mean_similarities_2d.append(compressed_mean_similarities(pca_2d, images, k))
+            mean_similarities_2d.append(projected_mean_similarities(pca_2d, images, k))
 
     _, axes = plt.subplots(figsize=(8, 6))
 
@@ -98,7 +98,7 @@ def create_pca_similarity_figure(images: np.array,
     plt.clf()
 
 def run_similarity_experiment() -> None:
-    p = parser.create_parser("plot_eigenvalues")
+    p = parser.create_parser("run_similarity_experiment")
     args = p.parse_args()
     number_of_eigenvectors = args.number_of_eigenvectors
     iterations = args.iterations
@@ -108,10 +108,10 @@ def run_similarity_experiment() -> None:
     images = read_images(Path(faces_path), args.scale_down_factor)
     max_2d_k = min(number_of_eigenvectors, images.shape[2])
 
-    k_range_2d = np.linspace(1, max_2d_k, 10, dtype=int)
-    k_range_2d_small = np.arange(1, 12)
-    k_range = np.linspace(1, 150, 10, dtype=int)
-    k_range_small = np.arange(1, 24)
+    k_range_2d = np.linspace(2, max_2d_k, 10, dtype=int)
+    k_range_2d_small = np.arange(2, 12)
+    k_range = np.linspace(2, 150, 10, dtype=int)
+    k_range_small = np.arange(2, 24)
 
     for its in [1, 2, 3, 4, 5, 8, 10, 15]:
         create_pca_similarity_figure(images, k_range_2d, use_2d=True, iterations=its, plot_same=True)
