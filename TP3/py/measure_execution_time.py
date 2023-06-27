@@ -1,10 +1,11 @@
-import iterative_methods
 import numpy as np
 import pandas as pd
 import os
 import seaborn as sns
 import time
 from data_paths import csvs_path, figures_path
+from iterative_methods import *
+from math import log
 from matplotlib import pyplot as plt
 from utils import create_test_case
 
@@ -45,6 +46,7 @@ def measure_iterative_time_complexity(iterative_method,
         os.remove(full_path)
     dict = {"dimension": [], "time": []}
     for d in dimensions:
+        print(d)
         x_0 = np.random.randint(1, 10, size=d)
         execution_times = measure_time_for_dimension(
             iterative_method, d, repetitions, low, high, x_0, *args)
@@ -66,8 +68,9 @@ def measure_ge_time_complexity(dimensions: list,
         os.remove(full_path)
     dict = {"dimension": [], "time": []}
     for d in dimensions:
+        print(d)
         execution_times = measure_time_for_dimension(
-            iterative_methods.gaussian_elimination, d, repetitions, low, high)
+            gaussian_elimination, d, repetitions, low, high)
         for e in execution_times:
             dict["dimension"].append(d)
             dict["time"].append(e)
@@ -75,39 +78,57 @@ def measure_ge_time_complexity(dimensions: list,
     df.to_csv(full_path, sep='\t', index=False)
 
 
-def plot_time_complexity(methods: list, filename: str, scale: str = 'linear'):
+def plot_time_complexity(methods: list,
+                         filename: str,
+                         xscale: str = 'linear',
+                         yscale: str = 'linear'):
     datasets = []
     for method in methods:
-        df = pd.read_csv(os.path.join(csvs_path, f"{method}_time.csv"), sep='\t')
+        df = pd.read_csv(os.path.join(csvs_path, f"{method}_time.csv"),
+                         sep='\t')
         time_means = df.groupby("dimension").mean()
         datasets.append(time_means.assign(method=method))
     
     g = sns.lineplot(pd.concat(datasets), x="dimension", y="time",
                      hue="method", marker='o')
-    g.set_xticks(datasets[0].axes[0].to_list())
-    g.tick_params(axis='x', rotation=90)
-    plt.yscale(scale)
+    xticks = datasets[0].axes[0].to_list()
+    xticklabels = xticks
+    # base is set to 2 because it's IMPOSSIBLE to format this otherwise
+    # trust me I've tried
+    if xscale == 'log':
+        exponents = [int(log(x, 2)) for x in xticks]
+        xticklabels = [r"$2^{%d}$" % e for e in exponents]
+    plt.xscale(xscale, base=2)
+    g.set_xticks(xticks, labels=xticklabels)
+    plt.yscale(yscale)
     plt.xlabel("Dimensión de la matriz")
     plt.ylabel("Tiempo de ejecución promedio (en segundos)")
     plt.tight_layout()
-
     plt.savefig(os.path.join(figures_path, filename))
-    plt.clf()
+    plt.close()
 
 
 REPETITIONS = 100
-DIMENSIONS = range(100, 1600, 100)
+DIMENSIONS = [2 ** i for i in range(13)]
 ITERATIVE_METHOD_NAMES = ["jacobi_matrix", "jacobi_sum_method",
                           "gauss_seidel_matrix", "gauss_seidel_sum_method"]
 
 for name in ITERATIVE_METHOD_NAMES:
     measure_iterative_time_complexity(
-        iterative_methods.methods_by_name[name], DIMENSIONS, REPETITIONS,
-        1, 10, f"{name}_time.csv", 10000, 1e-17)
+        methods_by_name[name], DIMENSIONS, REPETITIONS,
+        1, 10, f"{name}_time.csv", 10000, 1e-6)
 
-plot_time_complexity(ITERATIVE_METHOD_NAMES, "iterative_methods_time_complexity.png")
+plot_time_complexity(ITERATIVE_METHOD_NAMES, "iterative_methods_time_complexity.png",
+                     xscale='log')
+plot_time_complexity(ITERATIVE_METHOD_NAMES, "iterative_methods_time_complexity_log.png",
+                     xscale='log', yscale='log')
 
-measure_ge_time_complexity(DIMENSIONS, REPETITIONS, 1, 10, "gaussian_elimination_time.csv")
+measure_ge_time_complexity(DIMENSIONS, REPETITIONS, 1, 10,
+                           "gaussian_elimination_time.csv")
 
 plot_time_complexity(["jacobi_matrix", "gauss_seidel_matrix", "gaussian_elimination"],
-                     "iterative_matrix_vs_elimination_time_complexity.png")
+                     "iterative_matrix_vs_elimination_time_complexity.png",
+                     xscale='log')
+plot_time_complexity(["jacobi_matrix", "gauss_seidel_matrix", "gaussian_elimination"],
+                     "iterative_matrix_vs_elimination_time_complexity_log.png",
+                     xscale='log', yscale='log')
