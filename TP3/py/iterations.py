@@ -135,7 +135,7 @@ def read_method_datasets_from_csv(methods: list,
         if remove_outliers:
             # reference: https://stackoverflow.com/questions/57256870/flag-outliers-in-the-dataframe-for-each-group
             # Remove rows where the iterations are three standard deviations
-            # above or below mean for their respective factor.
+            # above or below the mean for their respective factor.
             # This is far more robust than using quantiles, which was leaving
             # the dataframe empty when there were less than 5 values.
             by_factor = df.groupby('factor')
@@ -147,15 +147,16 @@ def read_method_datasets_from_csv(methods: list,
 
 
 REPETITIONS = 100
-DIMENSION = 100
+DIMENSION = 200
 LOW = 1
 HIGH = 5
-GS_SUM_RANGE = range(10, 1001)
-GS_MATRIX_RANGE = range(10, 1001)
-JACOBI_SUM_RANGE = range(120, 241)
-JACOBI_MATRIX_RANGE = range(120, 241)
-JACOBI_VS_GS_RANGE = range(120, 241, 5)
-JACOBI_BOXPLOT_RANGE = range(120, 241, 15)
+GS_SUM_RANGE = range(20, 2001)
+GS_MATRIX_RANGE = range(20, 2001)
+JACOBI_SUM_RANGE = range(280, 601)
+JACOBI_MATRIX_RANGE = range(280, 601)
+JACOBI_LINE_PLOT_RANGE = range(280, 601, 20)
+JACOBI_VS_GS_LINE_PLOT_RANGE = range(280, 601, 15)
+JACOBI_BOXPLOT_RANGE = range(280, 601, 40)
 
 # === GAUSS-SEIDEL === #
 measure_iterations_growing_diagonal(
@@ -167,17 +168,17 @@ measure_iterations_growing_diagonal(
     GS_MATRIX_RANGE)
 
 violin_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
-                       range(10, 30, 2), DIMENSION, "violin_gs_iterations",
+                       range(20, 60, 4), DIMENSION, "violin_gs_iterations",
                        "log")
 
 box_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
-                    range(10, 30, 2), DIMENSION, "box_gs_iterations", "log")
+                    range(20, 60, 4), DIMENSION, "box_gs_iterations", "log")
 
 line_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
-                     range(10, 31), DIMENSION, "line_gs_iterations")
+                     range(20, 62, 2), DIMENSION, "line_gs_iterations")
 
 line_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
-                     range(10, 31), DIMENSION, "line_gs_iterations_no_outliers",
+                     range(20, 62, 2), DIMENSION, "line_gs_iterations_no_outliers",
                      remove_outliers=True)
 
 # === JACOBI === #
@@ -196,10 +197,10 @@ violin_plot_iterations(
 box_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], JACOBI_BOXPLOT_RANGE,
                     DIMENSION, "box_jacobi_iterations", "log")
 
-line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], range(120, 146),
+line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], JACOBI_LINE_PLOT_RANGE,
                      DIMENSION, "line_jacobi_iterations", rotate_xticklabels=True)
 
-line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], range(120, 146),
+line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], JACOBI_LINE_PLOT_RANGE,
                      DIMENSION, "line_jacobi_iterations_no_outliers",
                      rotate_xticklabels=True, remove_outliers=True)
 
@@ -214,7 +215,7 @@ box_plot_iterations(
     DIMENSION, "box_jacobi_vs_gauss_seidel_sum_iterations", "log")
 
 line_plot_iterations(["jacobi_sum_method", "gauss_seidel_sum_method"],
-                     JACOBI_VS_GS_RANGE, DIMENSION,
+                     JACOBI_VS_GS_LINE_PLOT_RANGE, DIMENSION,
                      "line_jacobi_vs_gauss_seidel_sum_iterations_no_outliers",
                      rotate_xticklabels=True, remove_outliers=True,
                      scale="log")
@@ -228,7 +229,7 @@ box_plot_iterations(
     DIMENSION, "box_jacobi_vs_gauss_seidel_matrix_iterations", "log")
 
 line_plot_iterations(["jacobi_matrix", "gauss_seidel_matrix"],
-                     JACOBI_VS_GS_RANGE, DIMENSION,
+                     JACOBI_VS_GS_LINE_PLOT_RANGE, DIMENSION,
                      "line_jacobi_vs_gauss_seidel_matrix_iterations_no_outliers",
                      rotate_xticklabels=True, remove_outliers=True,
                      scale="log")
