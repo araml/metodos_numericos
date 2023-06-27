@@ -16,7 +16,7 @@ def measure_convergence_ratio(iterative_method_name,
                               diagonal_expansion_factor: int,
                               x_0 = None,
                               iterations = 10000,
-                              eps = 1e-6):
+                              eps = 1e-6) -> pd.DataFrame:
     dict = {"converged": []}
     iterative_method = methods_by_name[iterative_method_name]
     if x_0 is None:

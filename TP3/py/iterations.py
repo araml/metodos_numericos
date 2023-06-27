@@ -3,73 +3,84 @@ import pandas as pd
 import os
 import seaborn as sns
 from data_paths import csvs_path, figures_path
-from matplotlib import pyplot as plt
 from iterative_methods import *
+from matplotlib import pyplot as plt
 from utils import *
 
 
-def measure_iterations(iterative_method,
+def measure_iterations(iterative_method_name,
                        dimension: int,
                        repetitions: int,
                        low: int,
                        high: int,
                        diagonal_expansion_factor: int,
-                       *args) -> list:
-    all_iterations = []
-    while len(all_iterations) < repetitions:
+                       iterations: int = 10000,
+                       eps: float = 1e-6) -> pd.DataFrame:
+    dict = {"iterations": []}
+    iterative_method = methods_by_name[iterative_method_name]
+    while len(dict["iterations"]) < repetitions:
         x_0 = np.random.randint(low, high, dimension)
         try:
             m, _, b = create_test_case(dimension, low, high,
                                        diagonal_expansion_factor)
-            _, iterations = iterative_method(m, b, x_0, *args)
-            all_iterations.append(iterations)
+            _, its = iterative_method(m, b, x_0, iterations, eps)
+            dict["iterations"].append(its)
         except:
             continue
-    return all_iterations
+    dict["factor"] = diagonal_expansion_factor
+    dict["method"] = iterative_method_name
+    dict["epsilon"] = eps
+    dict["dimension"] = dimension
+    return pd.DataFrame(data=dict)
 
 
-def measure_iterations_growing_diagonal(iterative_method,
+def measure_iterations_growing_diagonal(iterative_method_name,
                                         dimension: int,
                                         repetitions: int,
                                         low: int,
                                         high: int,
                                         diagonal_expansion_factors: list,
-                                        filename: str,
-                                        *args) -> None:
-    full_path = os.path.join(csvs_path, filename)
+                                        iterations: int = 10000,
+                                        eps: float = 1e-6) -> None:
+    full_path = os.path.join(csvs_path,
+        f"{iterative_method_name}_iterations_dim{dimension}.csv")
     if os.path.exists(full_path):
         os.remove(full_path)
-    dict = {"factor": [], "iterations": []}
+    results = []
     for d in diagonal_expansion_factors:
-        iterations = measure_iterations(
-            iterative_method, dimension, repetitions, low, high, d, *args)
-        for it in iterations:
-            dict["factor"].append(d)
-            dict["iterations"].append(it)
-    df = pd.DataFrame(data=dict)
+        r = measure_iterations(
+            iterative_method_name, dimension, repetitions,
+            low, high, d, iterations, eps)
+        results.append(r)
+    df = pd.concat(results)
     df.to_csv(full_path, sep='\t', index=False)
 
 
 def violin_plot_iterations(methods: list,
                            factors_to_plot: list,
+                           dimension: int,
                            figure_filename: str,
-                           y_scale: str) -> None:
-    method_data = read_method_datasets_from_csv(methods, factors_to_plot)
+                           y_scale: str = "linear") -> None:
+    method_data = read_method_datasets_from_csv(methods, factors_to_plot,
+                                                dimension)
     plt.figure(figsize=(8,6))
     g = sns.violinplot(data=pd.concat(method_data), x="factor",
                        y="iterations", hue="method")
     g.set_yscale(y_scale)
     g.set_xlabel("Factor de expansión de la diagonal")
     g.set_ylabel("Cantidad de iteraciones hasta converger")
-    plt.savefig(os.path.join(figures_path, figure_filename))
+    plt.savefig(os.path.join(figures_path,
+                             f"{figure_filename}_dim{dimension}.png"))
     plt.close()
 
 
 def box_plot_iterations(methods: list,
                         factors_to_plot: list,
+                        dimension: int,
                         figure_filename: str,
                         y_scale: str = "linear"):
-    method_data = read_method_datasets_from_csv(methods, factors_to_plot)
+    method_data = read_method_datasets_from_csv(methods, factors_to_plot,
+                                                dimension)
     plt.figure(figsize=(8,6))
     g = sns.boxplot(data=pd.concat(method_data), x="factor",
                     y="iterations", hue="method",
@@ -77,20 +88,20 @@ def box_plot_iterations(methods: list,
     g.set_yscale(y_scale)
     g.set_xlabel("Factor de expansión de la diagonal")
     g.set_ylabel("Cantidad de iteraciones hasta converger")
-    plt.savefig(os.path.join(figures_path, figure_filename))
+    plt.savefig(os.path.join(figures_path,
+                             f"{figure_filename}_dim{dimension}.png"))
     plt.close()
 
 
 def line_plot_iterations(methods: list,
                          factors_to_plot: list,
+                         dimension: int,
                          figure_filename: str,
                          scale: str = 'linear',
                          rotate_xticklabels: bool = False,
-                         remove_outliers: bool = False,
-                         low_q: float = 0.25,
-                         high_q: float = 0.75) -> None:
+                         remove_outliers: bool = False) -> None:
     method_data = read_method_datasets_from_csv(
-        methods, factors_to_plot, remove_outliers, low_q, high_q)
+        methods, factors_to_plot, dimension, remove_outliers)
     means = []
     for df in method_data:
         method = df["method"].iloc[0]
@@ -106,26 +117,31 @@ def line_plot_iterations(methods: list,
     plt.xlabel("Factor de expansión de la diagonal")
     plt.ylabel("Cantidad promedio de iteraciones hasta converger")
     plt.tight_layout()
-    plt.savefig(os.path.join(figures_path, figure_filename))
+    plt.savefig(os.path.join(figures_path,
+                             f"{figure_filename}_dim{dimension}.png"))
     plt.close()
 
 
 def read_method_datasets_from_csv(methods: list,
                                   factors_to_plot: list,
-                                  remove_outliers: bool = False,
-                                  low_q: float = 0.25,
-                                  high_q: float = 0.75) -> pd.DataFrame:
+                                  dimension: int,
+                                  remove_outliers: bool = False) -> list:
     method_data = []
     for method in methods:
-        df = pd.read_csv(os.path.join(csvs_path, f"{method}_iterations.csv"),
-                         sep='\t')
+        full_path = os.path.join(csvs_path,
+            f"{method}_iterations_dim{dimension}.csv")
+        df = pd.read_csv(full_path, sep='\t')
         df = df[df["factor"].isin(factors_to_plot)]
-        # TODO: use a better method for detecting outliers
         if remove_outliers:
-            df = df[df.groupby("factor").iterations.\
-                transform(lambda x : (x < x.quantile(high_q)) & \
-                          (x > x.quantile(low_q))).eq(1)]
-        df["method"] = method
+            # reference: https://stackoverflow.com/questions/57256870/flag-outliers-in-the-dataframe-for-each-group
+            # Remove rows where the iterations are three standard deviations
+            # above or below mean for their respective factor.
+            # This is far more robust than using quantiles, which was leaving
+            # the dataframe empty when there were less than 5 values.
+            by_factor = df.groupby('factor')
+            means = by_factor.iterations.transform("mean")
+            stds = by_factor.iterations.transform("std")
+            df = df[df.iterations.between(means - stds*3, means + stds*3)]
         method_data.append(df)
     return method_data
 
@@ -143,73 +159,76 @@ JACOBI_BOXPLOT_RANGE = range(120, 241, 15)
 
 # === GAUSS-SEIDEL === #
 measure_iterations_growing_diagonal(
-    gauss_seidel_sum_method, DIMENSION, REPETITIONS, LOW, HIGH,
-    GS_SUM_RANGE, "gs_sum_iterations.csv")
+    "gauss_seidel_sum_method", DIMENSION, REPETITIONS, LOW, HIGH,
+    GS_SUM_RANGE)
 
 measure_iterations_growing_diagonal(
-    gauss_seidel_matrix, DIMENSION, REPETITIONS, LOW, HIGH,
-    GS_MATRIX_RANGE, "gs_matrix_iterations.csv")
+    "gauss_seidel_matrix", DIMENSION, REPETITIONS, LOW, HIGH,
+    GS_MATRIX_RANGE)
 
-violin_plot_iterations(
-    ["gs_sum", "gs_matrix"], range(10, 30, 2),
-    "violin_gs_iterations.png", "log")
+violin_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                       range(10, 30, 2), DIMENSION, "violin_gs_iterations",
+                       "log")
 
-box_plot_iterations(["gs_sum", "gs_matrix"], range(10, 30, 2),
-                    "box_gs_iterations.png", "log")
+box_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                    range(10, 30, 2), DIMENSION, "box_gs_iterations", "log")
 
-line_plot_iterations(["gs_matrix", "gs_sum"], range(10, 31),
-                     "line_gs_iterations.png")
+line_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                     range(10, 31), DIMENSION, "line_gs_iterations")
 
-line_plot_iterations(["gs_matrix", "gs_sum"], range(10, 31),
-                     "line_gs_iterations_no_outliers.png", remove_outliers=True)
+line_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                     range(10, 31), DIMENSION, "line_gs_iterations_no_outliers",
+                     remove_outliers=True)
 
 # === JACOBI === #
 measure_iterations_growing_diagonal(
-    jacobi_sum_method, DIMENSION, REPETITIONS, LOW, HIGH,
-    JACOBI_SUM_RANGE, "jacobi_sum_iterations.csv")
+    "jacobi_sum_method", DIMENSION, REPETITIONS, LOW, HIGH,
+    JACOBI_SUM_RANGE)
 
 measure_iterations_growing_diagonal(
-    jacobi_matrix, DIMENSION, REPETITIONS, LOW, HIGH,
-    JACOBI_MATRIX_RANGE, "jacobi_matrix_iterations.csv")
+    "jacobi_matrix", DIMENSION, REPETITIONS, LOW, HIGH,
+    JACOBI_MATRIX_RANGE)
 
 violin_plot_iterations(
-    ["jacobi_sum", "jacobi_matrix"], JACOBI_BOXPLOT_RANGE,
-    "violin_jacobi_iterations.png", "log")
+    ["jacobi_sum_method", "jacobi_matrix"], JACOBI_BOXPLOT_RANGE,
+    DIMENSION, "violin_jacobi_iterations", "log")
 
-box_plot_iterations(["jacobi_sum", "jacobi_matrix"], JACOBI_BOXPLOT_RANGE,
-                    "box_jacobi_iterations.png", "log")
+box_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], JACOBI_BOXPLOT_RANGE,
+                    DIMENSION, "box_jacobi_iterations", "log")
 
-line_plot_iterations(["jacobi_matrix", "jacobi_sum"], range(120, 146),
-                     "line_jacobi_iterations.png", rotate_xticklabels=True)
+line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], range(120, 146),
+                     DIMENSION, "line_jacobi_iterations", rotate_xticklabels=True)
 
-line_plot_iterations(["jacobi_matrix", "jacobi_sum"], range(120, 146),
-                     "line_jacobi_iterations_no_outliers.png",
+line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], range(120, 146),
+                     DIMENSION, "line_jacobi_iterations_no_outliers",
                      rotate_xticklabels=True, remove_outliers=True)
 
 # === JACOBI/GS COMPARISON === #
 
 violin_plot_iterations(
-    ["jacobi_sum", "gs_sum"], JACOBI_BOXPLOT_RANGE,
-    "violin_jacobi_vs_gs_sum_iterations.png", "log")
+    ["jacobi_sum_method", "gauss_seidel_sum_method"], JACOBI_BOXPLOT_RANGE,
+    DIMENSION, "violin_jacobi_vs_gauss_seidel_sum_iterations", "log")
 
 box_plot_iterations(
-    ["jacobi_sum", "gs_sum"], JACOBI_BOXPLOT_RANGE,
-    "box_jacobi_vs_gs_sum_iterations.png", "log")
+    ["jacobi_sum_method", "gauss_seidel_sum_method"], JACOBI_BOXPLOT_RANGE,
+    DIMENSION, "box_jacobi_vs_gauss_seidel_sum_iterations", "log")
 
-line_plot_iterations(["jacobi_sum", "gs_sum"], JACOBI_VS_GS_RANGE,
-                     "line_jacobi_vs_gs_iterations_sum.png",
-                     rotate_xticklabels=True, remove_outliers=False,
+line_plot_iterations(["jacobi_sum_method", "gauss_seidel_sum_method"],
+                     JACOBI_VS_GS_RANGE, DIMENSION,
+                     "line_jacobi_vs_gauss_seidel_sum_iterations_no_outliers",
+                     rotate_xticklabels=True, remove_outliers=True,
                      scale="log")
 
 violin_plot_iterations(
-    ["jacobi_matrix", "gs_matrix"], JACOBI_BOXPLOT_RANGE,
-    "violin_jacobi_vs_gs_matrix_iterations.png", "log")
+    ["jacobi_matrix", "gauss_seidel_matrix"], JACOBI_BOXPLOT_RANGE,
+    DIMENSION, "violin_jacobi_vs_gauss_seidel_sum_iterations", "log")
 
 box_plot_iterations(
-    ["jacobi_matrix", "gs_matrix"], JACOBI_BOXPLOT_RANGE,
-    "box_jacobi_vs_gs_matrix_iterations.png", "log")
+    ["jacobi_matrix", "gauss_seidel_matrix"], JACOBI_BOXPLOT_RANGE,
+    DIMENSION, "box_jacobi_vs_gauss_seidel_matrix_iterations", "log")
 
-line_plot_iterations(["jacobi_matrix", "gs_matrix"], JACOBI_VS_GS_RANGE,
-                     "line_jacobi_vs_gs_iterations_matrix.png",
-                     rotate_xticklabels=True, remove_outliers=False,
+line_plot_iterations(["jacobi_matrix", "gauss_seidel_matrix"],
+                     JACOBI_VS_GS_RANGE, DIMENSION,
+                     "line_jacobi_vs_gauss_seidel_matrix_iterations_no_outliers",
+                     rotate_xticklabels=True, remove_outliers=True,
                      scale="log")
