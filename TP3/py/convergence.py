@@ -92,7 +92,6 @@ REPETITIONS = 100
 LOW = 1
 HIGH = 5
 FACTORS = range(10, 1001)
-ITERATIONS = range(10, 51, 10)
 GS_BAR_PLOT_PARAMS = [
     (10, range(100, 210, 10)),
     (100, range(10, 21))]
