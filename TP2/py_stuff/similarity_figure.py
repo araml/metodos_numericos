@@ -115,6 +115,7 @@ def run_similarity_experiment() -> None:
 
     for its in [1, 2, 3, 4, 5, 8, 10, 15]:
         create_pca_similarity_figure(images, k_range_2d, use_2d=True, iterations=its, plot_same=True)
+        create_pca_similarity_figure(images, k_range_2d, use_2d=True, iterations=its, plot_same=False)
         create_pca_similarity_figure(images, k_range_2d_small, use_2d=True, iterations=its, plot_same=False)
         create_pca_similarity_figure(images, k_range, use_2d=False, iterations=its, plot_same=True)
         create_pca_similarity_figure(images, k_range, use_2d=False, iterations=its, plot_same=False)
