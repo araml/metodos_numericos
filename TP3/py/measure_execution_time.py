@@ -26,7 +26,7 @@ def measure_time_for_dimension(function_to_measure,
     execution_times = []
     while len(execution_times) < repetitions:
         try:
-            m, _, b = create_test_case(dimension, low, high, dimension*(high+1))
+            m, _, b = create_test_case(dimension, low, high, dimension)
             execution_time = measure_execution_time(function_to_measure, m, b, *args)
             execution_times.append(execution_time)
         except:
@@ -109,7 +109,7 @@ def plot_time_complexity(methods: list,
 
 
 REPETITIONS = 100
-DIMENSIONS = [2 ** i for i in range(13)]
+DIMENSIONS = [2 ** (i+1) for i in range(12)]
 ITERATIVE_METHOD_NAMES = ["jacobi_matrix", "jacobi_sum_method",
                           "gauss_seidel_matrix", "gauss_seidel_sum_method"]
 

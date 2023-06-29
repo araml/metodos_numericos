@@ -32,10 +32,18 @@ def read_data_from_csv(keys_to_read: list, csv_filename: str, key_type, value_ty
                 data.append([value_type(v) for v in values])
     return x_values, data
 
-def remove_outliers(data, low_q, high_q):
-    low_cutoff, high_cutoff = np.quantile(data, (low_q, high_q))
-    return [x for x in data if x >= low_cutoff and x <= high_cutoff]
+def iteration_matrix(m: np.array, method_name: str) -> np.array:
+    l = np.tril(m, -1) * (-1)
+    u = np.triu(m, 1) * (-1)
+    d = m + l + u
+    if method_name.startswith("jacobi"):
+        return np.linalg.inv(d)@(l+u)
+    elif method_name.startswith("gauss_seidel"):
+        return np.linalg.inv(d-l)@u
 
+def spectral_radius(m: np.array) -> np.array:
+    eigenvalues = np.linalg.eigvals(m)
+    return np.abs(max(eigenvalues))
 
 # Edit: Although this should guarantee that Ax converges to something it doesn't 
 # guarantees it will under jacobi or gauss seidel

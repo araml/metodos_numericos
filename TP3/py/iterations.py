@@ -16,8 +16,10 @@ def measure_iterations(iterative_method_name,
                        diagonal_expansion_factor: int,
                        iterations: int = 10000,
                        eps: float = 1e-6) -> pd.DataFrame:
-    dict = {"iterations": []}
+    dict = {"iterations": [], "spectral_radius": [],
+            "condition_number": []}
     iterative_method = methods_by_name[iterative_method_name]
+
     while len(dict["iterations"]) < repetitions:
         x_0 = np.random.randint(low, high, dimension)
         try:
@@ -25,12 +27,20 @@ def measure_iterations(iterative_method_name,
                                        diagonal_expansion_factor)
             _, its = iterative_method(m, b, x_0, iterations, eps)
             dict["iterations"].append(its)
+            t = iteration_matrix(m, iterative_method_name)
+            dict["spectral_radius"].append(spectral_radius(t))
+            dict["condition_number"].append(np.linalg.cond(m))
+            r = len(dict["iterations"])
+            if r % 10 == 0:
+                print(f"\tFinished repetition {r}")
         except:
             continue
+
     dict["factor"] = diagonal_expansion_factor
     dict["method"] = iterative_method_name
     dict["epsilon"] = eps
     dict["dimension"] = dimension
+
     return pd.DataFrame(data=dict)
 
 
@@ -46,32 +56,17 @@ def measure_iterations_growing_diagonal(iterative_method_name,
         f"{iterative_method_name}_iterations_dim{dimension}.csv")
     if os.path.exists(full_path):
         os.remove(full_path)
+
     results = []
     for d in diagonal_expansion_factors:
+        print(f"Calculating {iterative_method_name}, d = {d}")
         r = measure_iterations(
             iterative_method_name, dimension, repetitions,
             low, high, d, iterations, eps)
         results.append(r)
+
     df = pd.concat(results)
     df.to_csv(full_path, sep='\t', index=False)
-
-
-def violin_plot_iterations(methods: list,
-                           factors_to_plot: list,
-                           dimension: int,
-                           figure_filename: str,
-                           y_scale: str = "linear") -> None:
-    method_data = read_method_datasets_from_csv(methods, factors_to_plot,
-                                                dimension)
-    plt.figure(figsize=(8,6))
-    g = sns.violinplot(data=pd.concat(method_data), x="factor",
-                       y="iterations", hue="method")
-    g.set_yscale(y_scale)
-    g.set_xlabel("Factor de expansión de la diagonal")
-    g.set_ylabel("Cantidad de iteraciones hasta converger")
-    plt.savefig(os.path.join(figures_path,
-                             f"{figure_filename}_dim{dimension}.png"))
-    plt.close()
 
 
 def box_plot_iterations(methods: list,
@@ -122,6 +117,26 @@ def line_plot_iterations(methods: list,
     plt.close()
 
 
+def plot_spectral_radius_iterations(methods: list,
+                                    factors_to_plot: list,
+                                    dimension: int,
+                                    figure_filename: str,
+                                    scale: str = 'linear',
+                                    sample_frac: float = 0.25) -> None:
+    method_data = read_method_datasets_from_csv(
+        methods, factors_to_plot, dimension)
+    df = pd.concat(method_data)
+    sampled = df.sample(frac=sample_frac)
+    plt.figure(figsize=(6,6))
+    g = sns.scatterplot(sampled, x="spectral_radius", y="iterations",
+                        hue="method", alpha=0.3, edgecolor="none")
+    plt.yscale(scale)
+    plt.tight_layout()
+    plt.savefig(os.path.join(figures_path,
+                             f"{figure_filename}_dim{dimension}.png"))
+    plt.close()
+
+
 def read_method_datasets_from_csv(methods: list,
                                   factors_to_plot: list,
                                   dimension: int,
@@ -147,89 +162,113 @@ def read_method_datasets_from_csv(methods: list,
 
 
 REPETITIONS = 100
-DIMENSION = 200
 LOW = 1
 HIGH = 5
-GS_SUM_RANGE = range(20, 2001)
-GS_MATRIX_RANGE = range(20, 2001)
-JACOBI_SUM_RANGE = range(280, 601)
-JACOBI_MATRIX_RANGE = range(280, 601)
-JACOBI_LINE_PLOT_RANGE = range(280, 601, 20)
-JACOBI_VS_GS_LINE_PLOT_RANGE = range(280, 601, 15)
-JACOBI_BOXPLOT_RANGE = range(280, 601, 40)
 
-# === GAUSS-SEIDEL === #
-measure_iterations_growing_diagonal(
-    "gauss_seidel_sum_method", DIMENSION, REPETITIONS, LOW, HIGH,
-    GS_SUM_RANGE)
+params_smaller = {
+    "DIMENSION" : 100,
+    "GS_SUM_RANGE" : range(10, 1001),
+    "GS_MATRIX_RANGE" : range(10, 1001),
+    "GS_BOXPLOT_RANGE" : range(10, 30, 2),
+    "GS_SCATTERPLOT_RANGE" : range(10, 1001),
+    "GS_LINE_PLOT_RANGE" : range(10, 30),
 
-measure_iterations_growing_diagonal(
-    "gauss_seidel_matrix", DIMENSION, REPETITIONS, LOW, HIGH,
-    GS_MATRIX_RANGE)
+    "JACOBI_SUM_RANGE" : range(120, 1001),
+    "JACOBI_MATRIX_RANGE" : range(120, 1001),
+    "JACOBI_BOXPLOT_RANGE" : range(120, 241, 15),
+    "JACOBI_SCATTERPLOT_RANGE" : range(120, 1001),
+    "JACOBI_LINE_PLOT_RANGE" : range(120, 146),
 
-violin_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
-                       range(20, 60, 4), DIMENSION, "violin_gs_iterations",
-                       "log")
+    "JACOBI_VS_GS_LINE_PLOT_RANGE" : range(120, 241, 5)
+}
 
-box_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
-                    range(20, 60, 4), DIMENSION, "box_gs_iterations", "log")
+params_larger = {
+    "DIMENSION" : 200,
+    "GS_SUM_RANGE" : range(20, 2001),
+    "GS_MATRIX_RANGE" : range(20, 2001),
+    "GS_BOXPLOT_RANGE" : range(20, 60, 4),
+    "GS_SCATTERPLOT_RANGE" : range(20, 2001),
+    "GS_LINE_PLOT_RANGE" : range(20, 62, 2),
 
-line_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
-                     range(20, 62, 2), DIMENSION, "line_gs_iterations")
+    "JACOBI_SUM_RANGE" : range(280, 1001),
+    "JACOBI_MATRIX_RANGE" : range(280, 1001),
+    "JACOBI_BOXPLOT_RANGE" : range(280, 601, 40),
+    "JACOBI_SCATTERPLOT_RANGE" : range(280, 1001),
+    "JACOBI_LINE_PLOT_RANGE" : range(280, 306),
 
-line_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
-                     range(20, 62, 2), DIMENSION, "line_gs_iterations_no_outliers",
-                     remove_outliers=True)
+    "JACOBI_VS_GS_LINE_PLOT_RANGE" : range(280, 596, 15)
+}
 
-# === JACOBI === #
-measure_iterations_growing_diagonal(
-    "jacobi_sum_method", DIMENSION, REPETITIONS, LOW, HIGH,
-    JACOBI_SUM_RANGE)
+for p in [params_smaller, params_larger]:
+    d = p["DIMENSION"]
+    
+    # === GAUSS-SEIDEL === #
+    # measure_iterations_growing_diagonal(
+    #     "gauss_seidel_sum_method", d, REPETITIONS, LOW, HIGH,
+    #     p["GS_SUM_RANGE"])
 
-measure_iterations_growing_diagonal(
-    "jacobi_matrix", DIMENSION, REPETITIONS, LOW, HIGH,
-    JACOBI_MATRIX_RANGE)
+    # measure_iterations_growing_diagonal(
+    #     "gauss_seidel_matrix", d, REPETITIONS, LOW, HIGH,
+    #     p["GS_MATRIX_RANGE"])
 
-violin_plot_iterations(
-    ["jacobi_sum_method", "jacobi_matrix"], JACOBI_BOXPLOT_RANGE,
-    DIMENSION, "violin_jacobi_iterations", "log")
+    box_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                        p["GS_BOXPLOT_RANGE"], d, "box_gs_iterations", "log")
 
-box_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], JACOBI_BOXPLOT_RANGE,
-                    DIMENSION, "box_jacobi_iterations", "log")
+    line_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                         p["GS_LINE_PLOT_RANGE"], d, "line_gs_iterations_no_outliers",
+                         remove_outliers=True)
+    
+    plot_spectral_radius_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                                    p["GS_SCATTERPLOT_RANGE"], d,
+                                    "spectral_radius_gauss_seidel", scale='linear',
+                                    sample_frac=0.01)
 
-line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], JACOBI_LINE_PLOT_RANGE,
-                     DIMENSION, "line_jacobi_iterations", rotate_xticklabels=True)
+    # === JACOBI === #
+    # measure_iterations_growing_diagonal(
+    #     "jacobi_sum_method", d, REPETITIONS, LOW, HIGH,
+    #     p["JACOBI_SUM_RANGE"])
 
-line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], JACOBI_LINE_PLOT_RANGE,
-                     DIMENSION, "line_jacobi_iterations_no_outliers",
-                     rotate_xticklabels=True, remove_outliers=True)
+    # measure_iterations_growing_diagonal(
+    #     "jacobi_matrix", d, REPETITIONS, LOW, HIGH,
+    #     p["JACOBI_MATRIX_RANGE"])
 
-# === JACOBI/GS COMPARISON === #
+    box_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], p["JACOBI_BOXPLOT_RANGE"],
+                        d, "box_jacobi_iterations", "log")
 
-violin_plot_iterations(
-    ["jacobi_sum_method", "gauss_seidel_sum_method"], JACOBI_BOXPLOT_RANGE,
-    DIMENSION, "violin_jacobi_vs_gauss_seidel_sum_iterations", "log")
+    line_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], p["JACOBI_LINE_PLOT_RANGE"],
+                         d, "line_jacobi_iterations_no_outliers",
+                         rotate_xticklabels=True, remove_outliers=True)
+    
+    plot_spectral_radius_iterations(["jacobi_sum_method", "jacobi_matrix"],
+                                    p["JACOBI_SCATTERPLOT_RANGE"], d,
+                                    "spectral_radius_jacobi", scale='log', sample_frac=0.01)
 
-box_plot_iterations(
-    ["jacobi_sum_method", "gauss_seidel_sum_method"], JACOBI_BOXPLOT_RANGE,
-    DIMENSION, "box_jacobi_vs_gauss_seidel_sum_iterations", "log")
+    # === JACOBI/GS COMPARISON === #
 
-line_plot_iterations(["jacobi_sum_method", "gauss_seidel_sum_method"],
-                     JACOBI_VS_GS_LINE_PLOT_RANGE, DIMENSION,
-                     "line_jacobi_vs_gauss_seidel_sum_iterations_no_outliers",
-                     rotate_xticklabels=True, remove_outliers=True,
-                     scale="log")
+    box_plot_iterations(
+        ["jacobi_sum_method", "gauss_seidel_sum_method"], p["JACOBI_BOXPLOT_RANGE"],
+        d, "box_jacobi_vs_gauss_seidel_sum_iterations", "log")
 
-violin_plot_iterations(
-    ["jacobi_matrix", "gauss_seidel_matrix"], JACOBI_BOXPLOT_RANGE,
-    DIMENSION, "violin_jacobi_vs_gauss_seidel_sum_iterations", "log")
+    line_plot_iterations(["jacobi_sum_method", "gauss_seidel_sum_method"],
+                         p["JACOBI_VS_GS_LINE_PLOT_RANGE"], d,
+                         "line_jacobi_vs_gauss_seidel_sum_iterations_no_outliers",
+                         rotate_xticklabels=True, remove_outliers=True,
+                         scale="log")
 
-box_plot_iterations(
-    ["jacobi_matrix", "gauss_seidel_matrix"], JACOBI_BOXPLOT_RANGE,
-    DIMENSION, "box_jacobi_vs_gauss_seidel_matrix_iterations", "log")
+    box_plot_iterations(
+        ["jacobi_matrix", "gauss_seidel_matrix"], p["JACOBI_BOXPLOT_RANGE"],
+        d, "box_jacobi_vs_gauss_seidel_matrix_iterations", "log")
 
-line_plot_iterations(["jacobi_matrix", "gauss_seidel_matrix"],
-                     JACOBI_VS_GS_LINE_PLOT_RANGE, DIMENSION,
-                     "line_jacobi_vs_gauss_seidel_matrix_iterations_no_outliers",
-                     rotate_xticklabels=True, remove_outliers=True,
-                     scale="log")
+    line_plot_iterations(["jacobi_matrix", "gauss_seidel_matrix"],
+                         p["JACOBI_VS_GS_LINE_PLOT_RANGE"], d,
+                         "line_jacobi_vs_gauss_seidel_matrix_iterations_no_outliers",
+                         rotate_xticklabels=True, remove_outliers=True,
+                         scale="log")
+    
+    plot_spectral_radius_iterations(["jacobi_sum_method", "gauss_seidel_sum_method"],
+                                    p["JACOBI_SCATTERPLOT_RANGE"], d,
+                                    "spectral_radius_sum", scale='log', sample_frac=0.01)
+    
+    plot_spectral_radius_iterations(["jacobi_matrix", "gauss_seidel_matrix"],
+                                    p["JACOBI_SCATTERPLOT_RANGE"], d,
+                                    "spectral_radius_matrix", scale='log', sample_frac=0.01)
