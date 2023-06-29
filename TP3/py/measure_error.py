@@ -17,6 +17,12 @@ def measure_n2_error(iterative_method_to_measure, m, x_0, b, iterations, eps) ->
     actual_result, _ = iterative_method_to_measure(m, x_0, b, iterations, eps)
     return np.linalg.norm(expected_result-actual_result, ord=2)
 
+def run_and_append(fn, m: np.array, b: np.array, x: np.array, 
+                   acc: list, iterations: int = 1000, debug: bool = False) -> (np.array, int):
+    v, iters = fn(m, b, x, iterations = iterations, debug = debug)
+    acc.append(np.linalg.norm(m@v - b))
+    return acc, iters
+
 def run_error_over_iterations(dim: int = 900): 
     jm = []
     js = []
@@ -30,70 +36,62 @@ def run_error_over_iterations(dim: int = 900):
 
         m, _, b = create_diagonally_dominant_matrix(dim)
         x = np.random.randint(low = 0, high = 100, size = dim)
-        v1, iters1 = jacobi_matrix(m, b, x, iterations = iterations, 
-                                   debug = True)
-        jm.append(np.linalg.norm(m@v1 - b))
-        v2, iters2 = jacobi_sum_method(m, b, x, iterations = iterations,
-                                       debug = True) 
-        js.append(np.linalg.norm(m@v2 - b))
-        v3, iters3 = gauss_seidel_matrix(m, b, x, iterations = iterations,
-                                         debug = True)
-        gsm.append(np.linalg.norm(m@v3 - b))
-        v4, iters4 = gauss_seidel_sum_method(m, b, x, iterations = iterations,
-                                             debug = True)   
-        gss.append(np.linalg.norm(m@v4 - b))
+        jm, it1 = run_and_append(jacobi_matrix, m, b, x, jm, iterations, True)
+        js, it2 = run_and_append(jacobi_sum_method, m, b, x, js, iterations, True)
+        gsm, it3 = run_and_append(gauss_seidel_matrix, m, b, x, gsm, iterations, True) 
+        gss, it4 = run_and_append(gauss_seidel_sum_method, m, b, x, gss, iterations, True)
 
         # We want to run until the algorithm stops because of the epsilon
-        if max([iters1, iters2, iters3, iters4]) < iterations:
+        if max([it1, it2, it3, it4]) < iterations:
             break;
 
     xs = range(1, len(jm) + 1, 1)
 
-    plt.plot(xs, jm, '-o', color = 'red',                          
-              label=f'Jacobi matriz')       
-    plt.plot(xs, js, '-o', color = 'green',                              
-              label=f'Jacobi suma')            
-    plt.plot(xs, gsm, '-o', color = 'blue',                      
-              label=f'Gauss-seidel matriz')      
-    plt.plot(xs, gss, '-o', color = 'yellow',                          
-              label=f'Gauss-seidel suma') 
+    plt.plot(xs, jm, label=f'Jacobi matriz')       
+    plt.plot(xs, js, label=f'Jacobi suma')            
+    plt.plot(xs, gsm, label=f'Gauss-seidel matriz')      
+    plt.plot(xs, gss, label=f'Gauss-seidel suma') 
     plt.xlabel('Iteraciones')
     plt.ylabel('Error')
+    plt.legend()
+    plt.savefig(f'Error over 1000 iterations') 
     plt.show()
 
 
-def run_error_experiment(max_dim: int = 900):
+def run_error_experiment(max_dim: int = 5000):
     steps = int(max_dim/10)
     jm = []
     js = []
     gsm = []
     gss = []
+    total_iters = []
 
     xs = range(steps, max_dim, steps)
     for dim in xs:
+        sys.stdout.write(f'\rIteration {dim} of {max_dim}')  
+        sys.stdout.flush()                                                   
+
         m, _, b = create_diagonally_dominant_matrix(dim)
         x = np.random.randint(low = 0, high = 100, size = dim)
-        v1, iters = jacobi_matrix(m, b, x)
-        jm.append(np.linalg.norm(m@v1 - b))
-        v2, _ = jacobi_sum_method(m, b, x)
-        js.append(np.linalg.norm(m@v2 - b))
-        v3, _ = gauss_seidel_matrix(m, b, x)
-        gsm.append(np.linalg.norm(m@v3 - b))
-        v4, _ = gauss_seidel_sum_method(m, b, x)
-        gss.append(np.linalg.norm(m@v4 - b))
+
+        jm, it1 = run_and_append(jacobi_matrix, m, b, x, jm)
+        js, it2 = run_and_append(jacobi_matrix, m, b, x, js)
+        gsm, it3 = run_and_append(jacobi_matrix, m, b, x, gsm)
+        gss, it4 = run_and_append(jacobi_matrix, m, b, x, gss)
      
+    print(total_iters)
 
 
-    plt.plot(xs, jm, '-o', color = 'red',                          
-              label=f'Jacobi matriz')       
-    plt.plot(xs, js, '-o', color = 'green',                              
-              label=f'Jacobi suma')            
-    plt.plot(xs, gsm, '-o', color = 'blue',                      
-              label=f'Gauss-seidel matriz')      
-    plt.plot(xs, gss, '-o', color = 'yellow',                          
-              label=f'Gauss-seidel suma')       
+    plt.plot(xs, jm, '-o', label=f'Jacobi matriz')       
+    plt.plot(xs, js, '-o', label=f'Jacobi suma')            
+    plt.plot(xs, gsm, '-o', label=f'Gauss-seidel matriz')      
+    plt.plot(xs, gss, '-o', label=f'Gauss-seidel suma')   
+    plt.xlabel('Dimension')
+    plt.ylabel('Error al corte del algoritmo')
+    plt.legend()
+    plt.savefig(f'Error al cambiar la dimension')
     plt.show()
 
 if __name__ == '__main__':
-    #run_error_experiment()
+    run_error_experiment()
     run_error_over_iterations()
