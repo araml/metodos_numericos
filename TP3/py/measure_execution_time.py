@@ -7,7 +7,7 @@ from data_paths import csvs_path, figures_path
 from iterative_methods import *
 from math import log
 from matplotlib import pyplot as plt
-from utils import create_test_case
+from utils import *
 
 
 def measure_execution_time(function_to_measure, *args) -> float:

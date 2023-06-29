@@ -1,4 +1,5 @@
 import csv
+from iterative_methods import *
 import numpy as np
 
 def create_test_case(dimension: int, low: int, high: int, diagonal_expansion_factor=None):
@@ -98,3 +99,11 @@ def create_diagonally_dominant_matrix(dimension: int,
 
     x = np.random.randint(low=low, high=high, size=dimension)
     return m, x, m@x
+
+# we don't include gaussian elimination because it's a baseline
+methods_by_name = {
+    "jacobi_matrix": jacobi_matrix,
+    "jacobi_sum_method": jacobi_sum_method,
+    "gauss_seidel_matrix": gauss_seidel_matrix,
+    "gauss_seidel_sum_method": gauss_seidel_sum_method,
+}

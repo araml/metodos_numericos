@@ -5,7 +5,7 @@ import seaborn as sns
 from data_paths import csvs_path, figures_path
 from iterative_methods import *
 from matplotlib import pyplot as plt
-from utils import create_test_case
+from utils import *
 
 
 def measure_convergence_ratio(iterative_method_name,

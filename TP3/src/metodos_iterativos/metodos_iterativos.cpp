@@ -28,7 +28,8 @@ jacobi_matrix(const MatrixXd &m,
               const VectorXd &b,
               const VectorXd &x_0,
               int iterations,
-              double eps) {
+              double eps,
+              bool debug) {
     int n = m.cols();
     for (int i = 0; i < n; i++) {
         if (m(i, i) == 0)
@@ -41,15 +42,21 @@ jacobi_matrix(const MatrixXd &m,
     MatrixXd L_plus_U = L + U;
 
     VectorXd x = x_0;
-    for (int i = 0; i < iterations; i++) {
+    int i = 0;
+    for (i = 0; i < iterations; i++) {
         VectorXd prev_x = x;
         x = D_inverse * (L_plus_U*x + b);
         if ((x - prev_x).norm() < eps) {
-            return std::make_tuple(x, i);
+            return std::make_tuple(x, i + 1);
         }
+    }
+    
+    if (debug) {
+        return {x, i};
     }
 
     throw std::logic_error("Matrix does not converge");
+    
 }
 
 std::tuple<VectorXd, int>
@@ -57,7 +64,8 @@ gauss_seidel_matrix(const MatrixXd &m,
                     const VectorXd &b,
                     const VectorXd &x_0,
                     int iterations,
-                    double eps) {
+                    double eps,
+                    bool debug) {
     int n = m.cols();
     for (int i = 0; i < n; i++) {
         if (m(i, i) == 0)
@@ -69,12 +77,17 @@ gauss_seidel_matrix(const MatrixXd &m,
     MatrixXd D_minus_L_inverse = (D - L).inverse();
 
     VectorXd x = x_0;   
-    for (int i = 0; i < iterations; i++) {
+    int i = 0;
+    for (i = 0; i < iterations; i++) {
         VectorXd prev_x = x;
         x = D_minus_L_inverse * (U*x + b);
         if ((x - prev_x).norm() < eps) {
-            return std::make_tuple(x, i);
+            return std::make_tuple(x, i + 1);
         }
+    }
+
+    if (debug) {
+        return {x, i};
     }
 
     throw std::logic_error("Matrix does not converge");
@@ -85,9 +98,11 @@ jacobi_sum_method(const MatrixXd &m,
                   const VectorXd &b, 
                   const VectorXd &x_0,
                   int iterations,
-                  double eps) {
+                  double eps, 
+                  bool debug) {
     int n = m.cols();
     VectorXd x = x_0;
+    int i = 0;
     for (int iter : std::views::iota(0, iterations)) {
         VectorXd prev_x = x;
         for (int i : std::views::iota(0, n)) {
@@ -102,9 +117,15 @@ jacobi_sum_method(const MatrixXd &m,
             x(i) = x_i;
         }
         if ((x - prev_x).norm() < eps) { 
-            return std::make_tuple(x, iter);
+            return std::make_tuple(x, iter + 1);
         }
+        i = iter;
     }
+
+    if (debug) {
+        return {x, i};
+    }
+
     throw std::logic_error("Matrix does not converge");
 }
 
@@ -112,9 +133,11 @@ std::tuple<VectorXd, int> gauss_seidel_sum_method(const MatrixXd &m,
                                                   const VectorXd &b,
                                                   const VectorXd &x_0,
                                                   int iterations,
-                                                  double eps) {
+                                                  double eps,
+                                                  bool debug) {
     int n = m.cols();
     VectorXd x = x_0;
+    int i = 0;
     for (int iter : std::views::iota(0, iterations)) {
         VectorXd prev_x = x;
         for (int i : std::views::iota(0, n)) {
@@ -134,8 +157,13 @@ std::tuple<VectorXd, int> gauss_seidel_sum_method(const MatrixXd &m,
             x(i) = x_i;
         }
         if ((x - prev_x).norm() < eps) { 
-            return std::make_tuple(x, iter);
+            return std::make_tuple(x, iter + 1);
         }
+        i = iter;
+    }
+
+    if (debug) {
+        return {x, i};
     }
 
     throw std::logic_error("Matrix does not converge");
