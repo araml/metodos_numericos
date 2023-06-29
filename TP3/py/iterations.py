@@ -122,15 +122,39 @@ def plot_spectral_radius_iterations(methods: list,
                                     dimension: int,
                                     figure_filename: str,
                                     scale: str = 'linear',
-                                    sample_frac: float = 0.25) -> None:
+                                    sample_frac: float = 0.25,
+                                    figsize=(6,6)) -> None:
     method_data = read_method_datasets_from_csv(
         methods, factors_to_plot, dimension)
     df = pd.concat(method_data)
     sampled = df.sample(frac=sample_frac)
-    plt.figure(figsize=(6,6))
+    plt.figure(figsize=figsize)
     g = sns.scatterplot(sampled, x="spectral_radius", y="iterations",
                         hue="method", alpha=0.3, edgecolor="none")
     plt.yscale(scale)
+    plt.tight_layout()
+    plt.savefig(os.path.join(figures_path,
+                             f"{figure_filename}_dim{dimension}.png"))
+    plt.close()
+
+
+def plot_condition_number_iterations(methods: list,
+                                     factors_to_plot: list,
+                                     dimension: int,
+                                     figure_filename: str,
+                                     xscale: str = 'linear',
+                                     yscale: str = 'linear',
+                                     sample_frac: float = 0.25,
+                                     figsize=(6,6)) -> None:
+    method_data = read_method_datasets_from_csv(
+        methods, factors_to_plot, dimension)
+    df = pd.concat(method_data)
+    sampled = df.sample(frac=sample_frac)
+    plt.figure(figsize=figsize)
+    g = sns.scatterplot(sampled, x="condition_number", y="iterations",
+                        hue="method", alpha=0.3, edgecolor="none")
+    plt.xscale(xscale)
+    plt.yscale(yscale)
     plt.tight_layout()
     plt.savefig(os.path.join(figures_path,
                              f"{figure_filename}_dim{dimension}.png"))
@@ -203,13 +227,13 @@ for p in [params_smaller, params_larger]:
     d = p["DIMENSION"]
     
     # === GAUSS-SEIDEL === #
-    # measure_iterations_growing_diagonal(
-    #     "gauss_seidel_sum_method", d, REPETITIONS, LOW, HIGH,
-    #     p["GS_SUM_RANGE"])
+    measure_iterations_growing_diagonal(
+        "gauss_seidel_sum_method", d, REPETITIONS, LOW, HIGH,
+        p["GS_SUM_RANGE"])
 
-    # measure_iterations_growing_diagonal(
-    #     "gauss_seidel_matrix", d, REPETITIONS, LOW, HIGH,
-    #     p["GS_MATRIX_RANGE"])
+    measure_iterations_growing_diagonal(
+        "gauss_seidel_matrix", d, REPETITIONS, LOW, HIGH,
+        p["GS_MATRIX_RANGE"])
 
     box_plot_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
                         p["GS_BOXPLOT_RANGE"], d, "box_gs_iterations", "log")
@@ -222,15 +246,21 @@ for p in [params_smaller, params_larger]:
                                     p["GS_SCATTERPLOT_RANGE"], d,
                                     "spectral_radius_gauss_seidel", scale='linear',
                                     sample_frac=0.01)
+    
+    plot_condition_number_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                                      p["GS_SCATTERPLOT_RANGE"], d,
+                                      "condition_number_gauss_seidel", xscale='log',
+                                      yscale='log', sample_frac=0.05)
+
 
     # === JACOBI === #
-    # measure_iterations_growing_diagonal(
-    #     "jacobi_sum_method", d, REPETITIONS, LOW, HIGH,
-    #     p["JACOBI_SUM_RANGE"])
+    measure_iterations_growing_diagonal(
+        "jacobi_sum_method", d, REPETITIONS, LOW, HIGH,
+        p["JACOBI_SUM_RANGE"])
 
-    # measure_iterations_growing_diagonal(
-    #     "jacobi_matrix", d, REPETITIONS, LOW, HIGH,
-    #     p["JACOBI_MATRIX_RANGE"])
+    measure_iterations_growing_diagonal(
+        "jacobi_matrix", d, REPETITIONS, LOW, HIGH,
+        p["JACOBI_MATRIX_RANGE"])
 
     box_plot_iterations(["jacobi_sum_method", "jacobi_matrix"], p["JACOBI_BOXPLOT_RANGE"],
                         d, "box_jacobi_iterations", "log")
@@ -243,7 +273,12 @@ for p in [params_smaller, params_larger]:
                                     p["JACOBI_SCATTERPLOT_RANGE"], d,
                                     "spectral_radius_jacobi", scale='log', sample_frac=0.01)
 
-    # === JACOBI/GS COMPARISON === #
+    plot_condition_number_iterations(["jacobi_sum_method", "jacobi_matrix"],
+                                      p["JACOBI_SCATTERPLOT_RANGE"], d,
+                                      "condition_number_jacobi", xscale='log',
+                                      yscale='log', sample_frac=0.05)
+
+    # # === JACOBI/GS COMPARISON === #
 
     box_plot_iterations(
         ["jacobi_sum_method", "gauss_seidel_sum_method"], p["JACOBI_BOXPLOT_RANGE"],
@@ -272,3 +307,20 @@ for p in [params_smaller, params_larger]:
     plot_spectral_radius_iterations(["jacobi_matrix", "gauss_seidel_matrix"],
                                     p["JACOBI_SCATTERPLOT_RANGE"], d,
                                     "spectral_radius_matrix", scale='log', sample_frac=0.01)
+
+    plot_condition_number_iterations(["jacobi_sum_method", "jacobi_matrix"],
+                                      p["JACOBI_SCATTERPLOT_RANGE"], d,
+                                      "condition_number_jacobi", xscale='log',
+                                      yscale='log', sample_frac=0.05)
+
+    plot_spectral_radius_iterations(["jacobi_sum_method", "jacobi_matrix",
+                                     "gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                                    p["GS_SCATTERPLOT_RANGE"], d,
+                                    "spectral_radius_all", scale='log',
+                                    sample_frac=0.01, figsize=(8,6))
+    
+    plot_condition_number_iterations(["jacobi_sum_method", "jacobi_matrix",
+                                      "gauss_seidel_sum_method", "gauss_seidel_matrix"],
+                                      p["JACOBI_SCATTERPLOT_RANGE"], d,
+                                      "condition_number_all", xscale='log',
+                                      yscale='log', sample_frac=0.05, figsize=(8,6))
