@@ -26,15 +26,18 @@ def measure_time_for_dimension(function_to_measure,
     execution_times = []
     while len(execution_times) < repetitions:
         try:
-            m, _, b = create_test_case(dimension, low, high, dimension)
+            m, _, b = create_test_case(dimension, low, high, dimension * (high//2))
             execution_time = measure_execution_time(function_to_measure, m, b, *args)
             execution_times.append(execution_time)
         except:
             continue
+        r = len(execution_times)
+        if r % 10 == 0:
+            print(f"\tFinished repetition {r}")
     return execution_times
 
 
-def measure_iterative_time_complexity(iterative_method,
+def measure_iterative_time_complexity(iterative_method_name,
                                       dimensions: list,
                                       repetitions: int,
                                       low: int,
@@ -44,9 +47,10 @@ def measure_iterative_time_complexity(iterative_method,
     full_path = os.path.join(csvs_path, filename)
     if os.path.exists(full_path):
         os.remove(full_path)
+    iterative_method = methods_by_name[iterative_method_name]
     dict = {"dimension": [], "time": []}
     for d in dimensions:
-        print(d)
+        print(f"Calculating {iterative_method_name}, d = {d}")
         x_0 = np.random.randint(1, 10, size=d)
         execution_times = measure_time_for_dimension(
             iterative_method, d, repetitions, low, high, x_0, *args)
@@ -68,7 +72,7 @@ def measure_ge_time_complexity(dimensions: list,
         os.remove(full_path)
     dict = {"dimension": [], "time": []}
     for d in dimensions:
-        print(d)
+        print(f"Calculating Gaussian elimination, d = {d}")
         execution_times = measure_time_for_dimension(
             gaussian_elimination, d, repetitions, low, high)
         for e in execution_times:
@@ -115,7 +119,7 @@ ITERATIVE_METHOD_NAMES = ["jacobi_matrix", "jacobi_sum_method",
 
 for name in ITERATIVE_METHOD_NAMES:
     measure_iterative_time_complexity(
-        methods_by_name[name], DIMENSIONS, REPETITIONS,
+        name, DIMENSIONS, REPETITIONS,
         1, 10, f"{name}_time.csv", 10000, 1e-6)
 
 plot_time_complexity(ITERATIVE_METHOD_NAMES, "iterative_methods_time_complexity.png",
