@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from utils import *
 from iterative_methods import *
 import sys
+np.set_printoptions(threshold=sys.maxsize)
 
 def measure_n2_error(iterative_method_to_measure, m, x_0, b, iterations, eps) -> float:
     expected_result = iterative_methods.gaussian_elimination(m, b)
@@ -18,7 +19,7 @@ def measure_n2_error(iterative_method_to_measure, m, x_0, b, iterations, eps) ->
     return np.linalg.norm(expected_result-actual_result, ord=2)
 
 def run_and_append(fn, m: np.array, b: np.array, x: np.array, 
-                   acc: list, iterations: int = 4000, debug: bool = False) -> (np.array, int):
+                   acc: list, iterations: int = 3000, debug: bool = False) -> (np.array, int):
     v, iters = fn(m, b, x, iterations = iterations, debug = debug)
     acc.append(np.linalg.norm(m@v - b))
     return acc, iters
@@ -71,12 +72,16 @@ def run_error_boxplot(dim: int = 1000, iterations: int = 100) -> None:
         sys.stdout.flush()                                                   
 
         m, _, b = create_diagonally_dominant_matrix(dim)
-        x = np.random.randint(low = 0, high = 100, size = dim)
+        x = np.random.randint(low = 0, high = 10, size = dim)
 
-        jm, it1 = run_and_append(jacobi_matrix, m, b, x, jm)
-        js, it2 = run_and_append(jacobi_sum_method, m, b, x, js)
-        gsm, it3 = run_and_append(gauss_seidel_matrix, m, b, x, gsm)
-        gss, it4 = run_and_append(gauss_seidel_sum_method, m, b, x, gss)
+        try:
+            jm, it1 = run_and_append(jacobi_matrix, m, b, x, jm)
+            js, it2 = run_and_append(jacobi_sum_method, m, b, x, js)
+            gsm, it3 = run_and_append(gauss_seidel_matrix, m, b, x, gsm)
+            gss, it4 = run_and_append(gauss_seidel_sum_method, m, b, x, gss)
+        except:
+            print(m)
+            assert(0)
      
     fig, ax = plt.subplots()
     ax.boxplot([jm, js, gsm, gss]) 
@@ -119,9 +124,9 @@ def run_error_experiment(max_dim: int = 5000) -> None:
     plt.show()
 
 if __name__ == '__main__':
-    #run_error_boxplot(dim = 100)
-    #run_error_boxplot(dim = 500)
-    #run_error_boxplot(dim = 1000)
-    run_error_boxplot(dim = 3000)
+    run_error_boxplot(dim = 2)
+    run_error_boxplot(dim = 500)
+    run_error_boxplot(dim = 1000)
+    #run_error_boxplot(dim = 3000)
     run_error_experiment()
-    #run_error_over_iterations()
+    run_error_over_iterations()

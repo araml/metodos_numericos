@@ -83,8 +83,11 @@ def try_create_convergent_matrix(dimension: int,
     x = np.random.randint(low=low, high=high, size=dimension)
     return M, x, M@x
 
+import random
+import sys
+
 def create_diagonally_dominant_matrix(dimension: int, 
-                                      low: float = 0, high: float = 100, 
+                                      low: float = 1, high: float = 10, 
                                       seed: float = None) -> (np.array, np.array, np.array):
 
     if seed:
@@ -95,8 +98,11 @@ def create_diagonally_dominant_matrix(dimension: int,
 
     for i in range(dimension):
         max_row = m.sum(axis = 1)[i] - m[i, i]
-        m[i, i] = np.random.random() * abs(high - max_row) + max_row  
-        assert(m[i, i] > max_row)
+        m[i, i] = np.random.randint(max_row + 1, dimension * 10 + 1)
+        if (m[i, i] <= max_row):
+            print(m)
+            print("ASD", max_row, m[i, i])
+            assert(0)
 
     x = np.random.randint(low=low, high=high, size=dimension)
     return m, x, m@x
