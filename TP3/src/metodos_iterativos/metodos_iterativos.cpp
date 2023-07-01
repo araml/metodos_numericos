@@ -109,12 +109,12 @@ jacobi_sum_method(const MatrixXd &m,
     for (int iter = 0; iter < iterations; iter++) {
         VectorXd prev_x = x;
         for (int i = 0; i < n; i++) {
-            float x_i = 0;
+            double x_i = 0;
             for (int j = 0; j < n; j++) {
                 if (i != j)
-                    x_i = x_i + m.coeff(i, j) * prev_x(j);
+                    x_i = x_i + m(i, j) * prev_x(j) / m(i, i);
             }
-            x(i) = (b(i) - x_i) / m.coeff(i, i);
+            x(i) = (b(i)/m(i, i) - x_i);
         }
         if ((x - prev_x).norm() < eps) { 
             return std::make_tuple(x, iter + 1);
@@ -145,17 +145,17 @@ std::tuple<VectorXd, int> gauss_seidel_sum_method(const MatrixXd &m,
         for (int i : std::views::iota(0, n)) {
             if (m.coeff(i, i) == 0)
                 throw std::logic_error("Matrix has zeros in diagonal");
-            float x_i = 0;
+            double x_i = 0;
             for (size_t j : std::views::iota(i + 1, n)) { 
                 if (i != j)
-                    x_i = x_i + m.coeff(i, j) * prev_x(j);
+                    x_i = x_i + m(i, j) * prev_x(j) / m(i, i);
             }
             
             for (size_t j : std::views::iota(0, i)) { 
-                x_i = x_i + m.coeff(i, j) * x(j);
+                x_i = x_i + m(i, j) * x(j) / m(i, i);
             }
 
-            x(i) = (b(i) - x_i) / m.coeff(i, i);
+            x(i) = (b(i) / m(i, i) - x_i);
         }
         if ((x - prev_x).norm() < eps) { 
             return std::make_tuple(x, iter + 1);
