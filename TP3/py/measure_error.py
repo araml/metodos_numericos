@@ -1,10 +1,10 @@
 # TODO(comment out if your cpu doesn't crash :)'
 import os
-os.environ["OMP_NUM_THREADS"] = "4" 
-os.environ["OPENBLAS_NUM_THREADS"] = "4" 
-os.environ["MKL_NUM_THREADS"] = "4" 
-os.environ["VECLIB_MAXIMUM_THREADS"] = "4" 
-os.environ["NUMEXPR_NUM_THREADS"] = "4" 
+os.environ["OMP_NUM_THREADS"] = "6" 
+os.environ["OPENBLAS_NUM_THREADS"] = "6" 
+os.environ["MKL_NUM_THREADS"] = "6" 
+os.environ["VECLIB_MAXIMUM_THREADS"] = "6" 
+os.environ["NUMEXPR_NUM_THREADS"] = "6" 
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ def measure_n2_error(iterative_method_to_measure, m, x_0, b, iterations, eps) ->
     return np.linalg.norm(expected_result-actual_result, ord=2)
 
 def run_and_append(fn, m: np.array, b: np.array, x: np.array, 
-                   acc: list, iterations: int = 1000, debug: bool = False) -> (np.array, int):
+                   acc: list, iterations: int = 4000, debug: bool = False) -> (np.array, int):
     v, iters = fn(m, b, x, iterations = iterations, debug = debug)
     acc.append(np.linalg.norm(m@v - b))
     return acc, iters
@@ -58,7 +58,35 @@ def run_error_over_iterations(dim: int = 900):
     plt.show()
 
 
-def run_error_experiment(max_dim: int = 5000):
+# Crea boxplot para una dimensión específica
+def run_error_boxplot(dim: int = 1000, iterations: int = 100) -> None:
+    jm = []
+    js = []
+    gsm = []
+    gss = []
+    total_iters = []
+
+    for i in range(iterations):
+        sys.stdout.write(f'\rIteration {i} of {iterations}')  
+        sys.stdout.flush()                                                   
+
+        m, _, b = create_diagonally_dominant_matrix(dim)
+        x = np.random.randint(low = 0, high = 100, size = dim)
+
+        jm, it1 = run_and_append(jacobi_matrix, m, b, x, jm)
+        js, it2 = run_and_append(jacobi_sum_method, m, b, x, js)
+        gsm, it3 = run_and_append(gauss_seidel_matrix, m, b, x, gsm)
+        gss, it4 = run_and_append(gauss_seidel_sum_method, m, b, x, gss)
+     
+    fig, ax = plt.subplots()
+    ax.boxplot([jm, js, gsm, gss]) 
+    ax.set_xticklabels(['Jacobi matriz', 'Jacobi suma', 'Gauss-Seidel matriz',
+                         'Gauss-Seidel suma'], rotation=0, fontsize=8)
+    plt.legend()
+    plt.savefig(f'Error metodos boxplot dim: {dim}')
+    #plt.show()
+
+def run_error_experiment(max_dim: int = 5000) -> None:
     steps = int(max_dim/10)
     jm = []
     js = []
@@ -72,15 +100,14 @@ def run_error_experiment(max_dim: int = 5000):
         sys.stdout.flush()                                                   
 
         m, _, b = create_diagonally_dominant_matrix(dim)
+        print(m)
         x = np.random.randint(low = 0, high = 100, size = dim)
 
         jm, it1 = run_and_append(jacobi_matrix, m, b, x, jm)
-        js, it2 = run_and_append(jacobi_matrix, m, b, x, js)
-        gsm, it3 = run_and_append(jacobi_matrix, m, b, x, gsm)
-        gss, it4 = run_and_append(jacobi_matrix, m, b, x, gss)
+        js, it2 = run_and_append(jacobi_sum_method, m, b, x, js)
+        gsm, it3 = run_and_append(gauss_seidel_matrix, m, b, x, gsm)
+        gss, it4 = run_and_append(gauss_seidel_sum_method, m, b, x, gss)
      
-    print(total_iters)
-
 
     plt.plot(xs, jm, '-o', label=f'Jacobi matriz')       
     plt.plot(xs, js, '-o', label=f'Jacobi suma')            
@@ -93,5 +120,9 @@ def run_error_experiment(max_dim: int = 5000):
     plt.show()
 
 if __name__ == '__main__':
+    #run_error_boxplot(dim = 100)
+    #run_error_boxplot(dim = 500)
+    #run_error_boxplot(dim = 1000)
+    #run_error_boxplot(dim = 3000)
     run_error_experiment()
-    run_error_over_iterations()
+    #run_error_over_iterations()
