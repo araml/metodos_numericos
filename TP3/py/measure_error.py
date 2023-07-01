@@ -100,7 +100,6 @@ def run_error_experiment(max_dim: int = 5000) -> None:
         sys.stdout.flush()                                                   
 
         m, _, b = create_diagonally_dominant_matrix(dim)
-        print(m)
         x = np.random.randint(low = 0, high = 100, size = dim)
 
         jm, it1 = run_and_append(jacobi_matrix, m, b, x, jm)
@@ -123,6 +122,6 @@ if __name__ == '__main__':
     #run_error_boxplot(dim = 100)
     #run_error_boxplot(dim = 500)
     #run_error_boxplot(dim = 1000)
-    #run_error_boxplot(dim = 3000)
+    run_error_boxplot(dim = 3000)
     run_error_experiment()
     #run_error_over_iterations()

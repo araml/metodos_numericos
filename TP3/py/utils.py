@@ -95,7 +95,7 @@ def create_diagonally_dominant_matrix(dimension: int,
 
     for i in range(dimension):
         max_row = m.sum(axis = 1)[i] - m[i, i]
-        m[i, i] = np.random.random() * abs(high - max_row) + max_row * 1000 
+        m[i, i] = np.random.random() * abs(high - max_row) + max_row  
         assert(m[i, i] > max_row)
 
     x = np.random.randint(low=low, high=high, size=dimension)
