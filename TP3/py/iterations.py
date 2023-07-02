@@ -80,6 +80,7 @@ def box_plot_iterations(methods: list,
     g = sns.boxplot(data=pd.concat(method_data), x="factor",
                     y="iterations", hue="method",
                     flierprops={"marker": '.'})
+    plt.tight_layout()
     g.set_yscale(y_scale)
     g.set_xlabel("Factor de expansión de la diagonal")
     g.set_ylabel("Cantidad de iteraciones hasta converger")
@@ -104,7 +105,7 @@ def line_plot_iterations(methods: list,
         means.append(mean.assign(method=method))
 
     g = sns.lineplot(pd.concat(means), x="factor", y="iterations",
-                     hue="method", marker='o')
+                     hue="method", marker='o', hue_order=methods)
     g.set_xticks(means[0].axes[0].to_list())
     if rotate_xticklabels:
         g.tick_params(axis='x', rotation=90)
@@ -130,7 +131,8 @@ def plot_spectral_radius_iterations(methods: list,
     sampled = df.sample(frac=sample_frac)
     plt.figure(figsize=figsize)
     g = sns.scatterplot(sampled, x="spectral_radius", y="iterations",
-                        hue="method", alpha=0.3, edgecolor="none")
+                        hue="method", alpha=0.3, edgecolor="none",
+                        hue_order=methods)
     plt.yscale(scale)
     plt.tight_layout()
     plt.savefig(os.path.join(figures_path,
@@ -152,7 +154,8 @@ def plot_condition_number_iterations(methods: list,
     sampled = df.sample(frac=sample_frac)
     plt.figure(figsize=figsize)
     g = sns.scatterplot(sampled, x="condition_number", y="iterations",
-                        hue="method", alpha=0.3, edgecolor="none")
+                        hue="method", alpha=0.3, edgecolor="none",
+                        hue_order=methods)
     plt.xscale(xscale)
     plt.yscale(yscale)
     plt.tight_layout()
@@ -244,13 +247,13 @@ for p in [params_smaller, params_larger]:
     
     plot_spectral_radius_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
                                     p["GS_SCATTERPLOT_RANGE"], d,
-                                    "spectral_radius_gauss_seidel", scale='linear',
+                                    "spectral_radius_gauss_seidel", scale='log',
                                     sample_frac=0.01)
     
     plot_condition_number_iterations(["gauss_seidel_sum_method", "gauss_seidel_matrix"],
                                       p["GS_SCATTERPLOT_RANGE"], d,
                                       "condition_number_gauss_seidel", xscale='log',
-                                      yscale='log', sample_frac=0.05)
+                                      yscale='log', sample_frac=0.01)
 
 
     # === JACOBI === #
@@ -276,25 +279,20 @@ for p in [params_smaller, params_larger]:
     plot_condition_number_iterations(["jacobi_sum_method", "jacobi_matrix"],
                                       p["JACOBI_SCATTERPLOT_RANGE"], d,
                                       "condition_number_jacobi", xscale='log',
-                                      yscale='log', sample_frac=0.05)
+                                      yscale='log', sample_frac=0.01)
 
-    # # === JACOBI/GS COMPARISON === #
+    # === JACOBI/GS COMPARISON === #
 
     box_plot_iterations(
         ["jacobi_sum_method", "gauss_seidel_sum_method"], p["JACOBI_BOXPLOT_RANGE"],
         d, "box_jacobi_vs_gauss_seidel_sum_iterations", "log")
 
-    line_plot_iterations(["jacobi_sum_method", "gauss_seidel_sum_method"],
-                         p["JACOBI_VS_GS_LINE_PLOT_RANGE"], d,
-                         "line_jacobi_vs_gauss_seidel_sum_iterations_no_outliers",
-                         rotate_xticklabels=True, remove_outliers=True,
-                         scale="log")
-
     box_plot_iterations(
         ["jacobi_matrix", "gauss_seidel_matrix"], p["JACOBI_BOXPLOT_RANGE"],
         d, "box_jacobi_vs_gauss_seidel_matrix_iterations", "log")
 
-    line_plot_iterations(["jacobi_matrix", "gauss_seidel_matrix"],
+    line_plot_iterations(["jacobi_sum_method", "jacobi_matrix",
+                         "gauss_seidel_sum_method", "gauss_seidel_matrix"],
                          p["JACOBI_VS_GS_LINE_PLOT_RANGE"], d,
                          "line_jacobi_vs_gauss_seidel_matrix_iterations_no_outliers",
                          rotate_xticklabels=True, remove_outliers=True,
@@ -311,7 +309,7 @@ for p in [params_smaller, params_larger]:
     plot_condition_number_iterations(["jacobi_sum_method", "jacobi_matrix"],
                                       p["JACOBI_SCATTERPLOT_RANGE"], d,
                                       "condition_number_jacobi", xscale='log',
-                                      yscale='log', sample_frac=0.05)
+                                      yscale='log', sample_frac=0.01)
 
     plot_spectral_radius_iterations(["jacobi_sum_method", "jacobi_matrix",
                                      "gauss_seidel_sum_method", "gauss_seidel_matrix"],
@@ -323,4 +321,4 @@ for p in [params_smaller, params_larger]:
                                       "gauss_seidel_sum_method", "gauss_seidel_matrix"],
                                       p["JACOBI_SCATTERPLOT_RANGE"], d,
                                       "condition_number_all", xscale='log',
-                                      yscale='log', sample_frac=0.05, figsize=(8,6))
+                                      yscale='log', sample_frac=0.01, figsize=(8,6))
