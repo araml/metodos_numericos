@@ -44,7 +44,10 @@ def test_same_eigenvalues():
     print(v)
 
 # Idea is to create a matrix with specific eigenvalues and then use
-# an x_0 that is normal to the first eigenvector 
+# an x_0 that is normal to one or more of the eigenvectors 
+# this should make it so once we keep trying to find more eigenvectors than the
+# ones that are not normal to x_0 we won't be able to since the deflation matrix 
+# M - lambda v * v^t will cancel all of these x_0s 
 def test_normal_eigenvector():
     matrix_dim = (3, 3)
     D = np.zeros(matrix_dim)
@@ -61,14 +64,43 @@ def test_normal_eigenvector():
     print(e, '\n')
     print(v)
 
+    # It doesn't matter where we start we can only get a single eigenvalue 
+    x = np.array([1, 0, 0])
+    e, v = d.deflate(m, x, 100, 3, 1e-17)
+    print(e, '\n')
+    print(v)
+
     e, v = np.linalg.eig(m)
     print(e, '\n')
     print(v)
 
-
+# Should be somewhat like above 
 def test_zero_eigenvalues():
-    pass
+    matrix_dim = (3, 3)
+    D = np.zeros(matrix_dim)
+    P = np.eye(3, 3)
+    P_inv = np.eye(3, 3) 
+    diagonal = [0, 3, 2]
+    for i in range(3):
+        D[i, i] = diagonal[i]
+
+    m = P@D@P_inv
+    x = np.ones(m.shape[0])
+    e, v = d.deflate(m, x, 100, 3, 1e-17)
+    print(e, '\n')
+    print(v)
+    
+    # It doesn't matter where we start we won't get any eigenvalue
+    x = np.array([1, 0, 0])
+    e, v = d.deflate(m, x, 100, 3, 1e-17)
+    print(e, '\n')
+    print(v)
+
+    e, v = np.linalg.eig(m)
+    print(e, '\n')
+    print(v)
 
 if __name__ == '__main__': 
   #  test_same_eigenvalues()
-    test_normal_eigenvector()
+  #  test_normal_eigenvector()
+    test_zero_eigenvalues()
