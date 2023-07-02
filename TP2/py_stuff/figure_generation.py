@@ -14,19 +14,19 @@ def plot_eigenvalues(images: np.array,
     pca = PCA(number_of_eigenvectors, iterations, tolerance)
     pca.fit(images)
     eigenvalues = pca.eigenvalues
-    pca_2d = PCA2D(number_of_eigenvectors, iterations, tolerance)
-    pca_2d.fit(images)
-    eigenvalues_2d = pca_2d.eigenvalues
+    # pca_2d = PCA2D(number_of_eigenvectors, iterations, tolerance)
+    # pca_2d.fit(images)
+    # eigenvalues_2d = pca_2d.eigenvalues
     x = np.arange(1, eigenvalues.size+1)
-    plt.plot(x, eigenvalues, label="PCA")
-    plt.plot(x, eigenvalues_2d, label="2DPCA")
-    plt.xticks(np.arange(1, eigenvalues.size+1, 10))
+    plt.scatter(x, eigenvalues, label="PCA")
+    # plt.plot(x, eigenvalues_2d, label="2DPCA")
+    # plt.xticks(np.arange(1, eigenvalues.size+1, 10))
     plt.xlabel("Número de componente")
     plt.ylabel("Autovalor")
     plt.yscale("log")
     plt.title(f"{eigenvalues.size} primeros autovalores, {iterations} iteraciones, escala logarítmica")
     plt.legend()
-    file_path = Path(figures_path, f"{eigenvalues.size}autovalores_{iterations}its_log.png")
+    file_path = Path(figures_path, f"{eigenvalues.size}autovalores_{iterations}its_scatter.png")
     plt.savefig(file_path)
     plt.clf()
 
