@@ -31,6 +31,14 @@ def run_and_append_with_random_matrix(fn, dim: int, acc: list, iterations: int =
     acc.append(np.linalg.norm(m@v - b))
     return acc, iters
 
+def run_and_append_x_error_with_random_matrix(fn, dim: int, acc: list, iterations: int = 3000,
+                                              debug: bool = False, eps = 1e-6) -> (np.array, int):
+    m, orig_x, b = create_diagonally_dominant_matrix(dim)
+    x = np.random.randint(low = 0, high = 100, size = dim)
+    v, iters = fn(m, b, x, iterations = iterations, debug = debug)
+    acc.append(np.linalg.norm(v - orig_x))
+    return acc, iters
+
 
 def run_error_over_iterations(dim: int = 900): 
     jm = []
@@ -69,7 +77,7 @@ def run_error_over_iterations(dim: int = 900):
 
 
 # Crea boxplot para una dimensión específica
-def run_error_boxplot(dim: int = 1000, iterations: int = 100) -> None:
+def run_error_solution(dim: int = 1000, iterations: int = 100) -> None:
     jm = []
     js = []
     gsm = []
@@ -80,18 +88,10 @@ def run_error_boxplot(dim: int = 1000, iterations: int = 100) -> None:
         sys.stdout.write(f'\rIteration {i} of {iterations}')  
         sys.stdout.flush()                                                   
 
-        m, _, b = create_diagonally_dominant_matrix(dim)
-        x = np.random.randint(low = 0, high = 10, size = dim)
-
-        try:
-            jm, it1 = run_and_append_with_random_matrix(jacobi_matrix, dim, jm)
-            js, it2 = run_and_append_with_random_matrix(jacobi_sum_method, dim, js)
-            gsm, it3 = run_and_append_with_random_matrix(gauss_seidel_matrix, dim, gsm)
-            gss, it4 = run_and_append_with_random_matrix(gauss_seidel_sum_method, dim, gss)
-        except:
-            print(m)
-            print(b)
-            assert(0)
+        jm, it1 = run_and_append_with_random_matrix(jacobi_matrix, dim, jm)
+        js, it2 = run_and_append_with_random_matrix(jacobi_sum_method, dim, js)
+        gsm, it3 = run_and_append_with_random_matrix(gauss_seidel_matrix, dim, gsm)
+        gss, it4 = run_and_append_with_random_matrix(gauss_seidel_sum_method, dim, gss)
      
     fig, ax = plt.subplots()
     ax.boxplot([jm, js, gsm, gss]) 
@@ -101,6 +101,36 @@ def run_error_boxplot(dim: int = 1000, iterations: int = 100) -> None:
     plt.savefig(f'Error metodos boxplot dim: {dim}')
     plt.clf()
     #plt.show()
+
+# Crea boxplot para una dimensión específica
+def run_error_x_approx(dim: int = 1000, iterations: int = 100, eps = 1e-6) -> None:
+    jm = []
+    js = []
+    gsm = []
+    gss = []
+    total_iters = []
+
+    for i in range(iterations):
+        sys.stdout.write(f'\rIteration {i} of {iterations}')  
+        sys.stdout.flush()                                                   
+
+        jm, it1 =  run_and_append_x_error_with_random_matrix(jacobi_matrix, dim,
+                                                             jm, eps = eps)
+        js, it2 =  run_and_append_x_error_with_random_matrix(jacobi_sum_method, 
+                                                             dim, js, eps = eps)
+        gsm, it3 = run_and_append_x_error_with_random_matrix(gauss_seidel_matrix,
+                                                             dim, gsm, eps = eps)
+        gss, it4 = run_and_append_x_error_with_random_matrix(gauss_seidel_sum_method, 
+                                                             dim, gss, eps = eps)
+
+     
+    fig, ax = plt.subplots()
+    ax.boxplot([jm, js, gsm, gss]) 
+    ax.set_xticklabels(['Jacobi matriz', 'Jacobi suma', 'Gauss-Seidel matriz',
+                         'Gauss-Seidel suma'], rotation=0, fontsize=8)
+    plt.legend()
+    plt.savefig(f'Error aproximación x boxplot dim: {dim} eps {eps}')
+    plt.clf()
 
 def run_error_experiment() -> None:
     jm = []
@@ -185,76 +215,23 @@ def run_error_experiment_with_random_matrix() -> None:
     plt.savefig(f'Error al cambiar la dimension matrices random cuadrados')
     plt.clf()
 
-def run_one(fn, ms, ls):
-    for m in ms: 
-        x = np.random.randint(low = 0, high = 100, size = 200)
-        ls, _ = run_and_append(fn, m[0], m[1], x, ls)        
 
-def run_spectral(ms, js, jm, gss, gsm):
-    try: 
-        js = run_one(jacobi_sum_method, ms[0], js)
-    except:
-        print(ms[0])
-        print(ms)
-    jm = run_one(jacobi_matrix, ms[1], js)
-    gss = run_one(gauss_seidel_sum_method, ms[2], js)
-    gsm = run_one(gauss_seidel_matrix, ms[3], js)
-    
-    return (js, jm, gss, gsm)
-
-def run_error_vary_spectral_radius_convergence_error():
-    m1 = generate_n_matrices_with_varying_spectral_radiuses(high = 1000)
-    m2 = generate_n_matrices_with_varying_spectral_radiuses(high = 0)
-    #m3 = generate_n_matrices_with_varying_spectral_radiuses()
-    #m4 = generate_n_matrices_with_varying_spectral_radiuses()
-    
-    r1 = [m1[0], m2[0]] #, m3[0], m4[0]]
-    r2 = [m1[1], m2[1]] #, m3[1], m4[1]]
-    r3 = [m1[2], m2[2]] #, m3[2], m4[2]]
-    r4 = [m1[3], m2[3]] #, m3[3], m4[3]]
-
-    radiuses = [r1, r2]#, r3, r4]
-    radiuses_str = ['0.1', '0.4'] #, '0.6', '0.9']
-    for idx in range(0, 2):
-        jm = []
-        js = []
-        gsm = []
-        gss = []
-        (jm, js, gsm, gss) = run_spectral(radiuses[idx], jm, js, gsm, gss)
-
-        fig, ax = plt.subplots()
-        ax.boxplot([jm, js, gsm, gss]) 
-        ax.set_xticklabels(['Jacobi matriz', 'Jacobi suma', 'Gauss-Seidel matriz',
-                             'Gauss-Seidel suma'], rotation=0, fontsize=8)
-        plt.legend()
-        plt.savefig(f'Error with varying radius dim: {radiuses_str[idx]}')
-        plt.clf()
 
 
 if __name__ == '__main__':
-#    try: 
-#        run_error_boxplot(dim = 128)
-#    except:
-#        pass 
+#        run_error_solution(dim = 128)
+#        run_error_solution(dim = 512)
+#        run_error_solution(dim = 2048)
+#        run_error_solution(dim = 4096)
 #
-#    try:
-#        run_error_boxplot(dim = 512)
-#    except:
-#        pass 
-#
-#    try:
-#        run_error_boxplot(dim = 2048)
-#    except:
-#        pass 
-#
-#    try:
-#        run_error_boxplot(dim = 4096)
-#    except:
-#        pass 
-#
+
+ #   run_error_x_approx(dim = 128)
+ #   run_error_x_approx(dim = 128, eps = 1e-12)
+ #   run_error_x_approx(dim = 128, eps = 1e-12)
+ #   run_error_x_approx(dim = 512)
+ #   run_error_x_approx(dim = 512, eps = 1e-12)
 
 #    run_error_experiment()
 #    run_error_over_iterations()
 #    run_error_experiment_with_random_matrix()
 
-    run_error_vary_spectral_radius_convergence_error()
