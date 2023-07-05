@@ -11,6 +11,7 @@ class PCABase:
         self.k = k
         self.iterations = iterations
         self.tolerance = tolerance
+        self.covariance_matrix = None
 
     def fit(self, images: np.array) -> None:
         raise NotImplementedError("Must be implemented in derived class")
@@ -47,8 +48,7 @@ class PCA(PCABase):
 
     def fit(self, images: np.array) -> None: 
         self.height, self.width = images[0].shape
-        flattened_images = flatten_images(images)
-        covariance = self.create_covariance_matrix(flattened_images)
+        covariance = self.create_covariance_matrix(images)
         self.eigenvalues, self.eigenvectors = \
                 get_eigenvalues_and_eigenvectors(covariance, 
                                                  self.k, 
@@ -59,10 +59,13 @@ class PCA(PCABase):
         projected_images = self.project_images(images)
         return projected_images @ self.eigenvectors[:, :self.k].T
 
-    def create_covariance_matrix(self, flattened_images: np.array) -> np.array:
-        n = flattened_images.shape[0]
-        centred_images = centre_images(flattened_images)
-        return (centred_images.T @ centred_images) / (n - 1)
+    def create_covariance_matrix(self, images: np.array) -> np.array:
+        if self.covariance_matrix is None:
+            flattened_images = flatten_images(images)
+            n = flattened_images.shape[0]
+            centred_images = centre_images(flattened_images)
+            self.covariance_matrix = (centred_images.T @ centred_images) / (n - 1)
+        return self.covariance_matrix
     
     def get_eigenfaces(self) -> np.array:
         transposed_eigenvectors = self.eigenvectors.transpose()

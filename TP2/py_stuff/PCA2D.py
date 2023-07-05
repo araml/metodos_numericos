@@ -11,7 +11,7 @@ class PCA2D(PCABase):
         self.name = "2DPCA"
 
     def fit(self, images: np.array) -> None:
-        G = self.get_image_covariance_matrix(images)
+        G = self.create_covariance_matrix(images)
         self.eigenvalues, self.eigenvectors = \
             get_eigenvalues_and_eigenvectors(G, self.k, self.iterations,
                                                 self.tolerance)
@@ -38,11 +38,13 @@ class PCA2D(PCABase):
             projected_images.append(self.project_single_image(image))
         return np.array(projected_images)
 
-    def get_image_covariance_matrix(self, images: np.array) -> np.array:
-        self.mean_pixel_values = np.mean(images, axis = 0)
-        centred_images = images - self.mean_pixel_values
-        return np.mean(np.array([image.T @ image for image in centred_images]),
-                       axis = 0)
+    def create_covariance_matrix(self, images: np.array) -> np.array:
+        if self.covariance_matrix is None:
+            self.mean_pixel_values = np.mean(images, axis = 0)
+            centred_images = images - self.mean_pixel_values
+            self.covariance_matrix = np.mean(
+                np.array([image.T @ image for image in centred_images]), axis = 0)
+        return self.covariance_matrix
     
     def get_eigenfaces(self) -> np.array:
         eigenfaces = []

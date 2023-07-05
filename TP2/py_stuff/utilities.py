@@ -41,10 +41,3 @@ def measure_execution_time(function_to_measure, *args) -> float:
     function_to_measure(*args)
     end_time = time.time()
     return end_time-start_time
-
-# def execution_times(function_to_measure, repetitions, *args) -> float:
-#     r = []
-#     for i in range(repetitions):
-#         print("Repetition {}".format(i))
-#         r.append(measure_execution_time(function_to_measure, *args))
-#     return r
