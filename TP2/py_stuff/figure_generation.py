@@ -11,14 +11,14 @@ def plot_eigenvalues(images: np.array,
                      number_of_eigenvectors: int,
                      iterations: int = 10,
                      tolerance: float = 1e-17):
-    pca = PCA(number_of_eigenvectors, iterations, tolerance)
-    pca.fit(images)
-    eigenvalues = pca.eigenvalues
-    # pca_2d = PCA2D(number_of_eigenvectors, iterations, tolerance)
-    # pca_2d.fit(images)
-    # eigenvalues_2d = pca_2d.eigenvalues
+    # pca = PCA(number_of_eigenvectors, iterations, tolerance)
+    # pca.fit(images)
+    # eigenvalues = pca.eigenvalues
+    pca_2d = PCA2D(number_of_eigenvectors, iterations, tolerance)
+    pca_2d.fit(images)
+    eigenvalues = pca_2d.eigenvalues
     x = np.arange(1, eigenvalues.size+1)
-    plt.scatter(x, eigenvalues, label="PCA")
+    plt.scatter(x, eigenvalues, label="2DPCA", s=2, color="tab:orange")
     # plt.plot(x, eigenvalues_2d, label="2DPCA")
     # plt.xticks(np.arange(1, eigenvalues.size+1, 10))
     plt.xlabel("Número de componente")

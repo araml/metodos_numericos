@@ -19,11 +19,6 @@ class PCA2D(PCABase):
     def transform(self, images: np.array) -> np.array:
         projected_images = self.project_images(images)
         return [image @ self.eigenvectors[:, :self.k].T for image in projected_images]
-        # compressed_images = []
-        # for image in images:
-        #     compressed_images.append(self.compress_image(image))
-
-        # return compressed_images
     
     def get_image_comparison(self, images: np.array, 
                              image_index: int) -> (np.array, np.array):

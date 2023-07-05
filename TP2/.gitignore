@@ -2,6 +2,7 @@
 *.zip
 build/
 caras/
+csvs/
 eigen/
 figures/
 matrices/

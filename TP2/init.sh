@@ -25,3 +25,11 @@ then
 else
     mkdir figures
 fi
+
+
+if [ -d "./csvs" ]
+then
+    echo "CSV folder already exists"
+else
+    mkdir csvs
+fi

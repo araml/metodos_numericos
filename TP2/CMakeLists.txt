@@ -24,6 +24,7 @@ include_directories(eigen)
 add_subdirectory(pybind11)
 pybind11_add_module(deflate src/main.cpp ${power_iteration})
 
+get_filename_component(CSVS_PATH csvs ABSOLUTE)
 get_filename_component(FACES_PATH caras ABSOLUTE)
 get_filename_component(MATRICES_PATH matrices ABSOLUTE)
 get_filename_component(FIGURES_PATH figures ABSOLUTE)

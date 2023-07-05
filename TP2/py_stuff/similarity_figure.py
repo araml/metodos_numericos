@@ -7,7 +7,7 @@ from pathlib import Path
 from PCA import *
 from PCA2D import PCA2D
 from utilities import read_images
-from utilities import average_execution_time, centre_images
+from utilities import centre_images
 
 SAMPLES_PER_PERSON = 10
 PLOT_COLOURS = plt.rcParams['axes.prop_cycle'].by_key()['color']
