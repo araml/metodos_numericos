@@ -22,7 +22,12 @@ images = read_images(Path(faces_path), scale_down_factor)
 max_2d_k = min(number_of_eigenvectors, images.shape[2])
 
 ks_2d = [5, 10, 15, 20, 60, 92]
-ks_1d = [5, 10, 20, 50, 100, 150]
+ks_1d_low = [5, 10, 20, 50, 100, 150]
+ks_1d_high = [200, 300, 410, 666, 1000, 1200]
 
-create_compression_grid(PCA2D, images, idxs, ks_2d, iterations, tolerance, 2, 3, (5,5), plt.cm.gray)
-create_compression_grid(PCA, images, idxs, ks_1d, iterations, tolerance, 2, 3, (5,5), plt.cm.gray)
+# create_compression_grid(PCA2D, images, idxs, ks_2d, iterations,
+#                         tolerance, 2, 3, (5,5), plt.cm.gray)
+create_compression_grid(PCA, images, idxs, ks_1d_low, iterations,
+                        tolerance, 2, 3, (5,5), plt.cm.gray)
+create_compression_grid(PCA, images, idxs, ks_1d_high, iterations,
+                        tolerance, 2, 3, (5,5), plt.cm.gray)

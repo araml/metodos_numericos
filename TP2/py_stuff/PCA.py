@@ -56,8 +56,10 @@ class PCA(PCABase):
                                                  self.tolerance)
 
     def transform(self, images: np.array) -> np.array:
-        projected_images = self.project_images(images)
-        return projected_images @ self.eigenvectors[:, :self.k].T
+        flattened_images = flatten_images(images)
+        mean = np.mean(flattened_images, axis=0)
+        projected_images = self.project_images(flattened_images-mean)
+        return (projected_images @ self.eigenvectors[:, :self.k].T) + mean
 
     def create_covariance_matrix(self, images: np.array) -> np.array:
         if self.covariance_matrix is None:
