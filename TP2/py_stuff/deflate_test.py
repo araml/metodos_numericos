@@ -1,6 +1,46 @@
 import numpy as np
 import deflate as d
 
+def test_power_iteration_normal():
+    matrix_dim = (3, 3)
+    D = np.zeros(matrix_dim)
+    P = np.eye(3, 3)
+    P_inv = np.eye(3, 3) 
+    diagonal = [5, 3, 2]
+    for i in range(3):
+        D[i, i] = diagonal[i]
+
+    m = P@D@P_inv
+
+    x = np.array([0, 1, 1])
+    e, v, i = d.power_iteration(m, x, 1000, 1e-17)
+    print("Eigenval", e, '\n')
+    print("Eigenvec", v)
+
+    e, v = np.linalg.eig(m)
+    print(e, '\n')
+    print(v)
+
+def test_same_eigenvalue_components():
+    matrix_dim = (3, 3)
+    D = np.zeros(matrix_dim)
+    P = np.eye(3, 3)
+    P_inv = np.eye(3, 3) 
+    diagonal = [3, 3, 2]
+    for i in range(3):
+        D[i, i] = diagonal[i]
+
+    m = P@D@P_inv
+
+    x = np.array([1, 1, 0])
+    e, v, i = d.power_iteration(m, x, 1000, 1e-17)
+    print("Eigenval", e, '\n')
+    print("Eigenvec", v)
+
+    e, v = np.linalg.eig(m)
+    print(e, '\n')
+    print(v)
+
 
 def create_matrix_with_eigenvals(dimension: int, 
                                  diagonal: np.array,
@@ -89,18 +129,36 @@ def test_zero_eigenvalues():
     e, v = d.deflate(m, x, 100, 3, 1e-17)
     print(e, '\n')
     print(v)
-    
-    # It doesn't matter where we start we won't get any eigenvalue
-    x = np.array([1, 0, 0])
-    e, v = d.deflate(m, x, 100, 3, 1e-17)
+
+
+    e, v = np.linalg.eig(m)
     print(e, '\n')
     print(v)
+
+def test_same_eigenvalue_components_get_eigenbase():
+    matrix_dim = (3, 3)
+    D = np.zeros(matrix_dim)
+    P = np.eye(3, 3)
+    P_inv = np.eye(3, 3) 
+    diagonal = [3, 3, 2]
+    for i in range(3):
+        D[i, i] = diagonal[i]
+
+    m = P@D@P_inv
+
+    x = np.array([0, 1, 0])
+    e, v = d.deflate(m, x, 1000, 3, 1e-17)
+    print("Eigenval", e, '\n')
+    print("Eigenvec", v)
 
     e, v = np.linalg.eig(m)
     print(e, '\n')
     print(v)
 
 if __name__ == '__main__': 
-  #  test_same_eigenvalues()
-  #  test_normal_eigenvector()
+   # test_power_iteration_normal()
+   # test_same_eigenvalue_components()
+   # test_same_eigenvalues()
+   # test_normal_eigenvector()
     test_zero_eigenvalues()
+    test_same_eigenvalue_components_get_eigenbase()

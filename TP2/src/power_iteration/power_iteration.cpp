@@ -6,6 +6,7 @@
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
+using Eigen::VectorXi;
 
 std::tuple<float, VectorXd, size_t>
 power_iteration_method(const MatrixXd &M, const VectorXd &x_0, size_t iters,
@@ -39,12 +40,15 @@ deflate(MatrixXd M, const VectorXd &x_0, size_t iters,
         throw std::logic_error("Non square matrix or asked for too many eigenvalues");
     }
 
+    srand((unsigned int) time(0));
+
     std::vector<float> eigenvalues;
     std::vector<VectorXd> eigenvectors;
     for (size_t i = 0; i < number_of_eigenvalues; i++) {
         std::cout << "\rCalculating eigenvalue " << i + 1 << " of " 
                   << number_of_eigenvalues << std::endl << std::flush;
-        auto [l, v, j] = power_iteration_method(M, x_0, iters, eps);
+        auto x1 = VectorXd::Random(M.cols()); //.template cast<double>();
+        auto [l, v, j] = power_iteration_method(M, x1, iters, eps);
         M = M - (l * v * v.transpose());
         eigenvalues.emplace_back(std::move(l));
         eigenvectors.emplace_back(std::move(v));
