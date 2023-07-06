@@ -79,7 +79,7 @@ def plot_errors_for_eigenvector(pca_class_names: list,
     g.set(xticks=iteration_values)
     plt.yscale(yscale)
     plt.xlabel("Iteraciones del método de deflación")
-    plt.ylabel(r"Error $\Vert Av - \lambda v \Vert_2$")
+    plt.ylabel(r"Error $\Vert Mv - \lambda v \Vert_2$")
     plt.tight_layout()
 
     file_path = Path(figures_path,
@@ -104,7 +104,7 @@ def plot_errors_for_many_eigenvectors(pca_class_names: list,
     g.set(xticks=eigenvectors_to_plot)
     plt.yscale(yscale)
     plt.xlabel("Número de autovector calculado")
-    plt.ylabel(r"Error $\Vert Av - \lambda v \Vert_2$")
+    plt.ylabel(r"Error $\Vert Mv - \lambda v \Vert_2$")
     plt.tight_layout()
 
     file_path = Path(figures_path,
@@ -134,19 +134,11 @@ for its in iterations:
         ["1DPCA", "2DPCA"], its, range(10, 91, 10), normalise_errors=True)
     plot_errors_for_many_eigenvectors(
         ["1DPCA"], its, range(100, 1200, 100), normalise_errors=True)
-    plot_errors_for_many_eigenvectors(
-        ["1DPCA", "2DPCA"], its, range(10, 91, 10), normalise_errors=False)
-    plot_errors_for_many_eigenvectors(
-        ["1DPCA"], its, range(100, 1200, 100), normalise_errors=False)
     
-for v in range(1, 11):
+for v in list(range(1, 11)) + [92]:
     plot_errors_for_eigenvector(
         ["1DPCA", "2DPCA"], iterations, v, normalise_errors=True)
-    plot_errors_for_eigenvector(
-        ["1DPCA", "2DPCA"], iterations, v, normalise_errors=False)
 
-for v in [410, 600, 1000]:
+for v in [200, 410, 600, 1000]:
     plot_errors_for_eigenvector(
         ["1DPCA"], iterations, v, normalise_errors=True)
-    plot_errors_for_eigenvector(
-        ["1DPCA"], iterations, v, normalise_errors=False)
