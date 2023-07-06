@@ -1,32 +1,43 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from data_paths import *
 from matplotlib import pyplot as plt
-import numpy as np
 from pathlib import Path
 from PCA import PCA, PCABase
 from PCA2D import PCA2D
 from utilities import centre_images
 
 
-def plot_eigenvalues(images: np.array,
-                     number_of_eigenvectors: int,
-                     iterations: int = 10,
-                     tolerance: float = 1e-17):
-    # pca = PCA(number_of_eigenvectors, iterations, tolerance)
-    # pca.fit(images)
-    # eigenvalues = pca.eigenvalues
-    pca_2d = PCA2D(number_of_eigenvectors, iterations, tolerance)
-    pca_2d.fit(images)
-    eigenvalues = pca_2d.eigenvalues
-    x = np.arange(1, eigenvalues.size+1)
-    plt.scatter(x, eigenvalues, label="2DPCA", s=2, color="tab:orange")
-    # plt.plot(x, eigenvalues_2d, label="2DPCA")
-    # plt.xticks(np.arange(1, eigenvalues.size+1, 10))
+def plot_eigenvalues(pca_class_names: list,
+                     eigenvalue_numbers_to_plot: list,
+                     iterations: int = 20,
+                     tolerance: float = 1e-17,
+                     yscale: str = "log",
+                     plot_function = sns.lineplot,
+                     set_xticks = False,
+                     kwargs = {}):
+    dfs = []
+    for name in pca_class_names:
+        file_path = Path(
+            csvs_path, f"eigenvalues_{iterations}its_tol{tolerance}_{name}.csv")
+        df = pd.read_csv(file_path, sep='\t')
+        df = df[df["eigenvalue_number"].isin(eigenvalue_numbers_to_plot)]
+        dfs.append(df)
+    df = pd.concat(dfs)
+    g = plot_function(data=df, x="eigenvalue_number", y="eigenvalue",
+                      hue="pca_class", marker='o', **kwargs)
+    if set_xticks:
+        g.set(xticks=eigenvalue_numbers_to_plot)
     plt.xlabel("Número de componente")
     plt.ylabel("Autovalor")
-    plt.yscale("log")
-    plt.title(f"{eigenvalues.size} primeros autovalores, {iterations} iteraciones, escala logarítmica")
-    plt.legend()
-    file_path = Path(figures_path, f"{eigenvalues.size}autovalores_{iterations}its_scatter.png")
+    plt.yscale(yscale)
+    plt.tight_layout()
+
+    file_path = Path(
+        figures_path,
+        f"{max(eigenvalue_numbers_to_plot)}autovalores_{iterations}its_" +
+        f"{'_'.join(pca_class_names)}.png")
     plt.savefig(file_path)
     plt.clf()
 
@@ -74,7 +85,8 @@ def create_compression_grid(pca_class,
             ax.set_title(f"{ks[i]} componentes")
             ax.axis('off')
         plt.tight_layout()
-        filename = f"compression_{image_index}_{subplots_height}x{subplots_width}_{iterations}iterations_{pca.name}_{colourmap.name}.png"
+        filename = f"compression_{image_index}_{subplots_height}x{subplots_width}" + \
+        f"_{iterations}iterations_{pca.name}_maxk{max(ks)}_{colourmap.name}.png"
         plt.savefig(Path(figures_path, filename))
         plt.clf()
 
