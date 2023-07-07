@@ -12,6 +12,7 @@ class PCABase:
         self.iterations = iterations
         self.tolerance = tolerance
         self.covariance_matrix = None
+        self.mean_pixel_values = None
 
     def fit(self, images: np.array) -> None:
         raise NotImplementedError("Must be implemented in derived class")
@@ -57,13 +58,13 @@ class PCA(PCABase):
 
     def transform(self, images: np.array) -> np.array:
         flattened_images = flatten_images(images)
-        mean = np.mean(flattened_images, axis=0)
-        projected_images = self.project_images(flattened_images-mean)
-        return (projected_images @ self.eigenvectors[:, :self.k].T) + mean
+        projected_images = self.project_images(flattened_images-self.mean_pixel_values)
+        return (projected_images @ self.eigenvectors[:, :self.k].T) + self.mean_pixel_values
 
     def create_covariance_matrix(self, images: np.array) -> np.array:
         if self.covariance_matrix is None:
             flattened_images = flatten_images(images)
+            self.mean_pixel_values = np.mean(flattened_images, axis=0)
             n = flattened_images.shape[0]
             centred_images = centre_images(flattened_images)
             self.covariance_matrix = (centred_images.T @ centred_images) / (n - 1)
