@@ -1,55 +1,68 @@
 import numpy as np
 import deflate as d
 
-def test_power_iteration_normal():
-    matrix_dim = (3, 3)
-    D = np.zeros(matrix_dim)
-    P = np.eye(3, 3)
-    P_inv = np.eye(3, 3) 
-    diagonal = [5, 3, 2]
-    for i in range(3):
-        D[i, i] = diagonal[i]
+def print_line() -> None:
+    print('------------------------------------------------------------------\n')
 
-    m = P@D@P_inv
+def print_numpy(m: np.array) -> None:
+    print('Running numpy\'s eigenfunction')
+    e, v = np.linalg.eig(m)
+    print('Eigenvalues', e, '\n')
+    print('Eigenvectors\n', v)
+
+
+def create_diagonal_matrix(diag: np.array) -> np.array:
+    matrix_dim = (len(diag), len(diag))
+    D = np.zeros(matrix_dim)
+    P = np.eye(len(diag), len(diag))
+    P_inv = np.eye(len(diag), len(diag))
+    for i in range(len(diag)):
+        D[i, i] = diag[i]
+
+    return P@D@P_inv
+
+
+def test_power_iteration_normal():
+    print('Vector normal to the first eigenvalue')
+
+    m = create_diagonal_matrix([3, 3, 2])
+
+    print('\nMatrix: \n', m, '\n')
+    print('Running our power method\n')
 
     x = np.array([0, 1, 1])
     e, v, i = d.power_iteration(m, x, 1000, 1e-17)
-    print("Eigenval", e, '\n')
-    print("Eigenvec", v)
+    print("Eigenvalues", e) 
+    print("Eigenvectors", v, '\n')
 
-    e, v = np.linalg.eig(m)
-    print(e, '\n')
-    print(v)
+    print_numpy(m)
+    print_line()
+
 
 def test_same_eigenvalue_components():
-    matrix_dim = (3, 3)
-    D = np.zeros(matrix_dim)
-    P = np.eye(3, 3)
-    P_inv = np.eye(3, 3) 
-    diagonal = [3, 3, 2]
-    for i in range(3):
-        D[i, i] = diagonal[i]
+    print('Initial vector has coordinates for two of the \'autovectors\'')
 
-    m = P@D@P_inv
+    m = create_diagonal_matrix([3, 3, 2])
+
+    print('\nMatrix: \n', m, '\n')
+    print('Running our power method\n')
 
     x = np.array([1, 1, 0])
     e, v, i = d.power_iteration(m, x, 1000, 1e-17)
-    print("Eigenval", e, '\n')
-    print("Eigenvec", v)
+    print("Eigenvalues", e) 
+    print("Eigenvectors", v, '\n')
 
-    e, v = np.linalg.eig(m)
-    print(e, '\n')
-    print(v)
+    print_numpy(m)
+    print_line()
 
-
-def create_matrix_with_eigenvals(dimension: int, 
-                                 diagonal: np.array,
+def create_matrix_with_eigenvals(diagonal: np.array,
                                  low: float = 0,
                                  high: float = 100, 
                                  seed: float = None) -> (np.array, np.array, np.array):
 
     if seed:
         np.random.seed(seed)
+    dimension = len(diagonal)
 
     matrix_dim = (dimension, dimension)
     D = np.zeros(matrix_dim)
@@ -68,97 +81,73 @@ def create_matrix_with_eigenvals(dimension: int,
         except: 
             continue
     
-    print(P)
     M = P_inv@D@P
-    print(M)
     return M, P, P_inv
 
 def test_same_eigenvalues(): 
-    m, _, _ = create_matrix_with_eigenvals(5, [3, 3, 3, 3, 4])
-    e, v = d.deflate(m, np.ones(m.shape[0]), 100, 5, 1e-17)
-    print(e, '\n')
-    print(v)
+    print('Matrix with more than one eigenvector associated to the same eigenvalue')
+    m = create_diagonal_matrix([3, 3, 1])
 
-    e, v = np.linalg.eig(m)
-    print(e, '\n')
-    print(v)
+    print('\nMatrix: \n', m, '\n')
+    print('Running our deflate\n')
 
-# Idea is to create a matrix with specific eigenvalues and then use
-# an x_0 that is normal to one or more of the eigenvectors 
-# this should make it so once we keep trying to find more eigenvectors than the
-# ones that are not normal to x_0 we won't be able to since the deflation matrix 
-# M - lambda v * v^t will cancel all of these x_0s 
-def test_normal_eigenvector():
-    matrix_dim = (3, 3)
-    D = np.zeros(matrix_dim)
-    P = np.eye(3, 3)
-    P_inv = np.eye(3, 3) 
-    diagonal = [5, 3, 2]
-    for i in range(3):
-        D[i, i] = diagonal[i]
+    e, v = d.deflate(m, np.ones(m.shape[0]), 100, 3, 1e-17)
+    print("Eigenvalues", e) 
+    print("Eigenvectors", v, '\n')
+    
+    print_numpy(m)
+    print_line()
 
-    m = P@D@P_inv
+def test_same_eigenvalues(): 
+    print('Matrix with more than one eigenvector associated to the same eigenvalue')
+    m = create_diagonal_matrix([3, 3, 1])
 
-    x = np.array([0, 1, 0])
-    e, v = d.deflate(m, x, 100, 3, 1e-17)
-    print(e, '\n')
-    print(v)
+    print('\nMatrix: \n', m, '\n')
+    print('Running our deflate\n')
 
-    # It doesn't matter where we start we can only get a single eigenvalue 
-    x = np.array([1, 0, 0])
-    e, v = d.deflate(m, x, 100, 3, 1e-17)
-    print(e, '\n')
-    print(v)
+    e, v = d.deflate(m, np.ones(m.shape[0]), 100, 3, 1e-38)
+    print("Eigenvalues", e) 
+    print("Eigenvectors", v, '\n')
+    
+    print_numpy(m)
+    print_line()
 
-    e, v = np.linalg.eig(m)
-    print(e, '\n')
-    print(v)
 
-# Should be somewhat like above 
+# Since the delfation algorithm "cancels" the eigenvalues we've already gotten
+# From the matrix when trying to find the eigenvectors for the 0s we might 
+# not get valid eigenvectors (ie they don't form a base)
 def test_zero_eigenvalues():
-    matrix_dim = (3, 3)
-    D = np.zeros(matrix_dim)
-    P = np.eye(3, 3)
-    P_inv = np.eye(3, 3) 
-    diagonal = [0, 3, 2]
-    for i in range(3):
-        D[i, i] = diagonal[i]
+    print('Matrix with 0 eigenvalues')
+    m = create_diagonal_matrix([3, 1, 0])
 
-    m = P@D@P_inv
-    x = np.ones(m.shape[0])
-    e, v = d.deflate(m, x, 100, 3, 1e-17)
-    print(e, '\n')
-    print(v)
+    print('\nMatrix: \n', m, '\n')
+    print('Running our deflate\n')
 
+    e, v = d.deflate(m, np.ones(m.shape[0]), 100, 3, 1e-17)
+    print("Eigenvalues", e) 
+    print("Eigenvectors", v, '\n')
+    
+    print_numpy(m)
+    print_line()
 
-    e, v = np.linalg.eig(m)
-    print(e, '\n')
-    print(v)
+def test_zero_eigenvalues_better_epsilon():
+    print('Matrix with 0 eigenvalues, better epsilon')
+    m = create_diagonal_matrix([3, 1, 0])
 
-def test_same_eigenvalue_components_get_eigenbase():
-    matrix_dim = (3, 3)
-    D = np.zeros(matrix_dim)
-    P = np.eye(3, 3)
-    P_inv = np.eye(3, 3) 
-    diagonal = [3, 3, 2]
-    for i in range(3):
-        D[i, i] = diagonal[i]
+    print('\nMatrix: \n', m, '\n')
+    print('Running our deflate\n')
 
-    m = P@D@P_inv
-
-    x = np.array([0, 1, 0])
-    e, v = d.deflate(m, x, 1000, 3, 1e-17)
-    print("Eigenval", e, '\n')
-    print("Eigenvec", v)
-
-    e, v = np.linalg.eig(m)
-    print(e, '\n')
-    print(v)
+    e, v = d.deflate(m, np.ones(m.shape[0]), 100, 3, 1e-250)
+    print("Eigenvalues", e) 
+    print("Eigenvectors", v, '\n')
+    
+    print_numpy(m)
+    print_line()
 
 if __name__ == '__main__': 
-   # test_power_iteration_normal()
-   # test_same_eigenvalue_components()
-   # test_same_eigenvalues()
-   # test_normal_eigenvector()
+    test_power_iteration_normal()
+    test_same_eigenvalue_components()
+    test_same_eigenvalues()
     test_zero_eigenvalues()
+    test_zero_eigenvalues_better_epsilon()
     test_same_eigenvalue_components_get_eigenbase()
